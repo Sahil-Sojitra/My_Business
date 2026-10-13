@@ -84,7 +84,7 @@ export const CompanyDetailsScreen: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading company profile & ledger..." />;
+    return <LoadingSpinner message="Loading buyer firm profile & ledger..." />;
   }
 
   if (!company) {
@@ -109,20 +109,54 @@ export const CompanyDetailsScreen: React.FC = () => {
     if (b.status === 'PAID') {
       return acc;
     }
+    const monthlyRate =
+      b.monthlyInterestRate ?? (b.interestRate ? b.interestRate / 12 : 1.5);
     const stats = calculateAccruedBillInterest(
       b.amount,
-      b.interestRate ?? 12,
+      monthlyRate,
       b.interestStartDate || b.date
     );
     return acc + stats.accruedInterest;
   }, 0);
   const totalPayableWithInterest = totalPrincipal + totalAccruedInterest;
 
+  // Sort bills by closest Due Date first (ascending by due date)
+  const sortedBills = [...bills].sort((a, b) => {
+    const timeA = a.dueDate ? new Date(a.dueDate).getTime() : new Date(a.date).getTime();
+    const timeB = b.dueDate ? new Date(b.dueDate).getTime() : new Date(b.date).getTime();
+    return timeA - timeB;
+  });
+
+  const getDueDaysLabel = (dueDateStr?: string) => {
+    if (!dueDateStr) {
+      return null;
+    }
+    const target = new Date(dueDateStr);
+    const now = new Date();
+    // Normalize to midnight
+    target.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+    const diffDays = Math.round(
+      (target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    if (diffDays < 0) {
+      return { text: `${Math.abs(diffDays)}d overdue`, isOverdue: true };
+    }
+    if (diffDays === 0) {
+      return { text: 'Due today', isOverdue: false, isNear: true };
+    }
+    if (diffDays <= 7) {
+      return { text: `Due in ${diffDays}d`, isOverdue: false, isNear: true };
+    }
+    return { text: `Due in ${diffDays}d`, isOverdue: false, isNear: false };
+  };
+
   return (
     <View style={styles.screen}>
       <AppHeader
         title={company.name}
-        subtitle="Buyer Firm Profile"
+        subtitle="Buyer Firm Ledger & Interest"
         showBack={true}
         rightAction={{
           label: 'Edit',
@@ -178,10 +212,10 @@ export const CompanyDetailsScreen: React.FC = () => {
           ) : null}
         </Card>
 
-        {/* Ledger & Interest Summary */}
+        {/* Ledger & Total Interest Summary */}
         <Card style={styles.ledgerCard}>
           <Text style={styles.ledgerTitle}>
-            Financial Ledger & Interest Due
+            Firm Ledger & Total Interest Accrued
           </Text>
           <View style={styles.metricsRow}>
             <View style={styles.metricItem}>
@@ -197,7 +231,7 @@ export const CompanyDetailsScreen: React.FC = () => {
               </Text>
             </View>
             <View style={styles.metricItem}>
-              <Text style={styles.metricLabel}>Total Due</Text>
+              <Text style={styles.metricLabel}>Total Outstanding</Text>
               <Text style={[styles.metricVal, styles.dueVal]}>
                 {formatCurrency(totalPayableWithInterest)}
               </Text>
@@ -205,11 +239,16 @@ export const CompanyDetailsScreen: React.FC = () => {
           </View>
         </Card>
 
-        {/* Bills for this company */}
+        {/* Bills for this company (Sorted by Nearest Due Date First) */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            Bills & Invoices ({bills.length})
-          </Text>
+          <View>
+            <Text style={styles.sectionTitle}>
+              Bills & Invoices ({bills.length})
+            </Text>
+            <Text style={styles.sortHint}>
+              Sorted by nearest payment due date first
+            </Text>
+          </View>
           <TouchableOpacity
             onPress={() =>
               navigation.navigate('TransactionForm', {
@@ -218,23 +257,27 @@ export const CompanyDetailsScreen: React.FC = () => {
             }
             activeOpacity={0.7}
             style={styles.addTxBtn}>
-            <Text style={styles.addTxText}>+ Record New Bill</Text>
+            <Text style={styles.addTxText}>+ Record Bill</Text>
           </TouchableOpacity>
         </View>
 
-        {bills.length === 0 ? (
+        {sortedBills.length === 0 ? (
           <Card style={styles.emptyCard}>
             <Text style={styles.emptyText}>
               No bills recorded for this company yet.
             </Text>
           </Card>
         ) : (
-          bills.map(item => {
+          sortedBills.map(item => {
+            const monthlyRate =
+              item.monthlyInterestRate ??
+              (item.interestRate ? item.interestRate / 12 : 1.5);
             const stats = calculateAccruedBillInterest(
               item.amount,
-              item.interestRate ?? 12,
+              monthlyRate,
               item.interestStartDate || item.date
             );
+            const dueInfo = getDueDaysLabel(item.dueDate);
 
             return (
               <Card
@@ -244,34 +287,89 @@ export const CompanyDetailsScreen: React.FC = () => {
                     transactionId: item.id,
                   })
                 }
-                style={styles.txCard}>
-                <View style={styles.txRow}>
-                  <View style={styles.txLeft}>
-                    <View style={styles.badgeRow}>
-                      <Badge status={item.status} />
-                      <View style={styles.rateTag}>
-                        <Text style={styles.rateTagText}>
-                          {item.interestRate ?? 12}% p.a.
-                        </Text>
-                      </View>
-                    </View>
+                style={[
+                  styles.txCard,
+                  dueInfo?.isOverdue && styles.txCardOverdue,
+                  dueInfo?.isNear && styles.txCardNear,
+                ]}>
+                <View style={styles.txHeaderRow}>
+                  <View style={styles.txHeaderLeft}>
                     <Text style={styles.txNumber}>
-                      {item.billNumber ? `Bill #${item.billNumber}` : 'Direct bill'}
+                      {item.billNumber ? `Bill #${item.billNumber}` : 'Direct Bill'}
                     </Text>
                     <Text style={styles.txDate}>
-                      {formatDate(item.date)} · {stats.daysElapsed} days
+                      Billed: {formatDate(item.date)}
                     </Text>
                   </View>
 
-                  <View style={styles.txRight}>
-                    <Text style={styles.txTotalAmount}>
+                  <View style={styles.txHeaderRight}>
+                    <Badge status={item.status} />
+                    {dueInfo ? (
+                      <View
+                        style={[
+                          styles.dueBadge,
+                          dueInfo.isOverdue && styles.dueBadgeOverdue,
+                          dueInfo.isNear && styles.dueBadgeNear,
+                        ]}>
+                        <Text
+                          style={[
+                            styles.dueBadgeText,
+                            dueInfo.isOverdue && styles.dueBadgeTextOverdue,
+                            dueInfo.isNear && styles.dueBadgeTextNear,
+                          ]}>
+                          {dueInfo.text}
+                        </Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </View>
+
+                {item.dueDate ? (
+                  <View style={styles.dueDateRow}>
+                    <Text style={styles.dueDateLabel}>
+                      Payment Due:{' '}
+                      <Text style={styles.dueDateVal}>
+                        {formatDate(item.dueDate)}
+                      </Text>
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* Explicit Interest and Principal Breakdown in Card */}
+                <View style={styles.cardFinancialsRow}>
+                  <View style={styles.cardFinancialCol}>
+                    <Text style={styles.cardFinLabel}>Principal</Text>
+                    <Text style={styles.cardFinVal}>
+                      {formatCurrency(item.amount)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.cardFinancialDivider} />
+
+                  <View style={styles.cardFinancialCol}>
+                    <Text style={styles.cardFinLabel}>
+                      Interest ({monthlyRate}%/mo)
+                    </Text>
+                    <Text style={[styles.cardFinVal, styles.cardInterestVal]}>
+                      +{formatCurrency(stats.accruedInterest)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.cardFinancialDivider} />
+
+                  <View style={styles.cardFinancialCol}>
+                    <Text style={styles.cardFinLabel}>Total Due</Text>
+                    <Text style={[styles.cardFinVal, styles.cardTotalVal]}>
                       {formatCurrency(stats.totalWithInterest)}
                     </Text>
-                    <Text style={styles.txInterest}>
-                      +{formatCurrency(stats.accruedInterest)} int.
-                    </Text>
-                    <Text style={styles.txChevron}>→</Text>
                   </View>
+                </View>
+
+                <View style={styles.cardFooter}>
+                  <Text style={styles.cardDaysText}>
+                    Accrued for {stats.daysElapsed} days
+                  </Text>
+                  <Text style={styles.viewLink}>View details →</Text>
                 </View>
               </Card>
             );
@@ -430,6 +528,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#0F172A',
   },
+  sortHint: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1,
+  },
   addTxBtn: {
     paddingVertical: 4,
     paddingHorizontal: 8,
@@ -451,61 +554,130 @@ const styles = StyleSheet.create({
   },
   txCard: {
     padding: 14,
-    marginBottom: 8,
+    marginBottom: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
   },
-  txRow: {
+  txCardOverdue: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#DC2626',
+  },
+  txCardNear: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+  },
+  txHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 6,
   },
-  txLeft: {
+  txHeaderLeft: {
     flex: 1,
   },
-  badgeRow: {
+  txHeaderRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 4,
-  },
-  rateTag: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  rateTagText: {
-    fontSize: 11,
-    color: '#1D4ED8',
-    fontWeight: '700',
   },
   txNumber: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
     color: '#0F172A',
   },
   txDate: {
     fontSize: 12,
     color: '#64748B',
-    marginTop: 2,
+    marginTop: 1,
   },
-  txRight: {
-    alignItems: 'flex-end',
+  dueBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
-  txTotalAmount: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 1,
+  dueBadgeNear: {
+    backgroundColor: '#FEF3C7',
   },
-  txInterest: {
+  dueBadgeOverdue: {
+    backgroundColor: '#FEE2E2',
+  },
+  dueBadgeText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#15803D',
-    marginBottom: 2,
+    fontWeight: '700',
+    color: '#475569',
   },
-  txChevron: {
-    fontSize: 14,
-    color: '#94A3B8',
+  dueBadgeTextNear: {
+    color: '#B45309',
+  },
+  dueBadgeTextOverdue: {
+    color: '#B91C1C',
+  },
+  dueDateRow: {
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
+  dueDateLabel: {
+    fontSize: 11,
+    color: '#64748B',
+  },
+  dueDateVal: {
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  cardFinancialsRow: {
+    flexDirection: 'row',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    marginVertical: 6,
+  },
+  cardFinancialCol: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  cardFinancialDivider: {
+    width: 1,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 4,
+  },
+  cardFinLabel: {
+    fontSize: 10,
+    color: '#64748B',
+    marginBottom: 2,
+    textTransform: 'uppercase',
+  },
+  cardFinVal: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  cardInterestVal: {
+    color: '#15803D',
+  },
+  cardTotalVal: {
+    color: '#0F172A',
+    fontWeight: '800',
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 8,
+  },
+  cardDaysText: {
+    fontSize: 11,
+    color: '#64748B',
+  },
+  viewLink: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2563EB',
   },
   deleteBtn: {
     marginTop: 20,

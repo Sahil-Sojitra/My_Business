@@ -163,33 +163,34 @@ describe('Interest Calculator Utility', () => {
     });
   });
 
-  describe('calculateAccruedBillInterest helper', () => {
-    it('calculates accrued interest for 365 days correctly', () => {
-      // 100,000 at 12% for 365 days = 12,000
-      const start = '2025-01-01';
-      const asOf = '2026-01-01'; // 365 days
-      const result = calculateAccruedBillInterest(100000, 12, start, asOf);
-
-      expect(result.daysElapsed).toBe(365);
-      expect(result.accruedInterest).toBe(12000);
-      expect(result.totalWithInterest).toBe(112000);
-      expect(result.monthlyInterest).toBe(1000);
-    });
-
-    it('calculates accrued interest for 30 days', () => {
+  describe('calculateAccruedBillInterest helper (monthly rate basis)', () => {
+    it('calculates accrued interest for 30 days at 1.5% monthly rate', () => {
+      // 100,000 at 1.5% per month for 30 days = 1,500 interest
       const start = '2026-09-01';
       const asOf = '2026-10-01'; // 30 days
-      const result = calculateAccruedBillInterest(50000, 18, start, asOf);
+      const result = calculateAccruedBillInterest(100000, 1.5, start, asOf);
 
       expect(result.daysElapsed).toBe(30);
-      // (50000 * 18 * (30 / 365)) / 100 = 739.73
-      expect(result.accruedInterest).toBeCloseTo(739.73, 1);
-      expect(result.totalWithInterest).toBeCloseTo(50739.73, 1);
+      expect(result.accruedInterest).toBe(1500);
+      expect(result.totalWithInterest).toBe(101500);
+      expect(result.monthlyInterest).toBe(1500);
+      expect(result.dailyInterest).toBe(50);
+    });
+
+    it('calculates accrued interest for 60 days at 2% monthly rate', () => {
+      // 50,000 at 2% per month for 60 days = 2,000 interest
+      const start = '2026-08-01';
+      const asOf = '2026-09-30'; // 60 days
+      const result = calculateAccruedBillInterest(50000, 2, start, asOf);
+
+      expect(result.daysElapsed).toBe(60);
+      expect(result.accruedInterest).toBe(2000);
+      expect(result.totalWithInterest).toBe(52000);
     });
 
     it('returns zero accrued interest when start date equals as-of date', () => {
       const date = '2026-10-13';
-      const result = calculateAccruedBillInterest(100000, 12, date, date);
+      const result = calculateAccruedBillInterest(100000, 1.5, date, date);
 
       expect(result.daysElapsed).toBe(0);
       expect(result.accruedInterest).toBe(0);

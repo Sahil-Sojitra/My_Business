@@ -8,7 +8,8 @@ export interface Bill {
   companyName: string;
   billNumber?: string;
   amount: number;
-  interestRate: number; // Annual interest percentage, e.g. 12 for 12% p.a.
+  monthlyInterestRate: number; // Monthly interest percentage, e.g. 1.0 or 1.5% per month
+  interestRate?: number; // Annual equivalent (monthlyInterestRate * 12)
   date: string; // Bill invoice date (YYYY-MM-DD)
   dueDate?: string; // Credit payment deadline (YYYY-MM-DD)
   interestStartDate?: string; // Date from which interest starts accruing (YYYY-MM-DD)

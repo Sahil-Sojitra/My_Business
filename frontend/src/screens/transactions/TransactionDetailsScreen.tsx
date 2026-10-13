@@ -87,11 +87,13 @@ export const TransactionDetailsScreen: React.FC = () => {
     );
   }
 
-  // Calculate interest tracking to date
+  // Calculate interest tracking to date based on monthly interest rate
   const startDate = bill.interestStartDate || bill.date;
+  const monthlyRate =
+    bill.monthlyInterestRate ?? (bill.interestRate ? bill.interestRate / 12 : 1.5);
   const interestStats = calculateAccruedBillInterest(
     bill.amount,
-    bill.interestRate ?? 12,
+    monthlyRate,
     startDate
   );
 
@@ -118,7 +120,7 @@ export const TransactionDetailsScreen: React.FC = () => {
             <Badge status={bill.status} />
             <View style={styles.ratePill}>
               <Text style={styles.ratePillText}>
-                {bill.interestRate ?? 12}% p.a.
+                {monthlyRate}% / month
               </Text>
             </View>
           </View>
@@ -175,15 +177,12 @@ export const TransactionDetailsScreen: React.FC = () => {
             style={styles.calcShortcutBtn}
             activeOpacity={0.7}
             onPress={() =>
-              navigation.navigate('InterestCalculator', {
-                initialPrincipal: bill.amount,
-                initialRate: bill.interestRate ?? 12,
-                initialTime: Math.max(1, Math.round(interestStats.monthsElapsed)),
-                initialUnit: 'months',
+              navigation.navigate('TransactionForm', {
+                transactionId: bill.id,
               })
             }>
             <Text style={styles.calcShortcutText}>
-              🧮 Open in Interest Calculator →
+              🧮 Open Interactive Calculator in Bill →
             </Text>
           </TouchableOpacity>
         </Card>

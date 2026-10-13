@@ -76,9 +76,11 @@ export const TransactionListScreen: React.FC = () => {
     if (t.status === 'PAID') {
       return acc;
     }
+    const monthlyRate =
+      t.monthlyInterestRate ?? (t.interestRate ? t.interestRate / 12 : 1.5);
     const stats = calculateAccruedBillInterest(
       t.amount,
-      t.interestRate ?? 12,
+      monthlyRate,
       t.interestStartDate || t.date
     );
     return acc + stats.accruedInterest;
@@ -201,9 +203,12 @@ export const TransactionListScreen: React.FC = () => {
             />
           }
           renderItem={({ item }) => {
+            const monthlyRate =
+              item.monthlyInterestRate ??
+              (item.interestRate ? item.interestRate / 12 : 1.5);
             const stats = calculateAccruedBillInterest(
               item.amount,
-              item.interestRate ?? 12,
+              monthlyRate,
               item.interestStartDate || item.date
             );
 
@@ -231,7 +236,7 @@ export const TransactionListScreen: React.FC = () => {
                       {formatCurrency(stats.totalWithInterest)}
                     </Text>
                     <Text style={styles.interestSub}>
-                      +{formatCurrency(stats.accruedInterest)} interest
+                      +{formatCurrency(stats.accruedInterest)} int.
                     </Text>
                   </View>
                 </View>
@@ -241,7 +246,7 @@ export const TransactionListScreen: React.FC = () => {
                     <Badge status={item.status} />
                     <View style={styles.rateTag}>
                       <Text style={styles.rateTagText}>
-                        {item.interestRate ?? 12}% p.a. · {stats.daysElapsed}d
+                        {monthlyRate}% / mo · {stats.daysElapsed}d
                       </Text>
                     </View>
                   </View>

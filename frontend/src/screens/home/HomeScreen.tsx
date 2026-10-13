@@ -67,14 +67,16 @@ export const HomeScreen: React.FC = () => {
     }
   };
 
-  // Metrics: Calculate bill totals and accrued interest
+  // Metrics: Calculate bill totals and accrued interest using monthly rate
   const activeBills = bills.filter(b => b.status !== 'PAID');
   const totalPrincipal = activeBills.reduce((acc, b) => acc + b.amount, 0);
 
   const totalAccruedInterest = activeBills.reduce((acc, b) => {
+    const monthlyRate =
+      b.monthlyInterestRate ?? (b.interestRate ? b.interestRate / 12 : 1.5);
     const stats = calculateAccruedBillInterest(
       b.amount,
-      b.interestRate ?? 12,
+      monthlyRate,
       b.interestStartDate || b.date
     );
     return acc + stats.accruedInterest;
@@ -163,7 +165,7 @@ export const HomeScreen: React.FC = () => {
           </Card>
         </View>
 
-        {/* Quick Actions */}
+        {/* Quick Actions (Interest calculator removed from here as requested) */}
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.actionsContainer}>
           <TouchableOpacity
@@ -197,22 +199,6 @@ export const HomeScreen: React.FC = () => {
             </View>
             <Text style={styles.actionChevron}>→</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionItem}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('InterestCalculator')}>
-            <View style={[styles.actionIconCircle, styles.actionIconAmber]}>
-              <Text style={styles.actionIcon}>🧮</Text>
-            </View>
-            <View style={styles.actionTextContainer}>
-              <Text style={styles.actionTitle}>Interest Calculator</Text>
-              <Text style={styles.actionSubtitle}>
-                Simple interest and credit period estimator
-              </Text>
-            </View>
-            <Text style={styles.actionChevron}>→</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Recent Bills with Interest */}
@@ -227,9 +213,12 @@ export const HomeScreen: React.FC = () => {
         ) : (
           <View style={styles.recentList}>
             {bills.slice(0, 3).map(item => {
+              const monthlyRate =
+                item.monthlyInterestRate ??
+                (item.interestRate ? item.interestRate / 12 : 1.5);
               const stats = calculateAccruedBillInterest(
                 item.amount,
-                item.interestRate ?? 12,
+                monthlyRate,
                 item.interestStartDate || item.date
               );
 
@@ -249,7 +238,7 @@ export const HomeScreen: React.FC = () => {
                       </Text>
                       <Text style={styles.recentMeta}>
                         {item.billNumber ? `${item.billNumber} · ` : ''}
-                        {formatDate(item.date)} · {item.interestRate ?? 12}% p.a.
+                        {formatDate(item.date)} · {monthlyRate}% / month
                       </Text>
                     </View>
                     <View style={styles.recentRight}>
@@ -430,9 +419,6 @@ const styles = StyleSheet.create({
   },
   actionIconGreen: {
     backgroundColor: '#F0FDF4',
-  },
-  actionIconAmber: {
-    backgroundColor: '#FEF3C7',
   },
   actionIcon: {
     fontSize: 20,

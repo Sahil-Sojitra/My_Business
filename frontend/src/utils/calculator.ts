@@ -19,7 +19,7 @@ export function validateInterestInput(
   }
 
   if (input.annualRate === undefined || isNaN(input.annualRate)) {
-    errors.annualRate = 'Annual interest rate is required';
+    errors.annualRate = 'Interest rate is required';
   } else if (input.annualRate < 0) {
     errors.annualRate = 'Interest rate cannot be negative';
   }
@@ -58,7 +58,6 @@ export function calculateSimpleInterest(input: InterestInput): InterestResult {
   const timeInYears = unit === 'months' ? time / 12 : time;
 
   const rawInterest = (principal * annualRate * timeInYears) / 100;
-  // Round to 2 decimal places to prevent floating point inaccuracies
   const interest = Math.round(rawInterest * 100) / 100;
   const totalPayable = Math.round((principal + interest) * 100) / 100;
 
@@ -83,16 +82,18 @@ export interface AccruedInterestResult {
 }
 
 /**
- * Calculates accrued interest on a bill amount based on elapsed days.
- * Simple interest formula: Principal * (Annual Rate / 100) * (Days / 365)
+ * Calculates accrued interest on a bill amount based on elapsed days and a monthly interest rate.
+ * Formula: Accrued = (Principal * MonthlyRate * DaysElapsed) / 3000
+ * Daily Interest = (Principal * MonthlyRate) / 3000
+ * Monthly Interest = (Principal * MonthlyRate) / 100
  */
 export function calculateAccruedBillInterest(
   amount: number,
-  annualRate: number,
+  monthlyRate: number,
   startDateStr: string,
   asOfDateStr?: string
 ): AccruedInterestResult {
-  if (isNaN(amount) || amount <= 0 || isNaN(annualRate) || annualRate < 0) {
+  if (isNaN(amount) || amount <= 0 || isNaN(monthlyRate) || monthlyRate < 0) {
     return {
       daysElapsed: 0,
       monthsElapsed: 0,
@@ -119,14 +120,15 @@ export function calculateAccruedBillInterest(
 
   const diffMs = Math.max(0, end.getTime() - start.getTime());
   const daysElapsed = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const monthsElapsed = Math.round((daysElapsed / 30.416) * 10) / 10;
+  const monthsElapsed = Math.round((daysElapsed / 30) * 10) / 10;
 
-  const rawInterest = (amount * annualRate * (daysElapsed / 365)) / 100;
+  // Monthly interest rate calculation (broker basis: 30-day month standard)
+  const rawInterest = (amount * monthlyRate * daysElapsed) / 3000;
   const accruedInterest = Math.round(rawInterest * 100) / 100;
   const totalWithInterest = Math.round((amount + accruedInterest) * 100) / 100;
 
-  const dailyInterest = Math.round(((amount * annualRate) / 36500) * 100) / 100;
-  const monthlyInterest = Math.round(((amount * annualRate) / 1200) * 100) / 100;
+  const dailyInterest = Math.round(((amount * monthlyRate) / 3000) * 100) / 100;
+  const monthlyInterest = Math.round(((amount * monthlyRate) / 100) * 100) / 100;
 
   return {
     daysElapsed,
@@ -135,5 +137,47 @@ export function calculateAccruedBillInterest(
     totalWithInterest,
     dailyInterest,
     monthlyInterest,
+  };
+}
+
+/**
+ * Calculates interest for a specified credit duration on a monthly rate basis.
+ */
+export function calculateBillCreditInterest(
+  amount: number,
+  monthlyRate: number,
+  duration: number,
+  unit: 'months' | 'days'
+): {
+  interest: number;
+  totalPayable: number;
+  monthlyInterest: number;
+  dailyInterest: number;
+} {
+  if (isNaN(amount) || amount <= 0 || isNaN(monthlyRate) || monthlyRate <= 0) {
+    return {
+      interest: 0,
+      totalPayable: Math.max(0, amount || 0),
+      monthlyInterest: 0,
+      dailyInterest: 0,
+    };
+  }
+
+  const monthlyInterest = Math.round(((amount * monthlyRate) / 100) * 100) / 100;
+  const dailyInterest = Math.round(((amount * monthlyRate) / 3000) * 100) / 100;
+
+  const rawInterest =
+    unit === 'months'
+      ? (amount * monthlyRate * duration) / 100
+      : (amount * monthlyRate * duration) / 3000;
+
+  const interest = Math.round(rawInterest * 100) / 100;
+  const totalPayable = Math.round((amount + interest) * 100) / 100;
+
+  return {
+    interest,
+    totalPayable,
+    monthlyInterest,
+    dailyInterest,
   };
 }

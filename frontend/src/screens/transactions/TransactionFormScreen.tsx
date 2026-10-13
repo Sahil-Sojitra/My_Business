@@ -16,7 +16,6 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { companyService, transactionService } from '../../services';
 import { Company } from '../../types/company';
-import { TransactionStatus } from '../../types/transaction';
 import { calculateAccruedBillInterest } from '../../utils/calculator';
 import { formatCurrency } from '../../utils/formatters';
 
@@ -33,26 +32,28 @@ export const TransactionFormScreen: React.FC = () => {
     defaultCompanyId || ''
   );
   const [amount, setAmount] = useState<string>('');
-  const [interestRate, setInterestRate] = useState<string>('12');
+  const [monthlyInterestRate, setMonthlyInterestRate] = useState<string>('1.5');
   const [billNumber, setBillNumber] = useState<string>('');
   const [date, setDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
+  const [dueDate, setDueDate] = useState<string>('');
   const [interestStartDate, setInterestStartDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
-  const [dueDate, setDueDate] = useState<string>('');
-  const [status, setStatus] = useState<TransactionStatus>('PENDING');
   const [description, setDescription] = useState<string>('');
+
+  // Built-in Calculator helper state for credit duration estimation
+  const [calcDuration, setCalcDuration] = useState<string>('30');
+  const [calcUnit, setCalcUnit] = useState<'days' | 'months'>('days');
 
   const [loadingInitial, setLoadingInitial] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [errors, setErrors] = useState<{
     company?: string;
     amount?: string;
-    interestRate?: string;
+    monthlyInterestRate?: string;
     date?: string;
-    interestStartDate?: string;
   }>({});
 
   useEffect(() => {
@@ -66,12 +67,14 @@ export const TransactionFormScreen: React.FC = () => {
           if (tx) {
             setSelectedCompanyId(tx.companyId);
             setAmount(String(tx.amount));
-            setInterestRate(String(tx.interestRate ?? 12));
+            const rate =
+              tx.monthlyInterestRate ??
+              (tx.interestRate ? tx.interestRate / 12 : 1.5);
+            setMonthlyInterestRate(String(rate));
             setBillNumber(tx.billNumber || '');
             setDate(tx.date);
             setInterestStartDate(tx.interestStartDate || tx.date);
             setDueDate(tx.dueDate || '');
-            setStatus(tx.status);
             setDescription(tx.description || '');
           }
         } else if (defaultCompanyId) {
@@ -101,22 +104,15 @@ export const TransactionFormScreen: React.FC = () => {
       newErrors.amount = 'Amount must be a positive number';
     }
 
-    const numRate = parseFloat(interestRate);
-    if (!interestRate.trim()) {
-      newErrors.interestRate = 'Interest rate is required';
+    const numRate = parseFloat(monthlyInterestRate);
+    if (!monthlyInterestRate.trim()) {
+      newErrors.monthlyInterestRate = 'Monthly interest rate is required';
     } else if (isNaN(numRate) || numRate < 0) {
-      newErrors.interestRate = 'Interest rate cannot be negative';
+      newErrors.monthlyInterestRate = 'Interest rate cannot be negative';
     }
 
     if (!date.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
       newErrors.date = 'Date must be in YYYY-MM-DD format (e.g. 2026-10-13)';
-    }
-
-    if (
-      interestStartDate.trim() &&
-      !/^\d{4}-\d{2}-\d{2}$/.test(interestStartDate.trim())
-    ) {
-      newErrors.interestStartDate = 'Date must be in YYYY-MM-DD format';
     }
 
     setErrors(newErrors);
@@ -136,26 +132,28 @@ export const TransactionFormScreen: React.FC = () => {
 
     setSaving(true);
     try {
+      const parsedRate = parseFloat(monthlyInterestRate);
       const payload = {
         companyId: selectedCompany.id,
         companyName: selectedCompany.name,
         amount: parseFloat(amount),
-        interestRate: parseFloat(interestRate),
+        monthlyInterestRate: parsedRate,
+        interestRate: parsedRate * 12,
         billNumber: billNumber.trim() || undefined,
         date: date.trim(),
         interestStartDate: interestStartDate.trim() || date.trim(),
         dueDate: dueDate.trim() || undefined,
-        status,
+        status: 'PENDING' as const, // Status defaults to PENDING
         description: description.trim() || undefined,
       };
 
       if (isEditing && transactionId) {
         await transactionService.update(transactionId, payload);
-        Alert.alert('Success', 'Bill & interest terms updated successfully');
+        Alert.alert('Success', 'Bill updated successfully');
         navigation.navigate('TransactionDetails', { transactionId });
       } else {
         const created = await transactionService.create(payload);
-        Alert.alert('Success', 'Bill recorded and interest tracking activated');
+        Alert.alert('Success', 'Bill created with status Pending');
         navigation.navigate('TransactionDetails', {
           transactionId: created.id,
         });
@@ -170,17 +168,31 @@ export const TransactionFormScreen: React.FC = () => {
     }
   };
 
-  // Dynamic preview calculation
+  // Live Interest Calculations
   const numAmt = parseFloat(amount) || 0;
-  const numRt = parseFloat(interestRate) || 0;
-  const preview = calculateAccruedBillInterest(
+  const numMonthlyRate = parseFloat(monthlyInterestRate) || 0;
+
+  // Monthly & daily interest
+  const monthlyInterest = (numAmt * numMonthlyRate) / 100;
+  const dailyInterest = (numAmt * numMonthlyRate) / 3000;
+
+  // Credit period interest from calculator duration input
+  const numDur = parseFloat(calcDuration) || 0;
+  const creditPeriodInterest =
+    calcUnit === 'days'
+      ? (numAmt * numMonthlyRate * numDur) / 3000
+      : (numAmt * numMonthlyRate * numDur) / 100;
+  const totalPayableWithCredit = numAmt + creditPeriodInterest;
+
+  // Live accrued interest to today
+  const accruedStats = calculateAccruedBillInterest(
     numAmt,
-    numRt,
+    numMonthlyRate,
     interestStartDate || date
   );
 
   if (loadingInitial) {
-    return <LoadingSpinner message="Loading form data..." />;
+    return <LoadingSpinner message="Loading bill form..." />;
   }
 
   return (
@@ -189,7 +201,7 @@ export const TransactionFormScreen: React.FC = () => {
       style={styles.screen}>
       <AppHeader
         title={isEditing ? 'Edit Bill' : 'Record Bill'}
-        subtitle="Broker sales bill with interest tracking"
+        subtitle="Sales invoice & live interest calculator"
         showBack={true}
       />
 
@@ -198,11 +210,11 @@ export const TransactionFormScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled">
         <View style={styles.formCard}>
           {/* Buyer Firm / Client Picker */}
-          <Text style={styles.fieldLabel}>Buyer Firm / Company *</Text>
+          <Text style={styles.fieldLabel}>Buyer Company / Firm *</Text>
           {companies.length === 0 ? (
             <View style={styles.noCompaniesWarning}>
               <Text style={styles.noCompText}>
-                No companies registered. Please create a client company first.
+                No buyer firms registered. Please create a company first.
               </Text>
               <Button
                 title="+ Add Company"
@@ -249,7 +261,7 @@ export const TransactionFormScreen: React.FC = () => {
 
           {/* Amount */}
           <Input
-            label="Bill / Invoice Amount (₹) *"
+            label="Bill Amount (₹) *"
             value={amount}
             onChangeText={val => {
               setAmount(val);
@@ -264,60 +276,133 @@ export const TransactionFormScreen: React.FC = () => {
             style={styles.inputMargin}
           />
 
-          {/* Interest Rate */}
+          {/* Monthly Interest Rate User Input */}
           <Input
-            label="Annual Interest Rate (% p.a.) *"
-            value={interestRate}
+            label="Monthly Interest Rate (% per month) *"
+            value={monthlyInterestRate}
             onChangeText={val => {
-              setInterestRate(val);
-              if (errors.interestRate) {
-                setErrors(prev => ({ ...prev, interestRate: undefined }));
+              setMonthlyInterestRate(val);
+              if (errors.monthlyInterestRate) {
+                setErrors(prev => ({
+                  ...prev,
+                  monthlyInterestRate: undefined,
+                }));
               }
             }}
-            placeholder="12"
+            placeholder="e.g. 1.5 (for 1.5% / month)"
             keyboardType="numeric"
-            error={errors.interestRate}
-            helperText="Broker interest charged on credit sales (e.g. 12% or 18% p.a.)"
+            error={errors.monthlyInterestRate}
+            helperText="Broker interest per month (e.g. 1.0%, 1.5%, 2.0% per month)"
             required
           />
 
-          {/* Live Interest Rate Preview Card */}
-          {numAmt > 0 && numRt > 0 ? (
-            <View style={styles.previewCard}>
-              <View style={styles.previewHeaderRow}>
-                <Text style={styles.previewTitle}>⚡ Interest Accrual Rate</Text>
-                <Text style={styles.previewRateBadge}>{numRt}% p.a.</Text>
+          {/* Built-in Interactive Interest Calculator Section */}
+          <View style={styles.calculatorSection}>
+            <View style={styles.calcHeaderRow}>
+              <Text style={styles.calcTitle}>🧮 Live Interest Calculator</Text>
+              <Text style={styles.calcRateBadge}>
+                {numMonthlyRate}% / month ({numMonthlyRate * 12}% p.a.)
+              </Text>
+            </View>
+
+            <View style={styles.calcMetricsRow}>
+              <View style={styles.calcMetricBox}>
+                <Text style={styles.calcMetricLabel}>Monthly Interest</Text>
+                <Text style={styles.calcMetricVal}>
+                  {formatCurrency(monthlyInterest)}
+                </Text>
               </View>
-              <View style={styles.previewMetricsRow}>
-                <View style={styles.previewMetricItem}>
-                  <Text style={styles.previewMetricLabel}>Monthly Accrual</Text>
-                  <Text style={styles.previewMetricVal}>
-                    {formatCurrency(preview.monthlyInterest)}/mo
-                  </Text>
-                </View>
-                <View style={styles.previewMetricItem}>
-                  <Text style={styles.previewMetricLabel}>Daily Accrual</Text>
-                  <Text style={styles.previewMetricVal}>
-                    {formatCurrency(preview.dailyInterest)}/day
-                  </Text>
+              <View style={styles.calcMetricBox}>
+                <Text style={styles.calcMetricLabel}>Daily Interest</Text>
+                <Text style={styles.calcMetricVal}>
+                  {formatCurrency(dailyInterest)}
+                </Text>
+              </View>
+            </View>
+
+            {/* Credit Duration Estimator */}
+            <View style={styles.calcPeriodRow}>
+              <View style={styles.calcDurationInputWrapper}>
+                <Text style={styles.calcSmallLabel}>Credit Duration</Text>
+                <Input
+                  value={calcDuration}
+                  onChangeText={setCalcDuration}
+                  placeholder="30"
+                  keyboardType="numeric"
+                  style={styles.noMarginInput}
+                />
+              </View>
+
+              <View style={styles.calcUnitSwitchWrapper}>
+                <Text style={styles.calcSmallLabel}>Duration Unit</Text>
+                <View style={styles.unitToggleGroup}>
+                  <TouchableOpacity
+                    onPress={() => setCalcUnit('days')}
+                    style={[
+                      styles.unitToggleBtn,
+                      calcUnit === 'days' && styles.unitToggleBtnActive,
+                    ]}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.unitToggleText,
+                        calcUnit === 'days' && styles.unitToggleTextActive,
+                      ]}>
+                      Days
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setCalcUnit('months')}
+                    style={[
+                      styles.unitToggleBtn,
+                      calcUnit === 'months' && styles.unitToggleBtnActive,
+                    ]}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.unitToggleText,
+                        calcUnit === 'months' && styles.unitToggleTextActive,
+                      ]}>
+                      Months
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
-              {preview.daysElapsed > 0 ? (
-                <Text style={styles.previewElapsedText}>
-                  Accrued to date ({preview.daysElapsed} days):{' '}
-                  <Text style={styles.previewElapsedBold}>
-                    {formatCurrency(preview.accruedInterest)}
-                  </Text>{' '}
-                  · Total:{' '}
-                  <Text style={styles.previewElapsedBold}>
-                    {formatCurrency(preview.totalWithInterest)}
+            </View>
+
+            {/* Credit Interest Result Banner */}
+            {numAmt > 0 && numMonthlyRate > 0 && numDur > 0 ? (
+              <View style={styles.calcResultBanner}>
+                <Text style={styles.calcResultLabel}>
+                  Estimated Interest for {numDur} {calcUnit}:
+                </Text>
+                <Text style={styles.calcResultVal}>
+                  +{formatCurrency(creditPeriodInterest)}
+                </Text>
+                <Text style={styles.calcTotalText}>
+                  Total Payable at maturity:{' '}
+                  <Text style={styles.calcTotalBold}>
+                    {formatCurrency(totalPayableWithCredit)}
                   </Text>
                 </Text>
-              ) : null}
-            </View>
-          ) : null}
+              </View>
+            ) : null}
 
-          {/* Bill / Ref Number */}
+            {accruedStats.daysElapsed > 0 ? (
+              <Text style={styles.liveAccruedText}>
+                Live Accrued to Date ({accruedStats.daysElapsed} days):{' '}
+                <Text style={styles.liveAccruedBold}>
+                  +{formatCurrency(accruedStats.accruedInterest)}
+                </Text>{' '}
+                · Current Total:{' '}
+                <Text style={styles.liveAccruedBold}>
+                  {formatCurrency(accruedStats.totalWithInterest)}
+                </Text>
+              </Text>
+            ) : null}
+          </View>
+
+          {/* Bill / Invoice Number */}
           <Input
             label="Bill / Invoice Number"
             value={billNumber}
@@ -332,7 +417,6 @@ export const TransactionFormScreen: React.FC = () => {
             value={date}
             onChangeText={val => {
               setDate(val);
-              // default interest start date to bill date if unchanged
               if (interestStartDate === date) {
                 setInterestStartDate(val);
               }
@@ -345,66 +429,37 @@ export const TransactionFormScreen: React.FC = () => {
             required
           />
 
+          {/* Payment Due Date */}
+          <Input
+            label="Payment Due Date (YYYY-MM-DD)"
+            value={dueDate}
+            onChangeText={setDueDate}
+            placeholder="2026-11-13"
+            helperText="Settlement deadline (closest due date appears first on firm list)"
+          />
+
           {/* Interest Start Date */}
           <Input
             label="Interest Start Date (YYYY-MM-DD)"
             value={interestStartDate}
-            onChangeText={val => {
-              setInterestStartDate(val);
-              if (errors.interestStartDate) {
-                setErrors(prev => ({ ...prev, interestStartDate: undefined }));
-              }
-            }}
+            onChangeText={setInterestStartDate}
             placeholder="2026-10-13"
-            helperText="Date from which interest begins accumulating (defaults to bill date)"
-            error={errors.interestStartDate}
+            helperText="Date from which monthly interest begins counting (defaults to bill date)"
           />
-
-          {/* Payment Due Date */}
-          <Input
-            label="Payment Due Date (Optional, YYYY-MM-DD)"
-            value={dueDate}
-            onChangeText={setDueDate}
-            placeholder="2026-11-13"
-            helperText="Agreed settlement deadline"
-          />
-
-          {/* Status Selection */}
-          <Text style={styles.fieldLabel}>Bill Status</Text>
-          <View style={styles.statusRow}>
-            {(['PENDING', 'OVERDUE', 'PAID'] as TransactionStatus[]).map(st => (
-              <TouchableOpacity
-                key={st}
-                onPress={() => setStatus(st)}
-                style={[
-                  styles.statusBtn,
-                  status === st && styles.statusBtnActive,
-                ]}
-                activeOpacity={0.7}>
-                <Text
-                  style={[
-                    styles.statusBtnText,
-                    status === st && styles.statusBtnTextActive,
-                  ]}>
-                  {st}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
 
           {/* Description */}
           <Input
-            label="Consignment / Goods Details"
+            label="Consignment / Deal Notes"
             value={description}
             onChangeText={setDescription}
-            placeholder="Quality grade, weight, truck number, buyer agreement notes..."
+            placeholder="Yarn counts, meter quantity, buyer payment agreement..."
             multiline
             numberOfLines={3}
             style={styles.inputMargin}
           />
 
           <Button
-            title={isEditing ? 'Update Bill' : 'Record Bill & Track Interest'}
+            title={isEditing ? 'Save Changes' : 'Record Bill (Status: Pending)'}
             onPress={handleSave}
             loading={saving}
             size="lg"
@@ -481,94 +536,145 @@ const styles = StyleSheet.create({
   companyPillTextSelected: {
     color: '#FFFFFF',
   },
-  previewCard: {
+  calculatorSection: {
     backgroundColor: '#F0FDF4',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#86EFAC',
+    borderRadius: 12,
     padding: 14,
-    marginBottom: 16,
+    marginBottom: 18,
   },
-  previewHeaderRow: {
+  calcHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  previewTitle: {
-    fontSize: 13,
+  calcTitle: {
+    fontSize: 14,
     fontWeight: '700',
     color: '#166534',
   },
-  previewRateBadge: {
-    fontSize: 12,
+  calcRateBadge: {
+    fontSize: 11,
     fontWeight: '700',
     color: '#166534',
     backgroundColor: '#DCFCE7',
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 6,
   },
-  previewMetricsRow: {
+  calcMetricsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
+    gap: 10,
+    marginBottom: 10,
   },
-  previewMetricItem: {
+  calcMetricBox: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
   },
-  previewMetricLabel: {
+  calcMetricLabel: {
     fontSize: 11,
     color: '#15803D',
+    fontWeight: '500',
   },
-  previewMetricVal: {
+  calcMetricVal: {
     fontSize: 15,
     fontWeight: '800',
     color: '#166534',
     marginTop: 2,
   },
-  previewElapsedText: {
+  calcPeriodRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  calcDurationInputWrapper: {
+    flex: 1,
+  },
+  calcUnitSwitchWrapper: {
+    width: 130,
+  },
+  calcSmallLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#166534',
+    marginBottom: 4,
+  },
+  noMarginInput: {
+    marginBottom: 0,
+  },
+  unitToggleGroup: {
+    flexDirection: 'row',
+    height: 48,
+    backgroundColor: '#DCFCE7',
+    borderRadius: 10,
+    padding: 3,
+  },
+  unitToggleBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  unitToggleBtnActive: {
+    backgroundColor: '#16A34A',
+  },
+  unitToggleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#166534',
+  },
+  unitToggleTextActive: {
+    color: '#FFFFFF',
+  },
+  calcResultBanner: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 2,
+  },
+  calcResultLabel: {
     fontSize: 12,
     color: '#15803D',
-    borderTopWidth: 1,
-    borderTopColor: '#DCFCE7',
-    paddingTop: 6,
-    marginTop: 4,
   },
-  previewElapsedBold: {
-    fontWeight: '700',
+  calcResultVal: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#15803D',
+    marginVertical: 2,
   },
-  statusRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  statusBtn: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  statusBtnActive: {
-    backgroundColor: '#0F172A',
-    borderColor: '#0F172A',
-  },
-  statusBtnText: {
+  calcTotalText: {
     fontSize: 12,
-    fontWeight: '700',
-    color: '#64748B',
+    color: '#166534',
   },
-  statusBtnTextActive: {
-    color: '#FFFFFF',
+  calcTotalBold: {
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  liveAccruedText: {
+    fontSize: 11,
+    color: '#15803D',
+    borderTopWidth: 1,
+    borderTopColor: '#BBF7D0',
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  liveAccruedBold: {
+    fontWeight: '700',
   },
   inputMargin: {
     marginTop: 4,
   },
   saveBtn: {
-    marginTop: 8,
+    marginTop: 10,
   },
   errorText: {
     fontSize: 12,

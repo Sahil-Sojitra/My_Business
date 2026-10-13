@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  StyleProp,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -9,7 +10,7 @@ import {
 interface CardProps {
   children: React.ReactNode;
   onPress?: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const Card: React.FC<CardProps> = ({ children, onPress, style }) => {
