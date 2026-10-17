@@ -66,13 +66,13 @@ export const Badge: React.FC<BadgeProps> = ({
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 7,
     alignSelf: 'flex-start',
   },
   text: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.3,
     textTransform: 'uppercase',

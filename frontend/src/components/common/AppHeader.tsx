@@ -125,19 +125,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#0F172A',
     letterSpacing: -0.3,
   },
   subtitle: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#64748B',
-    marginTop: 1,
+    marginTop: 2,
   },
   rightButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingVertical: 7,
+    paddingHorizontal: 13,
     borderRadius: 8,
     backgroundColor: '#F1F5F9',
   },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEE2E2',
   },
   rightButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: '#334155',
   },

@@ -8,10 +8,7 @@ import {
   View,
 } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
-import { Badge } from '../../components/common/Badge';
-import { Card } from '../../components/common/Card';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
-import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
@@ -19,7 +16,7 @@ import { companyService, transactionService } from '../../services';
 import { Company } from '../../types/company';
 import { Transaction } from '../../types/transaction';
 import { calculateAccruedBillInterest } from '../../utils/calculator';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency } from '../../utils/formatters';
 
 export const HomeScreen: React.FC = () => {
   const { user, logout } = useAuth();
@@ -88,8 +85,6 @@ export const HomeScreen: React.FC = () => {
     return <LoadingSpinner message="Loading broker portfolio..." />;
   }
 
-  const hasData = companies.length > 0 || bills.length > 0;
-
   return (
     <View style={styles.screen}>
       <AppHeader
@@ -104,6 +99,9 @@ export const HomeScreen: React.FC = () => {
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
+        bounces={false}
+        alwaysBounceVertical={false}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }>
@@ -115,10 +113,13 @@ export const HomeScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* Hero Card: Total Receivable with Interest */}
-        <Card style={styles.heroCard}>
+        {/* Hero Card: Executive Fintech Style */}
+        <View style={styles.heroCard}>
           <View style={styles.heroHeader}>
-            <Text style={styles.heroLabel}>Total Receivable (With Interest)</Text>
+            <View style={styles.heroTagRow}>
+              <View style={styles.heroLiveDot} />
+              <Text style={styles.heroLabel}>Total Receivable (With Interest)</Text>
+            </View>
             <View style={styles.activePill}>
               <Text style={styles.activePillText}>
                 {activeBills.length} Active Bills
@@ -141,121 +142,116 @@ export const HomeScreen: React.FC = () => {
             <View style={styles.heroMetricCol}>
               <Text style={styles.heroSubLabel}>Accrued Interest</Text>
               <Text style={[styles.heroSubVal, styles.interestVal]}>
-                +{formatCurrency(totalAccruedInterest)}
+                ▲ +{formatCurrency(totalAccruedInterest)}
               </Text>
             </View>
           </View>
-        </Card>
-
-        {/* Counts Grid */}
-        <View style={styles.summaryGrid}>
-          <Card style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Buyer Companies</Text>
-            <Text style={styles.summaryValue}>{companies.length}</Text>
-            <Text style={styles.summaryHint}>Registered firms</Text>
-          </Card>
-
-          <Card style={styles.summaryCard}>
-            <Text style={styles.summaryLabel}>Total Bills</Text>
-            <Text style={styles.summaryValue}>{bills.length}</Text>
-            <Text style={styles.summaryHint}>
-              {activeBills.length} pending · {bills.length - activeBills.length}{' '}
-              settled
-            </Text>
-          </Card>
         </View>
 
-        {/* Quick Actions (Interest calculator removed from here as requested) */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionsContainer}>
+        {/* Clickable Counts Grid */}
+        <View style={styles.summaryGrid}>
           <TouchableOpacity
-            style={styles.actionItem}
+            style={styles.summaryCard}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('CompanyList')}>
-            <View style={[styles.actionIconCircle, styles.actionIconBlue]}>
-              <Text style={styles.actionIcon}>🏢</Text>
+            <View style={styles.summaryTopRow}>
+              <View style={[styles.iconBox, styles.iconBoxBlue]}>
+                <Text style={styles.iconBoxText}>🏢</Text>
+              </View>
+              <View style={styles.arrowPill}>
+                <Text style={styles.arrowPillText}>→</Text>
+              </View>
             </View>
-            <View style={styles.actionTextContainer}>
-              <Text style={styles.actionTitle}>Buyer Companies</Text>
-              <Text style={styles.actionSubtitle}>
-                Manage client firms, GST & ledger
-              </Text>
-            </View>
-            <Text style={styles.actionChevron}>→</Text>
+            <Text style={styles.summaryValue}>{companies.length}</Text>
+            <Text style={styles.summaryLabel}>Buyer Companies</Text>
+            <Text style={styles.summaryHint}>
+              {companies.length} {companies.length === 1 ? 'registered firm' : 'registered firms'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.actionItem}
+            style={styles.summaryCard}
             activeOpacity={0.7}
             onPress={() => navigation.navigate('TransactionList')}>
-            <View style={[styles.actionIconCircle, styles.actionIconGreen]}>
-              <Text style={styles.actionIcon}>🧾</Text>
+            <View style={styles.summaryTopRow}>
+              <View style={[styles.iconBox, styles.iconBoxGreen]}>
+                <Text style={styles.iconBoxText}>🧾</Text>
+              </View>
+              <View style={styles.arrowPill}>
+                <Text style={styles.arrowPillText}>→</Text>
+              </View>
             </View>
-            <View style={styles.actionTextContainer}>
-              <Text style={styles.actionTitle}>Bills & Interest Tracking</Text>
-              <Text style={styles.actionSubtitle}>
-                Track sales bills and live accrued interest
-              </Text>
-            </View>
-            <Text style={styles.actionChevron}>→</Text>
+            <Text style={styles.summaryValue}>{bills.length}</Text>
+            <Text style={styles.summaryLabel}>Total Bills</Text>
+            <Text style={styles.summaryHint}>
+              {activeBills.length} pending · {bills.length - activeBills.length} settled
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Recent Bills with Interest */}
-        <Text style={styles.sectionTitle}>Recent Bills & Interest</Text>
-        {!hasData ? (
-          <EmptyState
-            title="No Companies or Bills Yet"
-            description="Add your first client firm and record sales bills to start tracking interest."
-            actionTitle="+ Add Buyer Company"
-            onAction={() => navigation.navigate('CompanyForm')}
-          />
-        ) : (
-          <View style={styles.recentList}>
-            {bills.slice(0, 3).map(item => {
-              const monthlyRate =
-                item.monthlyInterestRate ??
-                (item.interestRate ? item.interestRate / 12 : 1.5);
-              const stats = calculateAccruedBillInterest(
-                item.amount,
-                monthlyRate,
-                item.interestStartDate || item.date
-              );
+        {/* Large Action Cards */}
+        <View style={styles.actionButtonsRow}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnPrimary]}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('TransactionForm')}>
+            <View style={styles.actionBtnTopRow}>
+              <View style={styles.actionBtnIconBoxPrimary}>
+                <Text style={styles.actionBtnIconPrimary}>+</Text>
+              </View>
+              <View style={styles.actionBtnBadgePrimary}>
+                <Text style={styles.actionBtnBadgeTextPrimary}>New Deal</Text>
+              </View>
+            </View>
+            <View>
+              <Text style={styles.actionBtnTitlePrimary}>Record New Bill</Text>
+              <Text style={styles.actionBtnSubPrimary}>
+                Enter sales bill & set interest
+              </Text>
+            </View>
+          </TouchableOpacity>
 
-              return (
-                <Card
-                  key={item.id}
-                  onPress={() =>
-                    navigation.navigate('TransactionDetails', {
-                      transactionId: item.id,
-                    })
-                  }
-                  style={styles.recentCard}>
-                  <View style={styles.recentRow}>
-                    <View style={styles.recentMain}>
-                      <Text style={styles.recentCompany} numberOfLines={1}>
-                        {item.companyName}
-                      </Text>
-                      <Text style={styles.recentMeta}>
-                        {item.billNumber ? `${item.billNumber} · ` : ''}
-                        {formatDate(item.date)} · {monthlyRate}% / month
-                      </Text>
-                    </View>
-                    <View style={styles.recentRight}>
-                      <Text style={styles.recentAmount}>
-                        {formatCurrency(stats.totalWithInterest)}
-                      </Text>
-                      <Text style={styles.recentInterest}>
-                        +{formatCurrency(stats.accruedInterest)} int.
-                      </Text>
-                      <Badge status={item.status} />
-                    </View>
-                  </View>
-                </Card>
-              );
-            })}
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnSecondary]}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('CompanyForm')}>
+            <View style={styles.actionBtnTopRow}>
+              <View style={styles.actionBtnIconBoxSecondary}>
+                <Text style={styles.actionBtnIconSecondary}>+</Text>
+              </View>
+              <View style={styles.actionBtnBadgeSecondary}>
+                <Text style={styles.actionBtnBadgeTextSecondary}>New Client</Text>
+              </View>
+            </View>
+            <View>
+              <Text style={styles.actionBtnTitleSecondary}>Add Company</Text>
+              <Text style={styles.actionBtnSubSecondary}>
+                Register buyer firm & ledger
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Quick Tools: Standalone Interest Calculator */}
+        <TouchableOpacity
+          style={styles.calcToolCard}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('InterestCalculator')}>
+          <View style={styles.calcToolLeft}>
+            <View style={styles.calcToolIconWrap}>
+              <Text style={styles.calcToolIcon}>🧮</Text>
+            </View>
+            <View style={styles.calcToolTextWrap}>
+              <Text style={styles.calcToolTitle}>Interest Calculator Tool</Text>
+              <Text style={styles.calcToolSubtitle}>
+                Calculate custom monthly interest & days instantly
+              </Text>
+            </View>
           </View>
-        )}
+          <View style={styles.calcToolBadge}>
+            <Text style={styles.calcToolBadgeText}>Open →</Text>
+          </View>
+        </TouchableOpacity>
       </ScrollView>
 
       <ConfirmModal
@@ -278,14 +274,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 22,
   },
   welcomeBanner: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   greeting: {
-    fontSize: 22,
+    fontSize: 23,
     fontWeight: '800',
     color: '#0F172A',
     letterSpacing: -0.4,
@@ -296,190 +293,326 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   heroCard: {
-    backgroundColor: '#FFFFFF',
-    borderLeftWidth: 4,
-    borderLeftColor: '#2563EB',
-    padding: 16,
-    marginBottom: 12,
+    backgroundColor: '#0F172A',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#1E293B',
   },
   heroHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 10,
+  },
+  heroTagRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  heroLiveDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    marginRight: 7,
   },
   heroLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#64748B',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   activePill: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 11,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   activePillText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#1D4ED8',
+    color: '#60A5FA',
   },
   heroValue: {
-    fontSize: 26,
+    fontSize: 30,
     fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 8,
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    marginBottom: 14,
   },
   heroMetricsRow: {
     flexDirection: 'row',
-    paddingTop: 10,
+    paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: '#1E293B',
   },
   heroMetricCol: {
     flex: 1,
   },
   heroDivider: {
     width: 1,
-    backgroundColor: '#E2E8F0',
-    marginHorizontal: 10,
+    backgroundColor: '#334155',
+    marginHorizontal: 12,
   },
   heroSubLabel: {
-    fontSize: 11,
-    color: '#64748B',
-    marginBottom: 2,
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#94A3B8',
+    marginBottom: 3,
   },
   heroSubVal: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#F1F5F9',
   },
   interestVal: {
-    color: '#15803D',
+    color: '#34D399',
+    fontSize: 15,
   },
   summaryGrid: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 4,
+    marginBottom: 14,
   },
   summaryCard: {
     flex: 1,
-    padding: 14,
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#64748B',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  summaryValue: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginVertical: 4,
-  },
-  summaryHint: {
-    fontSize: 11,
-    color: '#94A3B8',
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
-    marginTop: 8,
-    marginBottom: 12,
-  },
-  actionsContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
+    padding: 15,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    overflow: 'hidden',
-    marginBottom: 20,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    minHeight: 132,
+    justifyContent: 'space-between',
   },
-  actionItem: {
+  summaryTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  iconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconBoxBlue: {
+    backgroundColor: '#EFF6FF',
+  },
+  iconBoxGreen: {
+    backgroundColor: '#F0FDF4',
+  },
+  iconBoxText: {
+    fontSize: 19,
+  },
+  arrowPill: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  summaryValue: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.4,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1E293B',
+    marginTop: 3,
+  },
+  summaryHint: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 14,
+  },
+  actionBtn: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 5,
+    elevation: 3,
+    minHeight: 132,
+    justifyContent: 'space-between',
+  },
+  actionBtnPrimary: {
+    backgroundColor: '#2563EB',
+    shadowColor: '#2563EB',
+  },
+  actionBtnSecondary: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+  },
+  actionBtnTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  actionBtnIconBoxPrimary: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnIconPrimary: {
+    fontSize: 21,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    lineHeight: 23,
+  },
+  actionBtnBadgePrimary: {
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 7,
+  },
+  actionBtnBadgeTextPrimary: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  actionBtnIconBoxSecondary: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnIconSecondary: {
+    fontSize: 21,
+    fontWeight: '800',
+    color: '#2563EB',
+    lineHeight: 23,
+  },
+  actionBtnBadgeSecondary: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 7,
+  },
+  actionBtnBadgeTextSecondary: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  actionBtnTitlePrimary: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginBottom: 3,
+  },
+  actionBtnSubPrimary: {
+    fontSize: 12,
+    color: '#BFDBFE',
+    fontWeight: '500',
+    lineHeight: 16,
+  },
+  actionBtnTitleSecondary: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 3,
+  },
+  actionBtnSubSecondary: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+    lineHeight: 16,
+  },
+  calcToolCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    marginBottom: 6,
   },
-  actionIconCircle: {
-    width: 42,
-    height: 42,
+  calcToolLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 10,
+  },
+  calcToolIconWrap: {
+    width: 40,
+    height: 40,
     borderRadius: 10,
+    backgroundColor: '#FEF3C7',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  actionIconBlue: {
-    backgroundColor: '#EFF6FF',
-  },
-  actionIconGreen: {
-    backgroundColor: '#F0FDF4',
-  },
-  actionIcon: {
+  calcToolIcon: {
     fontSize: 20,
   },
-  actionTextContainer: {
+  calcToolTextWrap: {
     flex: 1,
   },
-  actionTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  actionSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  actionChevron: {
-    fontSize: 18,
-    color: '#94A3B8',
-    fontWeight: '600',
-  },
-  recentList: {
-    marginBottom: 16,
-  },
-  recentCard: {
-    padding: 14,
-    marginBottom: 8,
-  },
-  recentRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  recentMain: {
-    flex: 1,
-    marginRight: 12,
-  },
-  recentCompany: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#0F172A',
-  },
-  recentMeta: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  recentRight: {
-    alignItems: 'flex-end',
-  },
-  recentAmount: {
-    fontSize: 15,
+  calcToolTitle: {
+    fontSize: 14.5,
     fontWeight: '700',
     color: '#0F172A',
-    marginBottom: 2,
   },
-  recentInterest: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#15803D',
-    marginBottom: 4,
+  calcToolSubtitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  calcToolBadge: {
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  calcToolBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2563EB',
   },
 });

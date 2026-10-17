@@ -177,11 +177,11 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    height: 40,
+    height: 46,
     backgroundColor: '#F1F5F9',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    fontSize: 14,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 15,
     color: '#0F172A',
   },
   clearSearchBtn: {
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   clearSearchText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#64748B',
   },
   listContent: {
@@ -197,8 +197,9 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   companyCard: {
-    padding: 16,
-    marginBottom: 10,
+    padding: 17,
+    borderRadius: 14,
+    marginBottom: 12,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -211,19 +212,19 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   companyName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
     color: '#0F172A',
   },
   ownerName: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#64748B',
     marginTop: 2,
   },
   chevron: {
-    fontSize: 18,
-    color: '#94A3B8',
-    fontWeight: '600',
+    fontSize: 20,
+    color: '#2563EB',
+    fontWeight: '700',
   },
   cardFooter: {
     flexDirection: 'row',
@@ -235,23 +236,23 @@ const styles = StyleSheet.create({
   },
   infoBadge: {
     backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
+    paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 7,
   },
   infoBadgeText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#334155',
     fontWeight: '500',
   },
   gstBadge: {
     backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
+    paddingHorizontal: 9,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: 7,
   },
   gstBadgeText: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#1E40AF',
     fontWeight: '600',
   },

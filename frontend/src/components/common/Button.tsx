@@ -83,20 +83,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 16,
   },
   size_sm: {
     paddingVertical: 8,
-    minHeight: 36,
+    minHeight: 38,
   },
   size_md: {
-    paddingVertical: 12,
-    minHeight: 46,
+    paddingVertical: 13,
+    minHeight: 50,
   },
   size_lg: {
-    paddingVertical: 14,
-    minHeight: 52,
+    paddingVertical: 15,
+    minHeight: 54,
   },
   primary: {
     backgroundColor: '#2563EB',
@@ -119,17 +119,17 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   textBase: {
-    fontWeight: '600',
+    fontWeight: '700',
     textAlign: 'center',
   },
   textSize_sm: {
-    fontSize: 13,
+    fontSize: 13.5,
   },
   textSize_md: {
-    fontSize: 15,
+    fontSize: 16,
   },
   textSize_lg: {
-    fontSize: 16,
+    fontSize: 17,
   },
   text_primary: {
     color: '#FFFFFF',

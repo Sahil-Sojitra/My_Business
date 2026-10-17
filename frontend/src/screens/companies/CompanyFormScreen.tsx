@@ -246,12 +246,12 @@ const styles = StyleSheet.create({
   },
   formCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 18,
+    borderRadius: 16,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   saveBtn: {
-    marginTop: 12,
+    marginTop: 14,
   },
 });

@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   label: {
-    fontSize: 14,
+    fontSize: 14.5,
     fontWeight: '600',
     color: '#1E293B',
   },
@@ -127,14 +127,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    borderRadius: 10,
+    borderRadius: 12,
     paddingHorizontal: 14,
-    minHeight: 48,
+    minHeight: 52,
   },
   multilineContainer: {
     alignItems: 'flex-start',
-    paddingVertical: 10,
-    minHeight: 90,
+    paddingVertical: 12,
+    minHeight: 96,
   },
   inputFocused: {
     borderColor: '#2563EB',
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: '#0F172A',
     padding: 0,
   },
@@ -157,19 +157,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   eyeText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#2563EB',
   },
   errorText: {
     marginTop: 5,
-    fontSize: 12,
+    fontSize: 12.5,
     color: '#DC2626',
     fontWeight: '500',
   },
   helperText: {
     marginTop: 5,
-    fontSize: 12,
+    fontSize: 12.5,
     color: '#64748B',
   },
 });
