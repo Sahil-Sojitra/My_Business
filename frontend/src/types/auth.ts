@@ -1,24 +1,20 @@
 export interface User {
   id: string;
   name: string;
-  phone: string;
-  mobileNumber?: string;
+  phone: string; // 10-digit mobile number (primary login identifier)
   email?: string;
   businessName?: string;
   createdAt: string;
 }
 
 export interface LoginCredentials {
-  phone: string; // 10-digit phone / mobile number for login
+  phone: string; // 10-digit mobile number
   password: string;
-  mobileNumber?: string;
-  email?: string;
 }
 
 export interface RegisterData {
   name: string;
-  phone: string; // 10-digit phone / mobile number
-  mobileNumber?: string;
+  phone: string; // 10-digit mobile number
   password: string;
   email?: string;
   businessName?: string;

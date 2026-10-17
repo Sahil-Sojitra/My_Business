@@ -33,9 +33,11 @@ export const LoginScreen: React.FC = () => {
     const cleanPhone = phone.trim().replace(/\D/g, '');
 
     if (!cleanPhone) {
-      errors.phone = 'Phone number is required';
+      errors.phone = 'Mobile number is required';
     } else if (cleanPhone.length !== 10) {
-      errors.phone = 'Please enter a valid 10-digit phone number';
+      errors.phone = 'Please enter a valid 10-digit mobile number';
+    } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      errors.phone = 'Please enter a valid 10-digit Indian mobile number';
     }
 
     if (!password) {
@@ -56,8 +58,7 @@ export const LoginScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      const cleanPhone = phone.trim().replace(/\D/g, '');
-      await login({ phone: cleanPhone, password });
+      await login({ phone: phone.trim().replace(/\D/g, ''), password });
       // Navigation state will automatically transition to Home via AuthContext listener
     } catch {
       // error is set in auth context
@@ -92,11 +93,11 @@ export const LoginScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>My Business Mobile</Text>
+            <Text style={styles.badgeText}>My Business Mobile MVP</Text>
           </View>
           <Text style={styles.title}>Broker Portal</Text>
           <Text style={styles.subtitle}>
-            Sign in with phone number to track Dalali deals & bills
+            Sign in to manage companies, bills, and calculate interest
           </Text>
         </View>
 
@@ -108,16 +109,18 @@ export const LoginScreen: React.FC = () => {
           ) : null}
 
           <Input
-            label="Phone Number"
+            label="Mobile Number"
             value={phone}
             onChangeText={text => {
-              setPhone(text);
+              // Only allow numbers and limit to 10 digits
+              const numeric = text.replace(/\D/g, '').slice(0, 10);
+              setPhone(numeric);
               if (validationErrors.phone) {
                 setValidationErrors(prev => ({ ...prev, phone: undefined }));
               }
               clearError();
             }}
-            placeholder="Enter 10-digit mobile number"
+            placeholder="e.g. 9876543210"
             keyboardType="phone-pad"
             maxLength={10}
             error={validationErrors.phone}
@@ -153,7 +156,7 @@ export const LoginScreen: React.FC = () => {
             style={styles.demoFillBtn}
             activeOpacity={0.7}>
             <Text style={styles.demoFillText}>
-              ⚡ Quick Fill Demo Account (9876543210)
+              ⚡ Quick Fill Demo Credentials
             </Text>
           </TouchableOpacity>
         </View>

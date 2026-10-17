@@ -15,8 +15,8 @@ export interface IAuthService {
 const INITIAL_MOCK_USER: User = {
   id: 'usr_1',
   name: 'Sahil Sojitra',
-  email: 'broker@mybusiness.com',
   phone: '9876543210',
+  email: 'broker@mybusiness.com',
   businessName: 'Sojitra Trade & Brokerage',
   createdAt: new Date().toISOString(),
 };
@@ -37,22 +37,13 @@ class MockAuthService implements IAuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     await this.delay(300);
 
-    const cleanPhone = (credentials.phone || credentials.mobileNumber || '').replace(/\D/g, '');
-    const emailTrimmed = credentials.email?.trim().toLowerCase();
-
-    const found = this.users.find(u => {
-      const userPhone = (u.user.phone || u.user.mobileNumber || '').replace(/\D/g, '');
-      if (cleanPhone && userPhone === cleanPhone) {
-        return true;
-      }
-      if (emailTrimmed && u.user.email?.toLowerCase() === emailTrimmed) {
-        return true;
-      }
-      return false;
-    });
+    const cleanPhone = credentials.phone.trim().replace(/\D/g, '');
+    const found = this.users.find(
+      u => u.user.phone.replace(/\D/g, '') === cleanPhone
+    );
 
     if (!found || found.passwordHash !== credentials.password) {
-      throw new Error('Invalid phone number or password');
+      throw new Error('Invalid mobile number or password');
     }
 
     this.currentUser = found.user;
@@ -65,24 +56,20 @@ class MockAuthService implements IAuthService {
   async register(data: RegisterData): Promise<AuthResponse> {
     await this.delay(350);
 
-    const cleanPhone = (data.phone || data.mobileNumber || '').replace(/\D/g, '');
-    const emailTrimmed = data.email?.trim().toLowerCase();
-
-    const existing = this.users.find(u => {
-      const userPhone = (u.user.phone || u.user.mobileNumber || '').replace(/\D/g, '');
-      return Boolean(cleanPhone && userPhone === cleanPhone);
-    });
+    const cleanPhone = data.phone.trim().replace(/\D/g, '');
+    const existing = this.users.find(
+      u => u.user.phone.replace(/\D/g, '') === cleanPhone
+    );
 
     if (existing) {
-      throw new Error('An account with this phone number already exists');
+      throw new Error('An account with this mobile number already exists');
     }
 
     const newUser: User = {
       id: `usr_${Date.now()}`,
       name: data.name.trim(),
       phone: cleanPhone,
-      mobileNumber: cleanPhone,
-      email: emailTrimmed,
+      email: data.email?.trim() || undefined,
       businessName: data.businessName?.trim() || 'My Business',
       createdAt: new Date().toISOString(),
     };

@@ -23,16 +23,16 @@ export const RegisterScreen: React.FC = () => {
 
   const [name, setName] = useState<string>('');
   const [businessName, setBusinessName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
   const [validationErrors, setValidationErrors] = useState<{
     name?: string;
-    email?: string;
     phone?: string;
+    email?: string;
     password?: string;
     confirmPassword?: string;
   }>({});
@@ -44,15 +44,18 @@ export const RegisterScreen: React.FC = () => {
       errors.name = 'Full name is required';
     }
 
-    const emailTrimmed = email.trim();
-    if (!emailTrimmed) {
-      errors.email = 'Email address is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
-      errors.email = 'Please enter a valid email address';
+    const cleanPhone = phone.trim().replace(/\D/g, '');
+    if (!cleanPhone) {
+      errors.phone = 'Mobile number is required';
+    } else if (cleanPhone.length !== 10) {
+      errors.phone = 'Please enter a valid 10-digit mobile number';
+    } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      errors.phone = 'Please enter a valid 10-digit Indian mobile number';
     }
 
-    if (phone.trim() && phone.replace(/\D/g, '').length < 10) {
-      errors.phone = 'Please enter a valid 10-digit phone number';
+    const emailTrimmed = email.trim();
+    if (emailTrimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+      errors.email = 'Please enter a valid email address';
     }
 
     if (!password) {
@@ -79,8 +82,8 @@ export const RegisterScreen: React.FC = () => {
     try {
       await register({
         name: name.trim(),
-        email: email.trim(),
-        phone: phone.trim(),
+        phone: phone.trim().replace(/\D/g, ''),
+        email: email.trim() || undefined,
         businessName: businessName.trim() || undefined,
         password,
       });
@@ -145,6 +148,23 @@ export const RegisterScreen: React.FC = () => {
           />
 
           <Input
+            label="Mobile Number"
+            value={phone}
+            onChangeText={val => {
+              const numeric = val.replace(/\D/g, '').slice(0, 10);
+              setPhone(numeric);
+              if (validationErrors.phone) {
+                setValidationErrors(prev => ({ ...prev, phone: undefined }));
+              }
+            }}
+            placeholder="e.g. 9876543210"
+            keyboardType="phone-pad"
+            maxLength={10}
+            error={validationErrors.phone}
+            required
+          />
+
+          <Input
             label="Business / Firm Name"
             value={businessName}
             onChangeText={setBusinessName}
@@ -153,7 +173,7 @@ export const RegisterScreen: React.FC = () => {
           />
 
           <Input
-            label="Email Address"
+            label="Email Address (Optional)"
             value={email}
             onChangeText={val => {
               setEmail(val);
@@ -165,21 +185,7 @@ export const RegisterScreen: React.FC = () => {
             keyboardType="email-address"
             autoCapitalize="none"
             error={validationErrors.email}
-            required
-          />
-
-          <Input
-            label="Phone Number"
-            value={phone}
-            onChangeText={val => {
-              setPhone(val);
-              if (validationErrors.phone) {
-                setValidationErrors(prev => ({ ...prev, phone: undefined }));
-              }
-            }}
-            placeholder="9876543210"
-            keyboardType="phone-pad"
-            error={validationErrors.phone}
+            helperText="Optional email for statement exports"
           />
 
           <Input
@@ -253,9 +259,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 6,
-    marginBottom: 8,
-    alignSelf: 'flex-start',
+    marginBottom: 12,
   },
   backText: {
     fontSize: 14,
@@ -263,27 +267,27 @@ const styles = StyleSheet.create({
     color: '#2563EB',
   },
   title: {
-    fontSize: 28,
+    fontSize: 27,
     fontWeight: '800',
     color: '#0F172A',
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#64748B',
     marginTop: 4,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 22,
+    borderRadius: 16,
+    padding: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   errorAlert: {
     backgroundColor: '#FEE2E2',
@@ -306,15 +310,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 22,
-    marginBottom: 16,
+    marginTop: 20,
+    marginBottom: 20,
   },
   footerText: {
-    fontSize: 15,
+    fontSize: 14.5,
     color: '#64748B',
   },
   footerLink: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontWeight: '700',
     color: '#2563EB',
   },
