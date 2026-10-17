@@ -181,3 +181,79 @@ export function calculateBillCreditInterest(
     dailyInterest,
   };
 }
+
+/**
+ * Validates inputs for Dalali (brokerage commission) calculation.
+ */
+export function validateDalaliInput(
+  input: Partial<{ billAmount: number; dalaliRate: number }>
+): {
+  isValid: boolean;
+  errors: { billAmount?: string; dalaliRate?: string };
+} {
+  const errors: { billAmount?: string; dalaliRate?: string } = {};
+
+  if (input.billAmount === undefined || isNaN(input.billAmount)) {
+    errors.billAmount = 'Bill amount is required';
+  } else if (input.billAmount <= 0) {
+    errors.billAmount = 'Bill amount must be greater than zero';
+  }
+
+  if (input.dalaliRate === undefined || isNaN(input.dalaliRate)) {
+    errors.dalaliRate = 'Dalali rate (%) is required';
+  } else if (input.dalaliRate < 0) {
+    errors.dalaliRate = 'Dalali rate cannot be negative';
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  };
+}
+
+/**
+ * Calculates Dalali (brokerage commission) on consignment bill amount.
+ * Formula: Dalali = (Bill Amount * Dalali Rate) / 100
+ * Optional TDS deduction (default 5% under Indian IT Act Sec 194H)
+ */
+export function calculateDalali(input: {
+  billAmount: number;
+  dalaliRate: number;
+  deductTds?: boolean;
+  tdsRate?: number;
+}): {
+  billAmount: number;
+  dalaliRate: number;
+  grossDalaliAmount: number;
+  deductTds: boolean;
+  tdsRate: number;
+  tdsAmount: number;
+  netDalaliAmount: number;
+} {
+  const validation = validateDalaliInput(input);
+  if (!validation.isValid) {
+    const firstError =
+      validation.errors.billAmount ||
+      validation.errors.dalaliRate ||
+      'Invalid Dalali calculation parameters';
+    throw new Error(firstError);
+  }
+
+  const { billAmount, dalaliRate, deductTds = false, tdsRate = 5 } = input;
+  const rawDalali = (billAmount * dalaliRate) / 100;
+  const grossDalaliAmount = Math.round(rawDalali * 100) / 100;
+
+  const rawTds = deductTds ? (grossDalaliAmount * tdsRate) / 100 : 0;
+  const tdsAmount = Math.round(rawTds * 100) / 100;
+  const netDalaliAmount = Math.round((grossDalaliAmount - tdsAmount) * 100) / 100;
+
+  return {
+    billAmount,
+    dalaliRate,
+    grossDalaliAmount,
+    deductTds,
+    tdsRate,
+    tdsAmount,
+    netDalaliAmount,
+  };
+}

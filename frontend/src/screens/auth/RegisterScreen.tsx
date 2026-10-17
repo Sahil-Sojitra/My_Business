@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/common/Button';
+import { ArrowLeft } from '../../components/common/Icon';
 import { Input } from '../../components/common/Input';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
@@ -108,7 +109,8 @@ export const RegisterScreen: React.FC = () => {
             onPress={() => navigation.navigate('Login')}
             style={styles.backBtn}
             activeOpacity={0.7}>
-            <Text style={styles.backText}>← Back to Login</Text>
+            <ArrowLeft size={16} color="#2563EB" strokeWidth={2.4} />
+            <Text style={styles.backText}>Back to Login</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Create Account</Text>
           <Text style={styles.subtitle}>
@@ -243,8 +245,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingVertical: 6,
     marginBottom: 8,
+    alignSelf: 'flex-start',
   },
   backText: {
     fontSize: 14,

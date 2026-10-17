@@ -25,3 +25,29 @@ export interface CalculationValidationResult {
     time?: string;
   };
 }
+
+export interface DalaliInput {
+  billAmount: number;
+  dalaliRate: number;
+  deductTds?: boolean;
+  tdsRate?: number;
+}
+
+export interface DalaliResult {
+  billAmount: number;
+  dalaliRate: number;
+  grossDalaliAmount: number;
+  deductTds: boolean;
+  tdsRate: number;
+  tdsAmount: number;
+  netDalaliAmount: number;
+}
+
+export interface DalaliValidationResult {
+  isValid: boolean;
+  errors: {
+    billAmount?: string;
+    dalaliRate?: string;
+  };
+}
+

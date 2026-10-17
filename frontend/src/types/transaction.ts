@@ -2,11 +2,21 @@ export type TransactionStatus = 'PENDING' | 'OVERDUE' | 'PARTIAL' | 'PAID';
 
 export type TransactionType = 'BILL' | 'PAYMENT';
 
+export interface AttachmentFile {
+  name: string;
+  type: 'pdf' | 'photo';
+  size?: string;
+  date?: string;
+  uri?: string;
+}
+
 export interface Bill {
   id: string;
   companyId: string;
   companyName: string;
   billNumber?: string;
+  billPdf?: AttachmentFile | null;
+  chitthi?: AttachmentFile | null;
   amount: number;
   dalaliRate?: number; // Dalali commission percentage (e.g. 1.0, 1.5, 2.0%)
   dalaliAmount?: number; // Dalali commission in ₹ (static: amount * dalaliRate / 100)

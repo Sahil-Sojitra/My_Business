@@ -16,6 +16,7 @@ import { companyService, transactionService } from '../../services';
 import { Company } from '../../types/company';
 import { Transaction } from '../../types/transaction';
 import { formatCurrency } from '../../utils/formatters';
+import { ChevronRight } from '../../components/common/Icon';
 
 export const HomeScreen: React.FC = () => {
   const { user, logout } = useAuth();
@@ -150,7 +151,7 @@ export const HomeScreen: React.FC = () => {
                 <Text style={styles.iconBoxText}>🏢</Text>
               </View>
               <View style={styles.arrowPill}>
-                <Text style={styles.arrowPillText}>→</Text>
+                <ChevronRight size={14} color="#64748B" strokeWidth={2.4} />
               </View>
             </View>
             <Text style={styles.summaryValue}>{companies.length}</Text>
@@ -169,7 +170,7 @@ export const HomeScreen: React.FC = () => {
                 <Text style={styles.iconBoxText}>🧾</Text>
               </View>
               <View style={styles.arrowPill}>
-                <Text style={styles.arrowPillText}>→</Text>
+                <ChevronRight size={14} color="#64748B" strokeWidth={2.4} />
               </View>
             </View>
             <Text style={styles.summaryValue}>{bills.length}</Text>
@@ -197,7 +198,7 @@ export const HomeScreen: React.FC = () => {
             <View>
               <Text style={styles.actionBtnTitlePrimary}>Record New Bill</Text>
               <Text style={styles.actionBtnSubPrimary}>
-                Enter sales bill & set interest
+                Record bill & Dalali %
               </Text>
             </View>
           </TouchableOpacity>
@@ -223,24 +224,25 @@ export const HomeScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Quick Tools: Standalone Interest Calculator */}
+        {/* Quick Tools: Standalone Dalali Calculator */}
         <TouchableOpacity
           style={styles.calcToolCard}
           activeOpacity={0.8}
-          onPress={() => navigation.navigate('InterestCalculator')}>
+          onPress={() => navigation.navigate('DalaliCalculator')}>
           <View style={styles.calcToolLeft}>
             <View style={styles.calcToolIconWrap}>
-              <Text style={styles.calcToolIcon}>🧮</Text>
+              <Text style={styles.calcToolIcon}>💼</Text>
             </View>
             <View style={styles.calcToolTextWrap}>
-              <Text style={styles.calcToolTitle}>Interest Calculator Tool</Text>
+              <Text style={styles.calcToolTitle}>Dalali Calculator</Text>
               <Text style={styles.calcToolSubtitle}>
-                Calculate custom monthly interest & days instantly
+                Calculate brokerage commission instantly on bill amounts
               </Text>
             </View>
           </View>
           <View style={styles.calcToolBadge}>
-            <Text style={styles.calcToolBadgeText}>Open →</Text>
+            <Text style={styles.calcToolBadgeText}>Calculate</Text>
+            <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
           </View>
         </TouchableOpacity>
       </ScrollView>
@@ -596,6 +598,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   calcToolBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: '#EFF6FF',
     paddingHorizontal: 12,
     paddingVertical: 6,

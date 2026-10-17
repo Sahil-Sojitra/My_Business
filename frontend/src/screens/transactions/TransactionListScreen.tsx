@@ -17,6 +17,7 @@ import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
 import { Transaction, TransactionStatus } from '../../types/transaction';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { ChevronRight } from '../../components/common/Icon';
 
 type FilterTab = 'ALL' | TransactionStatus;
 
@@ -230,7 +231,10 @@ export const TransactionListScreen: React.FC = () => {
                       </Text>
                     </View>
                   </View>
-                  <Text style={styles.viewLink}>View breakdown →</Text>
+                  <View style={styles.viewLinkRow}>
+                    <Text style={styles.viewLink}>View details</Text>
+                    <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+                  </View>
                 </View>
               </Card>
             );
@@ -393,6 +397,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#475569',
     fontWeight: '600',
+  },
+  viewLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   viewLink: {
     fontSize: 13,

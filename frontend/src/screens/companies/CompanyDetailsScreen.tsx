@@ -22,6 +22,7 @@ import {
   formatDate,
   formatPhone,
 } from '../../utils/formatters';
+import { ChevronRight } from '../../components/common/Icon';
 
 export const CompanyDetailsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -341,7 +342,10 @@ export const CompanyDetailsScreen: React.FC = () => {
                   <Text style={styles.cardDaysText}>
                     {dalaliRate}% Dalali commission
                   </Text>
-                  <Text style={styles.viewLink}>View details →</Text>
+                  <View style={styles.viewLinkRow}>
+                    <Text style={styles.viewLink}>View details</Text>
+                    <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+                  </View>
                 </View>
               </Card>
             );
@@ -649,6 +653,11 @@ const styles = StyleSheet.create({
   cardDaysText: {
     fontSize: 12,
     color: '#64748B',
+  },
+  viewLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
   },
   viewLink: {
     fontSize: 13,

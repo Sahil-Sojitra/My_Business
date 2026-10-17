@@ -16,6 +16,7 @@ import { useNavigation } from '../../navigation/NavigationContext';
 import { companyService } from '../../services';
 import { Company } from '../../types/company';
 import { formatPhone } from '../../utils/formatters';
+import { ChevronRight } from '../../components/common/Icon';
 
 export const CompanyListScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -138,7 +139,9 @@ export const CompanyListScreen: React.FC = () => {
                     </Text>
                   ) : null}
                 </View>
-                <Text style={styles.chevron}>→</Text>
+                <View style={styles.chevronBox}>
+                  <ChevronRight size={18} color="#2563EB" strokeWidth={2.4} />
+                </View>
               </View>
 
               <View style={styles.cardFooter}>
@@ -221,10 +224,13 @@ const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
-  chevron: {
-    fontSize: 20,
-    color: '#2563EB',
-    fontWeight: '700',
+  chevronBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardFooter: {
     flexDirection: 'row',

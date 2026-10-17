@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +18,7 @@ import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
 import { Transaction } from '../../types/transaction';
 import { formatCurrency, formatDate } from '../../utils/formatters';
+import { ChevronRight, XIcon } from '../../components/common/Icon';
 
 export const TransactionDetailsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -25,6 +27,7 @@ export const TransactionDetailsScreen: React.FC = () => {
   const [bill, setBill] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [showChitthiPreview, setShowChitthiPreview] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
 
   const loadBill = useCallback(async () => {
@@ -182,15 +185,15 @@ export const TransactionDetailsScreen: React.FC = () => {
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Buyer Firm / Client</Text>
             <TouchableOpacity
+              style={styles.companyLinkRow}
               onPress={() =>
                 navigation.navigate('CompanyDetails', {
                   companyId: bill.companyId,
                 })
               }
               activeOpacity={0.7}>
-              <Text style={styles.companyLink}>
-                {bill.companyName} →
-              </Text>
+              <Text style={styles.companyLink}>{bill.companyName}</Text>
+              <ChevronRight size={14} color="#2563EB" strokeWidth={2.4} />
             </TouchableOpacity>
           </View>
 
@@ -219,6 +222,69 @@ export const TransactionDetailsScreen: React.FC = () => {
               <Text style={styles.descText}>{bill.description}</Text>
             </View>
           ) : null}
+
+          {/* Attached Bill PDF Document */}
+          {bill.billPdf ? (
+            <View style={styles.attachmentBox}>
+              <Text style={styles.attachmentSectionHeading}>
+                Attached Bill Document
+              </Text>
+              <View style={styles.attachCard}>
+                <View style={styles.attachPdfBadge}>
+                  <Text style={styles.attachPdfBadgeText}>PDF</Text>
+                </View>
+                <View style={styles.attachInfo}>
+                  <Text style={styles.attachName} numberOfLines={1}>
+                    {bill.billPdf.name}
+                  </Text>
+                  <Text style={styles.attachMeta}>
+                    Invoice PDF Document • {bill.billPdf.size || 'Attached'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : null}
+
+          {/* Attached Chitthi Delivery Slip / Voucher */}
+          {bill.chitthi ? (
+            <View style={styles.attachmentBox}>
+              <Text style={styles.attachmentSectionHeading}>
+                Attached Chitthi (Voucher)
+              </Text>
+              <TouchableOpacity
+                style={[
+                  styles.attachCard,
+                  bill.chitthi.type === 'photo' && styles.attachCardPhoto,
+                ]}
+                onPress={() => setShowChitthiPreview(true)}
+                activeOpacity={0.8}>
+                <View
+                  style={
+                    bill.chitthi.type === 'photo'
+                      ? styles.attachBadgePhoto
+                      : styles.attachPdfBadge
+                  }>
+                  <Text
+                    style={
+                      bill.chitthi.type === 'photo'
+                        ? styles.attachBadgePhotoText
+                        : styles.attachPdfBadgeText
+                    }>
+                    {bill.chitthi.type === 'photo' ? '📷 PHOTO' : '📄 PDF'}
+                  </Text>
+                </View>
+                <View style={styles.attachInfo}>
+                  <Text style={styles.attachName} numberOfLines={1}>
+                    {bill.chitthi.name}
+                  </Text>
+                  <Text style={styles.attachMeta}>
+                    Physical Slip (Tap to View) • {bill.chitthi.size || 'Voucher'}
+                  </Text>
+                </View>
+                <ChevronRight size={14} color="#2563EB" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </Card>
 
         {/* Action Buttons */}
@@ -242,6 +308,81 @@ export const TransactionDetailsScreen: React.FC = () => {
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteModal(false)}
       />
+
+      {/* Modal to Preview Chitthi Voucher */}
+      <Modal
+        visible={showChitthiPreview}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowChitthiPreview(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.viewerCard}>
+            <View style={styles.dialogHeader}>
+              <View>
+                <Text style={styles.dialogTitle}>Chitthi Delivery Voucher</Text>
+                <Text style={styles.dialogSubtitle}>
+                  {bill?.chitthi?.name || 'Attached Slip'}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowChitthiPreview(false)}
+                activeOpacity={0.7}>
+                <XIcon size={18} color="#0F172A" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Simulated Indian Mandi Consignment Slip */}
+            <View style={styles.chitthiPaper}>
+              <View style={styles.chitthiPaperHeader}>
+                <Text style={styles.chitthiPaperTitle}>
+                  CONSIGNMENT DELIVERY CHITTHI
+                </Text>
+                <Text style={styles.chitthiPaperNo}>
+                  BILL REF: {bill?.billNumber || 'LOT-409'}
+                </Text>
+              </View>
+              <View style={styles.chitthiDottedDivider} />
+
+              <View style={styles.chitthiMetaRow}>
+                <Text style={styles.chitthiMetaLabel}>Buyer Client:</Text>
+                <Text style={styles.chitthiMetaVal}>{bill?.companyName}</Text>
+              </View>
+
+              <View style={styles.chitthiMetaRow}>
+                <Text style={styles.chitthiMetaLabel}>Bill Turnover:</Text>
+                <Text style={styles.chitthiMetaVal}>
+                  {bill ? formatCurrency(bill.amount) : ''}
+                </Text>
+              </View>
+
+              <View style={styles.chitthiMetaRow}>
+                <Text style={styles.chitthiMetaLabel}>Brokerage Dalali:</Text>
+                <Text style={styles.chitthiDalaliGreen}>
+                  {bill ? formatCurrency(dalaliAmount) : ''} ({dalaliRate}%)
+                </Text>
+              </View>
+
+              <View style={styles.chitthiDottedDivider} />
+
+              <View style={styles.chitthiStampBox}>
+                <Text style={styles.chitthiStampText}>
+                  VERIFIED & DELIVERED
+                </Text>
+                <Text style={styles.chitthiStampDate}>
+                  {bill ? formatDate(bill.date) : ''}
+                </Text>
+              </View>
+            </View>
+
+            <Button
+              title="Close Voucher"
+              variant="outline"
+              size="md"
+              onPress={() => setShowChitthiPreview(false)}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -430,6 +571,11 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontWeight: '600',
   },
+  companyLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   companyLink: {
     fontSize: 15,
     color: '#2563EB',
@@ -455,5 +601,171 @@ const styles = StyleSheet.create({
   },
   buttonGroup: {
     marginTop: 8,
+  },
+  attachmentBox: {
+    marginTop: 14,
+  },
+  attachmentSectionHeading: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 6,
+  },
+  attachCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 12,
+  },
+  attachCardPhoto: {
+    backgroundColor: '#FEF9C3',
+    borderColor: '#FDE047',
+  },
+  attachPdfBadge: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginRight: 10,
+  },
+  attachPdfBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#DC2626',
+  },
+  attachBadgePhoto: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginRight: 10,
+  },
+  attachBadgePhotoText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#B45309',
+  },
+  attachInfo: {
+    flex: 1,
+    marginRight: 8,
+  },
+  attachName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  attachMeta: {
+    fontSize: 11.5,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'flex-end',
+  },
+  viewerCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginHorizontal: 16,
+    marginBottom: 40,
+    padding: 20,
+  },
+  dialogHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  dialogTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  dialogSubtitle: {
+    fontSize: 13,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  chitthiPaper: {
+    backgroundColor: '#FEF9C3',
+    borderWidth: 2,
+    borderColor: '#FACC15',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 14,
+  },
+  chitthiPaperHeader: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  chitthiPaperTitle: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: '#854D0E',
+    letterSpacing: 0.5,
+  },
+  chitthiPaperNo: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#A16207',
+    marginTop: 2,
+  },
+  chitthiDottedDivider: {
+    borderStyle: 'dashed',
+    borderWidth: 1,
+    borderColor: '#EAB308',
+    marginVertical: 8,
+  },
+  chitthiMetaRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 4,
+  },
+  chitthiMetaLabel: {
+    fontSize: 13,
+    color: '#713F12',
+    fontWeight: '600',
+  },
+  chitthiMetaVal: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  chitthiDalaliGreen: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#15803D',
+  },
+  chitthiStampBox: {
+    alignSelf: 'flex-end',
+    borderWidth: 1.5,
+    borderColor: '#DC2626',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginTop: 8,
+    transform: [{ rotate: '-6deg' }],
+  },
+  chitthiStampText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#DC2626',
+    letterSpacing: 0.4,
+  },
+  chitthiStampDate: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#DC2626',
+    textAlign: 'center',
   },
 });

@@ -48,6 +48,7 @@ export const AppNavigator: React.FC = () => {
       case 'TransactionForm':
         return <TransactionFormScreen />;
       case 'InterestCalculator':
+      case 'DalaliCalculator':
         return <InterestCalculatorScreen />;
       default:
         return <HomeScreen />;

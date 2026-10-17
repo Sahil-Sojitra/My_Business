@@ -8,6 +8,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '../../navigation/NavigationContext';
 
+import { ArrowLeft } from './Icon';
+
 interface AppHeaderProps {
   title: string;
   subtitle?: string;
@@ -47,9 +49,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               onPress={handleBack}
               style={styles.backButton}
               activeOpacity={0.7}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Go back"
               accessibilityRole="button">
-              <Text style={styles.backArrow}>←</Text>
+              <ArrowLeft size={19} color="#0F172A" strokeWidth={2.4} />
             </TouchableOpacity>
           )}
           <View style={styles.titleContainer}>
@@ -111,15 +114,14 @@ const styles = StyleSheet.create({
   },
   backButton: {
     marginRight: 12,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderRadius: 8,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     backgroundColor: '#F1F5F9',
-  },
-  backArrow: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   titleContainer: {
     flex: 1,

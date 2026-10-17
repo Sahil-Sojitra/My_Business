@@ -19,6 +19,18 @@ const INITIAL_BILLS: Transaction[] = [
     companyId: 'cmp_1',
     companyName: 'Apex Global Traders',
     billNumber: 'INV-2026-081',
+    billPdf: {
+      name: 'Invoice_INV-2026-081.pdf',
+      type: 'pdf',
+      size: '284 KB',
+      date: '2026-09-01',
+    },
+    chitthi: {
+      name: 'Chitthi_Delivery_Slip_Lot409.jpg',
+      type: 'photo',
+      size: '1.2 MB',
+      date: '2026-09-01',
+    },
     amount: 145000,
     dalaliRate: 1.5,
     dalaliAmount: 2175,

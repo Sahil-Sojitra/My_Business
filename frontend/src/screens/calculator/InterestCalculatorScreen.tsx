@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
@@ -11,227 +12,225 @@ import {
 import { AppHeader } from '../../components/common/AppHeader';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
+import { ChevronRight } from '../../components/common/Icon';
 import { Input } from '../../components/common/Input';
-import { InterestResult, TimeUnit } from '../../types/calculator';
-import {
-  calculateSimpleInterest,
-  validateInterestInput,
-} from '../../utils/calculator';
+import { useNavigation } from '../../navigation/NavigationContext';
+import { DalaliResult } from '../../types/calculator';
+import { calculateDalali, validateDalaliInput } from '../../utils/calculator';
 import { formatCurrency } from '../../utils/formatters';
 
-import { useNavigation } from '../../navigation/NavigationContext';
+const PRESET_RATES = ['1.0', '1.5', '2.0', '2.5', '3.0'];
 
 export const InterestCalculatorScreen: React.FC = () => {
   const navigation = useNavigation();
   const navParams = navigation.params as
     | {
+        initialBillAmount?: number;
+        initialDalaliRate?: number;
         initialPrincipal?: number;
         initialRate?: number;
-        initialTime?: number;
-        initialUnit?: TimeUnit;
       }
     | undefined;
 
-  const [principal, setPrincipal] = useState<string>(
-    navParams?.initialPrincipal !== undefined
-      ? String(navParams.initialPrincipal)
-      : '100000'
-  );
-  const [annualRate, setAnnualRate] = useState<string>(
-    navParams?.initialRate !== undefined
-      ? String(navParams.initialRate)
-      : '12'
-  );
-  const [time, setTime] = useState<string>(
-    navParams?.initialTime !== undefined
-      ? String(navParams.initialTime)
-      : '12'
-  );
-  const [unit, setUnit] = useState<TimeUnit>(
-    navParams?.initialUnit || 'months'
-  );
+  const [billAmount, setBillAmount] = useState<string>(() => {
+    if (navParams?.initialBillAmount !== undefined) {
+      return String(navParams.initialBillAmount);
+    }
+    if (navParams?.initialPrincipal !== undefined) {
+      return String(navParams.initialPrincipal);
+    }
+    return '100000';
+  });
 
-  const [result, setResult] = useState<InterestResult | null>(null);
+  const [dalaliRate, setDalaliRate] = useState<string>(() => {
+    if (navParams?.initialDalaliRate !== undefined) {
+      return String(navParams.initialDalaliRate);
+    }
+    if (navParams?.initialRate !== undefined) {
+      return String(navParams.initialRate);
+    }
+    return '1.5';
+  });
+
+  const [deductTds, setDeductTds] = useState<boolean>(false);
+  const [result, setResult] = useState<DalaliResult | null>(null);
   const [errors, setErrors] = useState<{
-    principal?: string;
-    annualRate?: string;
-    time?: string;
+    billAmount?: string;
+    dalaliRate?: string;
   }>({});
 
-  React.useEffect(() => {
-    if (navParams?.initialPrincipal) {
-      try {
-        const numP = Number(navParams.initialPrincipal);
-        const numR = Number(navParams.initialRate ?? 12);
-        const numT = Number(navParams.initialTime ?? 12);
-        const u = navParams.initialUnit || 'months';
-        const calc = calculateSimpleInterest({
-          principal: numP,
-          annualRate: numR,
-          time: numT,
-          unit: u,
-        });
-        setResult(calc);
-      } catch {
-        // ignore
-      }
-    }
-  }, [navParams]);
+  const computeDalali = (amtStr: string, rateStr: string, withTds: boolean) => {
+    const numAmt = parseFloat(amtStr);
+    const numRate = parseFloat(rateStr);
 
-  const handleCalculate = () => {
-    const numPrincipal = parseFloat(principal);
-    const numRate = parseFloat(annualRate);
-    const numTime = parseFloat(time);
-
-    const validation = validateInterestInput({
-      principal: numPrincipal,
-      annualRate: numRate,
-      time: numTime,
-      unit,
+    const validation = validateDalaliInput({
+      billAmount: numAmt,
+      dalaliRate: numRate,
     });
 
-    setErrors(validation.errors);
-
     if (!validation.isValid) {
+      setErrors(validation.errors);
       setResult(null);
       return;
     }
 
+    setErrors({});
     try {
-      const calc = calculateSimpleInterest({
-        principal: numPrincipal,
-        annualRate: numRate,
-        time: numTime,
-        unit,
+      const res = calculateDalali({
+        billAmount: numAmt,
+        dalaliRate: numRate,
+        deductTds: withTds,
+        tdsRate: 5,
       });
-      setResult(calc);
-    } catch (err) {
+      setResult(res);
+    } catch {
       setResult(null);
-      setErrors({
-        principal: err instanceof Error ? err.message : 'Calculation error',
-      });
     }
   };
 
+  useEffect(() => {
+    computeDalali(billAmount, dalaliRate, deductTds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleBillAmountChange = (val: string) => {
+    setBillAmount(val);
+    computeDalali(val, dalaliRate, deductTds);
+  };
+
+  const handleRateChange = (val: string) => {
+    setDalaliRate(val);
+    computeDalali(billAmount, val, deductTds);
+  };
+
+  const handleSelectPreset = (rate: string) => {
+    setDalaliRate(rate);
+    computeDalali(billAmount, rate, deductTds);
+  };
+
+  const handleTdsToggle = (val: boolean) => {
+    setDeductTds(val);
+    computeDalali(billAmount, dalaliRate, val);
+  };
+
   const handleReset = () => {
-    setPrincipal('');
-    setAnnualRate('');
-    setTime('');
-    setUnit('months');
+    setBillAmount('');
+    setDalaliRate('1.5');
+    setDeductTds(false);
     setResult(null);
     setErrors({});
   };
+
+  const handleCreateBillWithDalali = () => {
+    if (!result) {
+      return;
+    }
+    navigation.navigate('TransactionForm', {
+      initialAmount: result.billAmount,
+      initialDalaliRate: result.dalaliRate,
+      initialDalaliAmount: result.grossDalaliAmount,
+    });
+  };
+
+  const parsedAmount = parseFloat(billAmount) || 0;
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.screen}>
       <AppHeader
-        title="Interest Calculator"
-        subtitle="Simple Interest Engine"
+        title="Dalali Calculator"
+        subtitle="Brokerage commission computation"
         showBack={true}
       />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled">
-        {/* Intro */}
+        {/* Intro Banner */}
         <View style={styles.banner}>
-          <Text style={styles.bannerTitle}>Brokerage Interest Estimator</Text>
+          <Text style={styles.bannerTitle}>Brokerage (Dalali) Engine</Text>
           <Text style={styles.bannerSub}>
-            Estimate financing charge and total payable amount for credit period
+            Instant brokerage computation based on consignment turnover and
+            agreed commission percentage. No interest or credit period.
           </Text>
         </View>
 
         {/* Inputs Card */}
         <Card style={styles.inputCard}>
           <Input
-            label="Principal Amount (₹)"
-            value={principal}
-            onChangeText={val => {
-              setPrincipal(val);
-              if (errors.principal) {
-                setErrors(prev => ({ ...prev, principal: undefined }));
-              }
-            }}
+            label="Consignment / Bill Amount (₹)"
+            value={billAmount}
+            onChangeText={handleBillAmountChange}
             placeholder="e.g. 100000"
             keyboardType="numeric"
-            error={errors.principal}
+            error={errors.billAmount}
             required
           />
-
-          <Input
-            label="Annual Interest Rate (%)"
-            value={annualRate}
-            onChangeText={val => {
-              setAnnualRate(val);
-              if (errors.annualRate) {
-                setErrors(prev => ({ ...prev, annualRate: undefined }));
-              }
-            }}
-            placeholder="e.g. 12 (for 12% p.a.)"
-            keyboardType="numeric"
-            error={errors.annualRate}
-            required
-          />
-
-          {/* Time period + Unit */}
-          <View style={styles.timeSection}>
-            <View style={styles.timeInputWrapper}>
-              <Input
-                label="Time Period"
-                value={time}
-                onChangeText={val => {
-                  setTime(val);
-                  if (errors.time) {
-                    setErrors(prev => ({ ...prev, time: undefined }));
-                  }
-                }}
-                placeholder={unit === 'months' ? 'e.g. 6' : 'e.g. 1'}
-                keyboardType="numeric"
-                error={errors.time}
-                required
-              />
+          {parsedAmount > 0 ? (
+            <View style={styles.amountPreview}>
+              <Text style={styles.amountPreviewLabel}>Turnover Value:</Text>
+              <Text style={styles.amountPreviewVal}>
+                {formatCurrency(parsedAmount)}
+              </Text>
             </View>
+          ) : null}
 
-            <View style={styles.unitWrapper}>
-              <Text style={styles.unitLabel}>Unit</Text>
-              <View style={styles.unitRow}>
-                <TouchableOpacity
-                  onPress={() => setUnit('months')}
-                  style={[
-                    styles.unitBtn,
-                    unit === 'months' && styles.unitBtnActive,
-                  ]}
-                  activeOpacity={0.7}>
-                  <Text
-                    style={[
-                      styles.unitBtnText,
-                      unit === 'months' && styles.unitBtnTextActive,
-                    ]}>
-                    Months
-                  </Text>
-                </TouchableOpacity>
+          {/* Dalali Rate Input & Presets */}
+          <View style={styles.rateSection}>
+            <Input
+              label="Dalali Commission Rate (%)"
+              value={dalaliRate}
+              onChangeText={handleRateChange}
+              placeholder="e.g. 1.5"
+              keyboardType="numeric"
+              error={errors.dalaliRate}
+              required
+            />
 
-                <TouchableOpacity
-                  onPress={() => setUnit('years')}
-                  style={[
-                    styles.unitBtn,
-                    unit === 'years' && styles.unitBtnActive,
-                  ]}
-                  activeOpacity={0.7}>
-                  <Text
+            <Text style={styles.presetHeading}>Standard Brokerage Rates</Text>
+            <View style={styles.presetRow}>
+              {PRESET_RATES.map(preset => {
+                const isActive = dalaliRate === preset;
+                return (
+                  <TouchableOpacity
+                    key={preset}
                     style={[
-                      styles.unitBtnText,
-                      unit === 'years' && styles.unitBtnTextActive,
-                    ]}>
-                    Years
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                      styles.presetPill,
+                      isActive && styles.presetPillActive,
+                    ]}
+                    onPress={() => handleSelectPreset(preset)}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.presetText,
+                        isActive && styles.presetTextActive,
+                      ]}>
+                      {preset}%
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
+          {/* Optional TDS 194H Toggle */}
+          <View style={styles.tdsToggleContainer}>
+            <View style={styles.tdsTextWrap}>
+              <Text style={styles.tdsTitle}>Deduct TDS (5% u/s 194H)</Text>
+              <Text style={styles.tdsSub}>
+                Applicable when annual brokerage exceeds ₹15,000
+              </Text>
+            </View>
+            <Switch
+              value={deductTds}
+              onValueChange={handleTdsToggle}
+              trackColor={{ false: '#CBD5E1', true: '#93C5FD' }}
+              thumbColor={deductTds ? '#2563EB' : '#FFFFFF'}
+            />
+          </View>
+
+          {/* Action Buttons */}
           <View style={styles.actionsRow}>
             <Button
               title="Reset"
@@ -241,8 +240,8 @@ export const InterestCalculatorScreen: React.FC = () => {
               style={styles.resetBtn}
             />
             <Button
-              title="Calculate Interest"
-              onPress={handleCalculate}
+              title="Re-calculate"
+              onPress={() => computeDalali(billAmount, dalaliRate, deductTds)}
               variant="primary"
               size="md"
               style={styles.calcBtn}
@@ -253,57 +252,104 @@ export const InterestCalculatorScreen: React.FC = () => {
         {/* Calculation Result */}
         {result ? (
           <Card style={styles.resultCard}>
-            <Text style={styles.resultTitle}>Calculation Breakdown</Text>
+            <View style={styles.resultHeader}>
+              <Text style={styles.resultTitle}>Brokerage Commission</Text>
+              <View style={styles.heroBadge}>
+                <Text style={styles.heroBadgeText}>Broker's Earning</Text>
+              </View>
+            </View>
 
+            {/* Primary Hero Metric */}
             <View style={styles.metricHero}>
-              <Text style={styles.resultLabel}>Calculated Interest</Text>
+              <Text style={styles.resultLabel}>
+                {result.deductTds
+                  ? 'Net In-Hand Dalali (After TDS)'
+                  : 'Total Dalali Receivable'}
+              </Text>
               <Text style={styles.interestValue}>
-                {formatCurrency(result.interest)}
+                {formatCurrency(result.netDalaliAmount)}
+              </Text>
+              <Text style={styles.heroSubText}>
+                Calculated at {result.dalaliRate}% on{' '}
+                {formatCurrency(result.billAmount)}
               </Text>
             </View>
 
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total Payable Amount</Text>
-              <Text style={styles.totalValue}>
-                {formatCurrency(result.totalPayable)}
-              </Text>
-            </View>
-
+            {/* Breakdown Details */}
             <View style={styles.breakdownDetails}>
               <View style={styles.breakdownRow}>
-                <Text style={styles.breakdownKey}>Principal Borrowed</Text>
+                <Text style={styles.breakdownKey}>Consignment Bill Value</Text>
                 <Text style={styles.breakdownVal}>
-                  {formatCurrency(result.principal)}
+                  {formatCurrency(result.billAmount)}
                 </Text>
               </View>
+
               <View style={styles.breakdownRow}>
-                <Text style={styles.breakdownKey}>Interest Rate</Text>
-                <Text style={styles.breakdownVal}>
-                  {result.annualRate}% per annum
-                </Text>
+                <Text style={styles.breakdownKey}>Agreed Dalali Rate</Text>
+                <Text style={styles.breakdownVal}>{result.dalaliRate}%</Text>
               </View>
+
               <View style={styles.breakdownRow}>
-                <Text style={styles.breakdownKey}>Duration</Text>
-                <Text style={styles.breakdownVal}>
-                  {result.timeInput} {result.unit} (
-                  {result.timeInYears} year
-                  {result.timeInYears !== 1 ? 's' : ''})
+                <Text style={styles.breakdownKey}>Gross Dalali Commission</Text>
+                <Text style={[styles.breakdownVal, styles.grossVal]}>
+                  {formatCurrency(result.grossDalaliAmount)}
                 </Text>
               </View>
+
+              {result.deductTds ? (
+                <>
+                  <View style={styles.breakdownRow}>
+                    <Text style={styles.breakdownKey}>
+                      Less TDS ({result.tdsRate}% u/s 194H)
+                    </Text>
+                    <Text style={[styles.breakdownVal, styles.tdsVal]}>
+                      -{formatCurrency(result.tdsAmount)}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.breakdownRow, styles.netRow]}>
+                    <Text style={styles.netLabel}>Net In-Hand Dalali</Text>
+                    <Text style={styles.netVal}>
+                      {formatCurrency(result.netDalaliAmount)}
+                    </Text>
+                  </View>
+                </>
+              ) : null}
             </View>
 
-            <View style={styles.formulaBanner}>
-              <Text style={styles.formulaText}>
-                Formula: Simple Interest = (Principal × Rate × Time in Years) /
-                100
+            {/* Practical Broker Domain Callout */}
+            <View style={styles.domainNoteBox}>
+              <Text style={styles.domainNoteText}>
+                💡 Broker Rule: You receive strictly the Dalali commission (
+                {formatCurrency(result.netDalaliAmount)}). The bill principal (
+                {formatCurrency(result.billAmount)}) is settled between buyer and
+                supplier.
               </Text>
             </View>
+
+            {/* Quick Action to record bill */}
+            <TouchableOpacity
+              style={styles.recordBillBtn}
+              onPress={handleCreateBillWithDalali}
+              activeOpacity={0.8}>
+              <View style={styles.recordBillTextWrap}>
+                <Text style={styles.recordBillTitle}>
+                  + Record Bill with this Dalali
+                </Text>
+                <Text style={styles.recordBillSub}>
+                  Populate ₹{result.billAmount.toLocaleString()} & {result.dalaliRate}% into a new entry
+                </Text>
+              </View>
+              <ChevronRight size={16} color="#FFFFFF" strokeWidth={2.4} />
+            </TouchableOpacity>
           </Card>
         ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
+
+export const DalaliCalculatorScreen = InterestCalculatorScreen;
 
 const styles = StyleSheet.create({
   screen: {
@@ -321,64 +367,103 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     color: '#0F172A',
+    letterSpacing: -0.3,
   },
   bannerSub: {
-    fontSize: 14,
+    fontSize: 13.5,
     color: '#64748B',
-    marginTop: 3,
+    marginTop: 4,
+    lineHeight: 19,
   },
   inputCard: {
     padding: 20,
     borderRadius: 16,
     marginBottom: 16,
   },
-  timeSection: {
+  amountPreview: {
     flexDirection: 'row',
-    gap: 12,
-  },
-  timeInputWrapper: {
-    flex: 1,
-  },
-  unitWrapper: {
-    width: 135,
-    marginBottom: 16,
-  },
-  unitLabel: {
-    fontSize: 14.5,
-    fontWeight: '600',
-    color: '#1E293B',
-    marginBottom: 6,
-  },
-  unitRow: {
-    flexDirection: 'row',
-    height: 52,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    padding: 3,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-  },
-  unitBtn: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 9,
+    gap: 6,
+    marginTop: -8,
+    marginBottom: 14,
+    paddingHorizontal: 4,
   },
-  unitBtnActive: {
-    backgroundColor: '#2563EB',
+  amountPreviewLabel: {
+    fontSize: 12.5,
+    color: '#64748B',
+    fontWeight: '500',
   },
-  unitBtnText: {
+  amountPreviewVal: {
     fontSize: 13.5,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  rateSection: {
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  presetHeading: {
+    fontSize: 12.5,
     fontWeight: '600',
     color: '#64748B',
+    marginBottom: 8,
+    marginTop: -4,
   },
-  unitBtnTextActive: {
+  presetRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  presetPill: {
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  presetPillActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
+  },
+  presetText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  presetTextActive: {
     color: '#FFFFFF',
+  },
+  tdsToggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 6,
+    marginBottom: 16,
+  },
+  tdsTextWrap: {
+    flex: 1,
+    marginRight: 12,
+  },
+  tdsTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  tdsSub: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
   },
   actionsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 8,
+    marginTop: 4,
   },
   resetBtn: {
     flex: 1,
@@ -388,62 +473,76 @@ const styles = StyleSheet.create({
   },
   resultCard: {
     padding: 20,
-    borderRadius: 16,
+    borderRadius: 18,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
     backgroundColor: '#FFFFFF',
-    borderLeftWidth: 4,
-    borderLeftColor: '#16A34A',
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
   },
   resultTitle: {
-    fontSize: 17.5,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '800',
     color: '#0F172A',
-    marginBottom: 14,
+  },
+  heroBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  heroBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#15803D',
   },
   metricHero: {
     alignItems: 'center',
-    paddingVertical: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 12,
     backgroundColor: '#F0FDF4',
-    borderRadius: 12,
-    marginBottom: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    marginBottom: 16,
   },
   resultLabel: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#166534',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   interestValue: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '900',
     color: '#15803D',
-    marginTop: 4,
+    letterSpacing: -0.8,
+    marginVertical: 4,
   },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  totalLabel: {
-    fontSize: 15,
+  heroSubText: {
+    fontSize: 13,
+    color: '#16A34A',
     fontWeight: '600',
-    color: '#0F172A',
-  },
-  totalValue: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0F172A',
   },
   breakdownDetails: {
-    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: 12,
+    marginBottom: 14,
   },
   breakdownRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 7,
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   breakdownKey: {
     fontSize: 14,
@@ -451,18 +550,67 @@ const styles = StyleSheet.create({
   },
   breakdownVal: {
     fontSize: 14.5,
-    fontWeight: '600',
-    color: '#334155',
+    fontWeight: '700',
+    color: '#0F172A',
   },
-  formulaBanner: {
+  grossVal: {
+    color: '#15803D',
+    fontWeight: '800',
+  },
+  tdsVal: {
+    color: '#DC2626',
+    fontWeight: '700',
+  },
+  netRow: {
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    marginTop: 6,
+    paddingTop: 10,
+  },
+  netLabel: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  netVal: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#15803D',
+  },
+  domainNoteBox: {
     backgroundColor: '#F8FAFC',
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 8,
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 14,
   },
-  formulaText: {
-    fontSize: 12,
-    color: '#64748B',
-    textAlign: 'center',
+  domainNoteText: {
+    fontSize: 12.5,
+    color: '#475569',
+    lineHeight: 18,
+  },
+  recordBillBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#2563EB',
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+  },
+  recordBillTextWrap: {
+    flex: 1,
+    marginRight: 8,
+  },
+  recordBillTitle: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  recordBillSub: {
+    fontSize: 11.5,
+    color: '#BFDBFE',
+    marginTop: 2,
   },
 });

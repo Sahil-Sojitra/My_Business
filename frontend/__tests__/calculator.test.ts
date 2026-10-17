@@ -1,6 +1,8 @@
 import {
   calculateAccruedBillInterest,
+  calculateDalali,
   calculateSimpleInterest,
+  validateDalaliInput,
   validateInterestInput,
 } from '../src/utils/calculator';
 
@@ -195,6 +197,58 @@ describe('Interest Calculator Utility', () => {
       expect(result.daysElapsed).toBe(0);
       expect(result.accruedInterest).toBe(0);
       expect(result.totalWithInterest).toBe(100000);
+    });
+  });
+
+  describe('Dalali (Brokerage) Calculator', () => {
+    it('calculates gross Dalali commission correctly on bill amount', () => {
+      // Bill: 100,000, Dalali: 1.5%
+      // Dalali = (100000 * 1.5) / 100 = 1500
+      const result = calculateDalali({
+        billAmount: 100000,
+        dalaliRate: 1.5,
+      });
+
+      expect(result.grossDalaliAmount).toBe(1500);
+      expect(result.netDalaliAmount).toBe(1500);
+      expect(result.deductTds).toBe(false);
+      expect(result.tdsAmount).toBe(0);
+    });
+
+    it('calculates Dalali with TDS deduction (5% u/s 194H) correctly', () => {
+      // Bill: 200,000, Dalali: 2.0%
+      // Gross Dalali = 4000
+      // TDS 5% = 200
+      // Net = 3800
+      const result = calculateDalali({
+        billAmount: 200000,
+        dalaliRate: 2.0,
+        deductTds: true,
+        tdsRate: 5,
+      });
+
+      expect(result.grossDalaliAmount).toBe(4000);
+      expect(result.tdsAmount).toBe(200);
+      expect(result.netDalaliAmount).toBe(3800);
+    });
+
+    it('validates required fields correctly', () => {
+      const invalid = validateDalaliInput({
+        billAmount: 0,
+        dalaliRate: -1,
+      });
+
+      expect(invalid.isValid).toBe(false);
+      expect(invalid.errors.billAmount).toBe('Bill amount must be greater than zero');
+      expect(invalid.errors.dalaliRate).toBe('Dalali rate cannot be negative');
+
+      const valid = validateDalaliInput({
+        billAmount: 50000,
+        dalaliRate: 1.0,
+      });
+
+      expect(valid.isValid).toBe(true);
+      expect(Object.keys(valid.errors).length).toBe(0);
     });
   });
 });

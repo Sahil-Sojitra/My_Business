@@ -8,7 +8,8 @@ export type RootScreenName =
   | 'TransactionList'
   | 'TransactionDetails'
   | 'TransactionForm'
-  | 'InterestCalculator';
+  | 'InterestCalculator'
+  | 'DalaliCalculator';
 
 export interface ScreenParams {
   Login: undefined;
@@ -19,13 +20,27 @@ export interface ScreenParams {
   CompanyForm: { companyId?: string };
   TransactionList: { companyId?: string };
   TransactionDetails: { transactionId: string };
-  TransactionForm: { transactionId?: string; defaultCompanyId?: string };
+  TransactionForm: {
+    transactionId?: string;
+    defaultCompanyId?: string;
+    initialAmount?: number;
+    initialDalaliRate?: number;
+    initialDalaliAmount?: number;
+  };
   InterestCalculator:
     | {
         initialPrincipal?: number;
         initialRate?: number;
         initialTime?: number;
         initialUnit?: 'months' | 'years';
+        initialBillAmount?: number;
+        initialDalaliRate?: number;
+      }
+    | undefined;
+  DalaliCalculator:
+    | {
+        initialBillAmount?: number;
+        initialDalaliRate?: number;
       }
     | undefined;
 }
