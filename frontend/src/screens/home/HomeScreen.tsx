@@ -15,7 +15,6 @@ import { useNavigation } from '../../navigation/NavigationContext';
 import { companyService, transactionService } from '../../services';
 import { Company } from '../../types/company';
 import { Transaction } from '../../types/transaction';
-import { calculateAccruedBillInterest } from '../../utils/calculator';
 import { formatCurrency } from '../../utils/formatters';
 
 export const HomeScreen: React.FC = () => {
@@ -64,22 +63,14 @@ export const HomeScreen: React.FC = () => {
     }
   };
 
-  // Metrics: Calculate bill totals and accrued interest using monthly rate
+  // Metrics: Calculate total Dalali commission and bill volume
   const activeBills = bills.filter(b => b.status !== 'PAID');
   const totalPrincipal = activeBills.reduce((acc, b) => acc + b.amount, 0);
 
-  const totalAccruedInterest = activeBills.reduce((acc, b) => {
-    const monthlyRate =
-      b.monthlyInterestRate ?? (b.interestRate ? b.interestRate / 12 : 1.5);
-    const stats = calculateAccruedBillInterest(
-      b.amount,
-      monthlyRate,
-      b.interestStartDate || b.date
-    );
-    return acc + stats.accruedInterest;
+  const totalDalali = activeBills.reduce((acc, b) => {
+    const rate = b.dalaliRate ?? b.monthlyInterestRate ?? 1.5;
+    return acc + (b.dalaliAmount ?? (b.amount * rate) / 100);
   }, 0);
-
-  const grandTotalReceivable = totalPrincipal + totalAccruedInterest;
 
   if (loading && !refreshing) {
     return <LoadingSpinner message="Loading broker portfolio..." />;
@@ -109,16 +100,16 @@ export const HomeScreen: React.FC = () => {
         <View style={styles.welcomeBanner}>
           <Text style={styles.greeting}>Welcome, {user?.name || 'Broker'}</Text>
           <Text style={styles.greetingSub}>
-            Brokerage deal & bill interest management
+            Brokerage deal & Dalali commission tracking
           </Text>
         </View>
 
-        {/* Hero Card: Executive Fintech Style */}
+        {/* Hero Card: Brokerage / Dalali Receivable */}
         <View style={styles.heroCard}>
           <View style={styles.heroHeader}>
             <View style={styles.heroTagRow}>
               <View style={styles.heroLiveDot} />
-              <Text style={styles.heroLabel}>Total Receivable (With Interest)</Text>
+              <Text style={styles.heroLabel}>Total Dalali Receivable</Text>
             </View>
             <View style={styles.activePill}>
               <Text style={styles.activePillText}>
@@ -128,21 +119,21 @@ export const HomeScreen: React.FC = () => {
           </View>
 
           <Text style={styles.heroValue}>
-            {formatCurrency(grandTotalReceivable)}
+            {formatCurrency(totalDalali)}
           </Text>
 
           <View style={styles.heroMetricsRow}>
             <View style={styles.heroMetricCol}>
-              <Text style={styles.heroSubLabel}>Principal Billed</Text>
+              <Text style={styles.heroSubLabel}>Total Bill Turnover</Text>
               <Text style={styles.heroSubVal}>
                 {formatCurrency(totalPrincipal)}
               </Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroMetricCol}>
-              <Text style={styles.heroSubLabel}>Accrued Interest</Text>
+              <Text style={styles.heroSubLabel}>Active Consignments</Text>
               <Text style={[styles.heroSubVal, styles.interestVal]}>
-                ▲ +{formatCurrency(totalAccruedInterest)}
+                {activeBills.length} Pending Bills
               </Text>
             </View>
           </View>

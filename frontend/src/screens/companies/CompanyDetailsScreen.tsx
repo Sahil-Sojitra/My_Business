@@ -17,7 +17,6 @@ import { useNavigation } from '../../navigation/NavigationContext';
 import { companyService, transactionService } from '../../services';
 import { Company } from '../../types/company';
 import { Transaction } from '../../types/transaction';
-import { calculateAccruedBillInterest } from '../../utils/calculator';
 import {
   formatCurrency,
   formatDate,
@@ -105,20 +104,10 @@ export const CompanyDetailsScreen: React.FC = () => {
 
   // Calculate company financial totals
   const totalPrincipal = bills.reduce((acc, b) => acc + b.amount, 0);
-  const totalAccruedInterest = bills.reduce((acc, b) => {
-    if (b.status === 'PAID') {
-      return acc;
-    }
-    const monthlyRate =
-      b.monthlyInterestRate ?? (b.interestRate ? b.interestRate / 12 : 1.5);
-    const stats = calculateAccruedBillInterest(
-      b.amount,
-      monthlyRate,
-      b.interestStartDate || b.date
-    );
-    return acc + stats.accruedInterest;
+  const totalDalali = bills.reduce((acc, b) => {
+    const rate = b.dalaliRate ?? b.monthlyInterestRate ?? 1.5;
+    return acc + (b.dalaliAmount ?? (b.amount * rate) / 100);
   }, 0);
-  const totalPayableWithInterest = totalPrincipal + totalAccruedInterest;
 
   // Sort bills by closest Due Date first (ascending by due date)
   const sortedBills = [...bills].sort((a, b) => {
@@ -156,7 +145,7 @@ export const CompanyDetailsScreen: React.FC = () => {
     <View style={styles.screen}>
       <AppHeader
         title={company.name}
-        subtitle="Buyer Firm Ledger & Interest"
+        subtitle="Buyer Firm Ledger & Dalali"
         showBack={true}
         rightAction={{
           label: 'Edit',
@@ -212,28 +201,22 @@ export const CompanyDetailsScreen: React.FC = () => {
           ) : null}
         </Card>
 
-        {/* Ledger & Total Interest Summary */}
+        {/* Ledger & Total Dalali Summary */}
         <Card style={styles.ledgerCard}>
           <Text style={styles.ledgerTitle}>
-            Firm Ledger & Total Interest Accrued
+            Firm Ledger & Total Dalali
           </Text>
           <View style={styles.metricsRow}>
             <View style={styles.metricItem}>
-              <Text style={styles.metricLabel}>Principal Billed</Text>
+              <Text style={styles.metricLabel}>Total Bill Turnover</Text>
               <Text style={styles.metricVal}>
                 {formatCurrency(totalPrincipal)}
               </Text>
             </View>
             <View style={styles.metricItem}>
-              <Text style={styles.metricLabel}>Accrued Interest</Text>
+              <Text style={styles.metricLabel}>Total Dalali Receivable</Text>
               <Text style={[styles.metricVal, styles.interestVal]}>
-                +{formatCurrency(totalAccruedInterest)}
-              </Text>
-            </View>
-            <View style={styles.metricItem}>
-              <Text style={styles.metricLabel}>Total Outstanding</Text>
-              <Text style={[styles.metricVal, styles.dueVal]}>
-                {formatCurrency(totalPayableWithInterest)}
+                +{formatCurrency(totalDalali)}
               </Text>
             </View>
           </View>
@@ -269,14 +252,12 @@ export const CompanyDetailsScreen: React.FC = () => {
           </Card>
         ) : (
           sortedBills.map(item => {
-            const monthlyRate =
+            const dalaliRate =
+              item.dalaliRate ??
               item.monthlyInterestRate ??
               (item.interestRate ? item.interestRate / 12 : 1.5);
-            const stats = calculateAccruedBillInterest(
-              item.amount,
-              monthlyRate,
-              item.interestStartDate || item.date
-            );
+            const dalaliAmount =
+              item.dalaliAmount ?? (item.amount * dalaliRate) / 100;
             const dueInfo = getDueDaysLabel(item.dueDate);
 
             return (
@@ -335,10 +316,10 @@ export const CompanyDetailsScreen: React.FC = () => {
                   </View>
                 ) : null}
 
-                {/* Explicit Interest and Principal Breakdown in Card */}
+                {/* Explicit Dalali and Principal Breakdown in Card */}
                 <View style={styles.cardFinancialsRow}>
                   <View style={styles.cardFinancialCol}>
-                    <Text style={styles.cardFinLabel}>Principal</Text>
+                    <Text style={styles.cardFinLabel}>Bill Amount</Text>
                     <Text style={styles.cardFinVal}>
                       {formatCurrency(item.amount)}
                     </Text>
@@ -348,26 +329,17 @@ export const CompanyDetailsScreen: React.FC = () => {
 
                   <View style={styles.cardFinancialCol}>
                     <Text style={styles.cardFinLabel}>
-                      Interest ({monthlyRate}%/mo)
+                      Dalali ({dalaliRate}%)
                     </Text>
                     <Text style={[styles.cardFinVal, styles.cardInterestVal]}>
-                      +{formatCurrency(stats.accruedInterest)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.cardFinancialDivider} />
-
-                  <View style={styles.cardFinancialCol}>
-                    <Text style={styles.cardFinLabel}>Total Due</Text>
-                    <Text style={[styles.cardFinVal, styles.cardTotalVal]}>
-                      {formatCurrency(stats.totalWithInterest)}
+                      +{formatCurrency(dalaliAmount)}
                     </Text>
                   </View>
                 </View>
 
                 <View style={styles.cardFooter}>
                   <Text style={styles.cardDaysText}>
-                    Accrued for {stats.daysElapsed} days
+                    {dalaliRate}% Dalali commission
                   </Text>
                   <Text style={styles.viewLink}>View details →</Text>
                 </View>

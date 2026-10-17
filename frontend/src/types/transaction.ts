@@ -8,7 +8,9 @@ export interface Bill {
   companyName: string;
   billNumber?: string;
   amount: number;
-  monthlyInterestRate: number; // Monthly interest percentage, e.g. 1.0 or 1.5% per month
+  dalaliRate?: number; // Dalali commission percentage (e.g. 1.0, 1.5, 2.0%)
+  dalaliAmount?: number; // Dalali commission in ₹ (static: amount * dalaliRate / 100)
+  monthlyInterestRate: number; // Kept for backwards compatibility
   interestRate?: number; // Annual equivalent (monthlyInterestRate * 12)
   date: string; // Bill invoice date (YYYY-MM-DD)
   dueDate?: string; // Credit payment deadline (YYYY-MM-DD)

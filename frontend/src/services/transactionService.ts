@@ -20,6 +20,8 @@ const INITIAL_BILLS: Transaction[] = [
     companyName: 'Apex Global Traders',
     billNumber: 'INV-2026-081',
     amount: 145000,
+    dalaliRate: 1.5,
+    dalaliAmount: 2175,
     monthlyInterestRate: 1.5, // 1.5% per month
     interestRate: 18,
     date: '2026-09-01',
@@ -36,6 +38,8 @@ const INITIAL_BILLS: Transaction[] = [
     companyName: 'Apex Global Traders',
     billNumber: 'INV-2026-094',
     amount: 75000,
+    dalaliRate: 1.0,
+    dalaliAmount: 750,
     monthlyInterestRate: 1.0, // 1.0% per month
     interestRate: 12,
     date: '2026-09-20',
@@ -52,6 +56,8 @@ const INITIAL_BILLS: Transaction[] = [
     companyName: 'Metro Textile Mills',
     billNumber: 'INV-9022',
     amount: 82000,
+    dalaliRate: 2.0,
+    dalaliAmount: 1640,
     monthlyInterestRate: 2.0, // 2.0% per month
     interestRate: 24,
     date: '2026-08-15',
@@ -68,6 +74,8 @@ const INITIAL_BILLS: Transaction[] = [
     companyName: 'Sunrise Polymers & Weaving',
     billNumber: 'INV-4411',
     amount: 325000,
+    dalaliRate: 1.25,
+    dalaliAmount: 4062.5,
     monthlyInterestRate: 1.25, // 1.25% per month
     interestRate: 15,
     date: '2026-10-01',
@@ -102,17 +110,30 @@ class MockTransactionService implements ITransactionService {
     await this.delay(150);
 
     const now = new Date().toISOString();
+    const amount = Number(data.amount);
+    const dalaliRate =
+      data.dalaliRate !== undefined
+        ? Number(data.dalaliRate)
+        : data.monthlyInterestRate !== undefined
+        ? Number(data.monthlyInterestRate)
+        : 1.5;
+    const dalaliAmount =
+      data.dalaliAmount !== undefined
+        ? Number(data.dalaliAmount)
+        : (amount * dalaliRate) / 100;
     const monthlyRate =
       data.monthlyInterestRate !== undefined
         ? Number(data.monthlyInterestRate)
-        : 1.5;
+        : dalaliRate;
 
     const newBill: Transaction = {
       id: `bill_${Date.now()}`,
       companyId: data.companyId,
       companyName: data.companyName,
       billNumber: data.billNumber?.trim(),
-      amount: Number(data.amount),
+      amount,
+      dalaliRate,
+      dalaliAmount,
       monthlyInterestRate: monthlyRate,
       interestRate: monthlyRate * 12,
       date: data.date,
@@ -137,15 +158,29 @@ class MockTransactionService implements ITransactionService {
     }
 
     const current = this.transactions[index];
+    const amount =
+      data.amount !== undefined ? Number(data.amount) : current.amount;
+    const dalaliRate =
+      data.dalaliRate !== undefined
+        ? Number(data.dalaliRate)
+        : data.monthlyInterestRate !== undefined
+        ? Number(data.monthlyInterestRate)
+        : current.dalaliRate ?? current.monthlyInterestRate ?? 1.5;
+    const dalaliAmount =
+      data.dalaliAmount !== undefined
+        ? Number(data.dalaliAmount)
+        : (amount * dalaliRate) / 100;
     const monthlyRate =
       data.monthlyInterestRate !== undefined
         ? Number(data.monthlyInterestRate)
-        : current.monthlyInterestRate;
+        : dalaliRate;
 
     const updated: Transaction = {
       ...current,
       ...data,
-      amount: data.amount !== undefined ? Number(data.amount) : current.amount,
+      amount,
+      dalaliRate,
+      dalaliAmount,
       monthlyInterestRate: monthlyRate,
       interestRate: monthlyRate * 12,
       billNumber:

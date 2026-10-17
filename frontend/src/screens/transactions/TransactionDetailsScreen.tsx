@@ -16,7 +16,6 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
 import { Transaction } from '../../types/transaction';
-import { calculateAccruedBillInterest } from '../../utils/calculator';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 export const TransactionDetailsScreen: React.FC = () => {
@@ -87,20 +86,18 @@ export const TransactionDetailsScreen: React.FC = () => {
     );
   }
 
-  // Calculate interest tracking to date based on monthly interest rate
-  const startDate = bill.interestStartDate || bill.date;
-  const monthlyRate =
-    bill.monthlyInterestRate ?? (bill.interestRate ? bill.interestRate / 12 : 1.5);
-  const interestStats = calculateAccruedBillInterest(
-    bill.amount,
-    monthlyRate,
-    startDate
-  );
+  // Calculate Dalali commission on bill amount (static, no time dependency)
+  const dalaliRate =
+    bill.dalaliRate ??
+    bill.monthlyInterestRate ??
+    (bill.interestRate ? bill.interestRate / 12 : 1.5);
+  const dalaliAmount =
+    bill.dalaliAmount ?? (bill.amount * dalaliRate) / 100;
 
   return (
     <View style={styles.screen}>
       <AppHeader
-        title="Bill & Interest"
+        title="Bill Details"
         subtitle={bill.billNumber || 'Invoice Details'}
         showBack={true}
         rightAction={{
@@ -114,77 +111,68 @@ export const TransactionDetailsScreen: React.FC = () => {
       />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Total Outstanding with Interest Hero Card */}
+        {/* Dalali Commission Hero Card */}
         <Card style={styles.heroCard}>
           <View style={styles.badgeRow}>
             <Badge status={bill.status} />
             <View style={styles.ratePill}>
               <Text style={styles.ratePillText}>
-                {monthlyRate}% / month
+                {dalaliRate}% Dalali
               </Text>
             </View>
           </View>
 
           <Text style={styles.totalPayableLabel}>
-            Total Outstanding (Principal + Interest)
+            Broker Dalali Commission
           </Text>
           <Text style={styles.totalPayableValue}>
-            {formatCurrency(interestStats.totalWithInterest)}
+            {formatCurrency(dalaliAmount)}
           </Text>
 
           <View style={styles.heroBreakdownRow}>
             <View style={styles.heroBreakdownItem}>
-              <Text style={styles.heroSubLabel}>Principal Billed</Text>
+              <Text style={styles.heroSubLabel}>Invoice Bill Value</Text>
               <Text style={styles.heroSubVal}>
                 {formatCurrency(bill.amount)}
               </Text>
             </View>
             <View style={styles.heroDivider} />
             <View style={styles.heroBreakdownItem}>
-              <Text style={styles.heroSubLabel}>Accrued Interest</Text>
+              <Text style={styles.heroSubLabel}>Commission Rate</Text>
               <Text style={[styles.heroSubVal, styles.interestHighlight]}>
-                +{formatCurrency(interestStats.accruedInterest)}
+                {dalaliRate}% Rate
               </Text>
             </View>
           </View>
         </Card>
 
-        {/* Live Interest Accrual Card */}
+        {/* Dalali Brokerage Summary Card */}
         <Card style={styles.interestCard}>
           <View style={styles.interestCardHeader}>
-            <Text style={styles.sectionHeading}>Interest Accrual Summary</Text>
-            <Text style={styles.daysBadge}>
-              {interestStats.daysElapsed} days elapsed
-            </Text>
+            <Text style={styles.sectionHeading}>💼 Brokerage Summary</Text>
+            <View style={styles.ratePill}>
+              <Text style={styles.ratePillText}>{dalaliRate}% Commission</Text>
+            </View>
           </View>
 
           <View style={styles.accrualGrid}>
             <View style={styles.accrualItem}>
-              <Text style={styles.accrualLabel}>Daily Charge</Text>
-              <Text style={styles.accrualVal}>
-                {formatCurrency(interestStats.dailyInterest)}/day
-              </Text>
+              <Text style={styles.accrualLabel}>Bill Amount</Text>
+              <Text style={styles.accrualVal}>{formatCurrency(bill.amount)}</Text>
             </View>
             <View style={styles.accrualItem}>
-              <Text style={styles.accrualLabel}>Monthly Charge</Text>
-              <Text style={styles.accrualVal}>
-                {formatCurrency(interestStats.monthlyInterest)}/month
+              <Text style={styles.accrualLabel}>Dalali Receivable</Text>
+              <Text style={[styles.accrualVal, styles.interestHighlight]}>
+                {formatCurrency(dalaliAmount)}
               </Text>
             </View>
           </View>
 
-          <TouchableOpacity
-            style={styles.calcShortcutBtn}
-            activeOpacity={0.7}
-            onPress={() =>
-              navigation.navigate('TransactionForm', {
-                transactionId: bill.id,
-              })
-            }>
-            <Text style={styles.calcShortcutText}>
-              🧮 Open Interactive Calculator in Bill →
+          <View style={styles.dalaliCalcNote}>
+            <Text style={styles.dalaliCalcNoteText}>
+              Brokerage earned: {dalaliRate}% of {formatCurrency(bill.amount)} = {formatCurrency(dalaliAmount)}
             </Text>
-          </TouchableOpacity>
+          </View>
         </Card>
 
         {/* Bill & Client Details Card */}
@@ -216,11 +204,6 @@ export const TransactionDetailsScreen: React.FC = () => {
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Bill Date</Text>
             <Text style={styles.infoValue}>{formatDate(bill.date)}</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Interest Starts From</Text>
-            <Text style={styles.infoValue}>{formatDate(startDate)}</Text>
           </View>
 
           {bill.dueDate ? (
@@ -392,6 +375,19 @@ const styles = StyleSheet.create({
     fontSize: 16.5,
     fontWeight: '800',
     color: '#166534',
+  },
+  dalaliCalcNote: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    borderRadius: 10,
+    padding: 12,
+  },
+  dalaliCalcNoteText: {
+    fontSize: 13,
+    color: '#15803D',
+    fontWeight: '600',
+    textAlign: 'center',
   },
   calcShortcutBtn: {
     backgroundColor: '#FFFFFF',

@@ -16,7 +16,6 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
 import { Transaction, TransactionStatus } from '../../types/transaction';
-import { calculateAccruedBillInterest } from '../../utils/calculator';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 
 type FilterTab = 'ALL' | TransactionStatus;
@@ -70,22 +69,12 @@ export const TransactionListScreen: React.FC = () => {
     );
   });
 
-  // Calculate overall metrics
+  // Calculate overall Dalali metrics
   const totalPrincipal = transactions.reduce((acc, t) => acc + t.amount, 0);
-  const totalAccruedInterest = transactions.reduce((acc, t) => {
-    if (t.status === 'PAID') {
-      return acc;
-    }
-    const monthlyRate =
-      t.monthlyInterestRate ?? (t.interestRate ? t.interestRate / 12 : 1.5);
-    const stats = calculateAccruedBillInterest(
-      t.amount,
-      monthlyRate,
-      t.interestStartDate || t.date
-    );
-    return acc + stats.accruedInterest;
+  const totalDalali = transactions.reduce((acc, t) => {
+    const rate = t.dalaliRate ?? t.monthlyInterestRate ?? 1.5;
+    return acc + (t.dalaliAmount ?? (t.amount * rate) / 100);
   }, 0);
-  const grandTotalWithInterest = totalPrincipal + totalAccruedInterest;
 
   return (
     <View style={styles.screen}>
@@ -103,26 +92,19 @@ export const TransactionListScreen: React.FC = () => {
         }}
       />
 
-      {/* Aggregate Interest Summary Card */}
+      {/* Aggregate Dalali Summary Card */}
       <View style={styles.summaryBar}>
         <View style={styles.summaryCol}>
-          <Text style={styles.summaryLabel}>Total Principal</Text>
+          <Text style={styles.summaryLabel}>Total Bill Turnover</Text>
           <Text style={styles.summaryVal}>
             {formatCurrency(totalPrincipal)}
           </Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryCol}>
-          <Text style={styles.summaryLabel}>Accrued Interest</Text>
+          <Text style={styles.summaryLabel}>Total Dalali Receivable</Text>
           <Text style={[styles.summaryVal, styles.interestVal]}>
-            +{formatCurrency(totalAccruedInterest)}
-          </Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryCol}>
-          <Text style={styles.summaryLabel}>Total Payable</Text>
-          <Text style={styles.summaryVal}>
-            {formatCurrency(grandTotalWithInterest)}
+            +{formatCurrency(totalDalali)}
           </Text>
         </View>
       </View>
@@ -203,14 +185,12 @@ export const TransactionListScreen: React.FC = () => {
             />
           }
           renderItem={({ item }) => {
-            const monthlyRate =
+            const dalaliRate =
+              item.dalaliRate ??
               item.monthlyInterestRate ??
               (item.interestRate ? item.interestRate / 12 : 1.5);
-            const stats = calculateAccruedBillInterest(
-              item.amount,
-              monthlyRate,
-              item.interestStartDate || item.date
-            );
+            const dalaliAmount =
+              item.dalaliAmount ?? (item.amount * dalaliRate) / 100;
 
             return (
               <Card
@@ -233,10 +213,10 @@ export const TransactionListScreen: React.FC = () => {
 
                   <View style={styles.amountContainer}>
                     <Text style={styles.totalAmount}>
-                      {formatCurrency(stats.totalWithInterest)}
+                      {formatCurrency(dalaliAmount)}
                     </Text>
                     <Text style={styles.interestSub}>
-                      +{formatCurrency(stats.accruedInterest)} int.
+                      {dalaliRate}% on {formatCurrency(item.amount)}
                     </Text>
                   </View>
                 </View>
@@ -246,7 +226,7 @@ export const TransactionListScreen: React.FC = () => {
                     <Badge status={item.status} />
                     <View style={styles.rateTag}>
                       <Text style={styles.rateTagText}>
-                        {monthlyRate}% / mo · {stats.daysElapsed}d
+                        {dalaliRate}% Dalali
                       </Text>
                     </View>
                   </View>
