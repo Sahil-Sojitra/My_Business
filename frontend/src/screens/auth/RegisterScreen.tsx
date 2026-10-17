@@ -3,6 +3,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -99,7 +100,11 @@ export const RegisterScreen: React.FC = () => {
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: Math.max(insets.top, 24) + 12,
+            paddingTop:
+              Math.max(
+                insets.top,
+                Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 24,
+              ) + 24,
             paddingBottom: Math.max(insets.bottom, 24) + 16,
           },
         ]}

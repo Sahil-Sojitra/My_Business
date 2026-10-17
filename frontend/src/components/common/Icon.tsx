@@ -264,6 +264,44 @@ export const XIcon: React.FC<IconProps> = ({
   );
 };
 
+/**
+ * Modern vector PlusIcon (crossbars at 0 and 90 deg)
+ */
+export const PlusIcon: React.FC<IconProps> = ({
+  size = 18,
+  color = '#FFFFFF',
+  strokeWidth = 2.4,
+}) => {
+  const lineLen = Math.round(size * 0.72);
+
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      <View
+        style={[
+          styles.plusLineH,
+          {
+            width: lineLen,
+            height: strokeWidth,
+            backgroundColor: color,
+            borderRadius: strokeWidth / 2,
+          },
+        ]}
+      />
+      <View
+        style={[
+          styles.plusLineV,
+          {
+            width: strokeWidth,
+            height: lineLen,
+            backgroundColor: color,
+            borderRadius: strokeWidth / 2,
+          },
+        ]}
+      />
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
@@ -313,5 +351,11 @@ const styles = StyleSheet.create({
   },
   crossLine2: {
     transform: [{ rotate: '-45deg' }],
+  },
+  plusLineH: {
+    position: 'absolute',
+  },
+  plusLineV: {
+    position: 'absolute',
   },
 });

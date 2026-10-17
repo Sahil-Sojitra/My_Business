@@ -1,5 +1,7 @@
 import React from 'react';
 import {
+  Platform,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -40,8 +42,14 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
     }
   };
 
+  const statusBarHeight =
+    Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0;
+  const topInset = Math.max(insets.top, statusBarHeight);
+  // Add 14dp of comfortable breathing room below status bar
+  const headerPaddingTop = topInset + 14;
+
   return (
-    <View style={[styles.headerContainer, { paddingTop: Math.max(insets.top, 12) }]}>
+    <View style={[styles.headerContainer, { paddingTop: headerPaddingTop }]}>
       <View style={styles.contentRow}>
         <View style={styles.leftSection}>
           {showBack && (

@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/common/AppHeader';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -16,9 +17,10 @@ import { useNavigation } from '../../navigation/NavigationContext';
 import { companyService } from '../../services';
 import { Company } from '../../types/company';
 import { formatPhone } from '../../utils/formatters';
-import { ChevronRight } from '../../components/common/Icon';
+import { ChevronRight, PlusIcon } from '../../components/common/Icon';
 
 export const CompanyListScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -66,11 +68,6 @@ export const CompanyListScreen: React.FC = () => {
         title="Companies"
         subtitle={`${companies.length} clients registered`}
         showBack={true}
-        rightAction={{
-          label: '+ Add',
-          onPress: () => navigation.navigate('CompanyForm'),
-          variant: 'primary',
-        }}
       />
 
       <View style={styles.searchContainer}>
@@ -160,6 +157,20 @@ export const CompanyListScreen: React.FC = () => {
           )}
         />
       )}
+
+      {/* Floating Action Button (FAB) for effortless 1-hand thumb reach */}
+      <TouchableOpacity
+        style={[
+          styles.fabButton,
+          { bottom: Math.max(insets.bottom, 16) + 16 },
+        ]}
+        activeOpacity={0.85}
+        onPress={() => navigation.navigate('CompanyForm')}
+        accessibilityRole="button"
+        accessibilityLabel="Add new company">
+        <PlusIcon size={18} color="#FFFFFF" strokeWidth={2.6} />
+        <Text style={styles.fabButtonText}>Add Company</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -197,7 +208,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 100, // ensure last card isn't obscured by floating FAB
   },
   companyCard: {
     padding: 17,
@@ -261,5 +272,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#1E40AF',
     fontWeight: '600',
+  },
+  fabButton: {
+    position: 'absolute',
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+    borderRadius: 30,
+    gap: 8,
+    elevation: 8,
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    zIndex: 999,
+  },
+  fabButtonText: {
+    fontSize: 15.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
 });

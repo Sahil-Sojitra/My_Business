@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/common/AppHeader';
 import { Badge } from '../../components/common/Badge';
 import { Card } from '../../components/common/Card';
@@ -17,11 +18,12 @@ import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
 import { Transaction, TransactionStatus } from '../../types/transaction';
 import { formatCurrency, formatDate } from '../../utils/formatters';
-import { ChevronRight } from '../../components/common/Icon';
+import { ChevronRight, PlusIcon } from '../../components/common/Icon';
 
 type FilterTab = 'ALL' | TransactionStatus;
 
 export const TransactionListScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const filterCompanyId = navigation.params?.companyId as string | undefined;
 
@@ -83,14 +85,6 @@ export const TransactionListScreen: React.FC = () => {
         title="Bills & Invoices"
         subtitle={`${transactions.length} sales bills tracked`}
         showBack={true}
-        rightAction={{
-          label: '+ Add Bill',
-          onPress: () =>
-            navigation.navigate('TransactionForm', {
-              defaultCompanyId: filterCompanyId,
-            }),
-          variant: 'primary',
-        }}
       />
 
       {/* Aggregate Dalali Summary Card */}
@@ -241,6 +235,24 @@ export const TransactionListScreen: React.FC = () => {
           }}
         />
       )}
+
+      {/* Floating Action Button (FAB) for effortless 1-hand thumb reach */}
+      <TouchableOpacity
+        style={[
+          styles.fabButton,
+          { bottom: Math.max(insets.bottom, 16) + 16 },
+        ]}
+        activeOpacity={0.85}
+        onPress={() =>
+          navigation.navigate('TransactionForm', {
+            defaultCompanyId: filterCompanyId,
+          })
+        }
+        accessibilityRole="button"
+        accessibilityLabel="Record new bill">
+        <PlusIcon size={18} color="#FFFFFF" strokeWidth={2.6} />
+        <Text style={styles.fabButtonText}>Record Bill</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -333,7 +345,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: 100, // ensure last card isn't obscured by floating FAB
   },
   txCard: {
     padding: 17,
@@ -407,5 +419,28 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#2563EB',
+  },
+  fabButton: {
+    position: 'absolute',
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2563EB',
+    paddingVertical: 14,
+    paddingHorizontal: 22,
+    borderRadius: 30,
+    gap: 8,
+    elevation: 8,
+    shadowColor: '#1D4ED8',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    zIndex: 999,
+  },
+  fabButtonText: {
+    fontSize: 15.5,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
 });
