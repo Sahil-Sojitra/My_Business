@@ -1,0 +1,14 @@
+import { Router } from 'express';
+import { register, login, getMe } from '../controllers/auth.controller.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
+
+const router: Router = Router();
+
+// Public auth endpoints
+router.post('/register', register);
+router.post('/login', login);
+
+// Protected auth endpoints
+router.get('/me', authenticate, getMe);
+
+export default router;

@@ -20,22 +20,22 @@ export const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
   const { login, error: authError, clearError } = useAuth();
 
-  const [email, setEmail] = useState<string>('broker@mybusiness.com');
+  const [phone, setPhone] = useState<string>('9876543210');
   const [password, setPassword] = useState<string>('password123');
   const [loading, setLoading] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<{
-    email?: string;
+    phone?: string;
     password?: string;
   }>({});
 
   const validate = (): boolean => {
-    const errors: { email?: string; password?: string } = {};
-    const emailTrimmed = email.trim();
+    const errors: { phone?: string; password?: string } = {};
+    const cleanPhone = phone.trim().replace(/\D/g, '');
 
-    if (!emailTrimmed) {
-      errors.email = 'Email address is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
-      errors.email = 'Please enter a valid email address';
+    if (!cleanPhone) {
+      errors.phone = 'Phone number is required';
+    } else if (cleanPhone.length !== 10) {
+      errors.phone = 'Please enter a valid 10-digit phone number';
     }
 
     if (!password) {
@@ -56,7 +56,8 @@ export const LoginScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      await login({ email: email.trim(), password });
+      const cleanPhone = phone.trim().replace(/\D/g, '');
+      await login({ phone: cleanPhone, password });
       // Navigation state will automatically transition to Home via AuthContext listener
     } catch {
       // error is set in auth context
@@ -66,7 +67,7 @@ export const LoginScreen: React.FC = () => {
   };
 
   const fillDemoCredentials = () => {
-    setEmail('broker@mybusiness.com');
+    setPhone('9876543210');
     setPassword('password123');
     setValidationErrors({});
     clearError();
@@ -91,11 +92,11 @@ export const LoginScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>My Business Mobile MVP</Text>
+            <Text style={styles.badgeText}>My Business Mobile</Text>
           </View>
           <Text style={styles.title}>Broker Portal</Text>
           <Text style={styles.subtitle}>
-            Sign in to manage companies, bills, and calculate interest
+            Sign in with phone number to track Dalali deals & bills
           </Text>
         </View>
 
@@ -107,19 +108,19 @@ export const LoginScreen: React.FC = () => {
           ) : null}
 
           <Input
-            label="Email Address"
-            value={email}
+            label="Phone Number"
+            value={phone}
             onChangeText={text => {
-              setEmail(text);
-              if (validationErrors.email) {
-                setValidationErrors(prev => ({ ...prev, email: undefined }));
+              setPhone(text);
+              if (validationErrors.phone) {
+                setValidationErrors(prev => ({ ...prev, phone: undefined }));
               }
               clearError();
             }}
-            placeholder="broker@mybusiness.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={validationErrors.email}
+            placeholder="Enter 10-digit mobile number"
+            keyboardType="phone-pad"
+            maxLength={10}
+            error={validationErrors.phone}
             required
           />
 
@@ -152,7 +153,7 @@ export const LoginScreen: React.FC = () => {
             style={styles.demoFillBtn}
             activeOpacity={0.7}>
             <Text style={styles.demoFillText}>
-              ⚡ Quick Fill Demo Credentials
+              ⚡ Quick Fill Demo Account (9876543210)
             </Text>
           </TouchableOpacity>
         </View>

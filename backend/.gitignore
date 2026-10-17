@@ -9,6 +9,9 @@ dist/
 .env.*
 !.env.example
 
+# Migrations
+**/prisma/migrations
+
 # Logs
 npm-debug.log*
 yarn-debug.log*

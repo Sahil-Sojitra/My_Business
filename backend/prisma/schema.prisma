@@ -10,3 +10,91 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+// -------------------------------------------------------------
+// ENUMS
+// -------------------------------------------------------------
+
+enum BillStatus {
+  PENDING
+  OVERDUE
+  PARTIAL
+  PAID
+}
+
+// -------------------------------------------------------------
+// MODELS
+// -------------------------------------------------------------
+
+/// Authenticated broker account holder
+model User {
+  id           String    @id @default(uuid())
+  name         String
+  mobileNumber String    @unique // Primary unique login identifier
+  email        String?   // Optional profile field
+  passwordHash String
+  businessName String?   @default("My Business")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Multi-tenant relations: each broker owns their companies and bills
+  companies    Company[]
+  bills        Bill[]
+
+  @@index([mobileNumber])
+  @@map("users")
+}
+
+/// Registered buyer company / client firm
+model Company {
+  id            String    @id @default(uuid())
+  userId        String
+  name          String
+  ownerName     String?
+  contactNumber String
+  email         String?
+  gstin         String?
+  address       String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bills         Bill[]
+
+  @@index([userId])
+  @@index([name])
+  @@map("companies")
+}
+
+/// Consignment sales bill / invoice
+model Bill {
+  id                  String       @id @default(uuid())
+  userId              String
+  companyId           String
+  companyName         String       // Cached for fast list queries
+  billNumber          String?
+  amount              Decimal      @db.Decimal(12, 2)
+  dalaliRate          Decimal      @default(1.50) @db.Decimal(5, 2) // Commission percentage (e.g. 1.50%)
+  dalaliAmount        Decimal      @db.Decimal(12, 2)               // Static: (amount * dalaliRate) / 100
+  date                String                                        // Invoice date (YYYY-MM-DD)
+  dueDate             String?                                       // Credit deadline (YYYY-MM-DD)
+  status              BillStatus   @default(PENDING)
+  description         String?
+
+  // File Attachments metadata (stored as JSON)
+  billPdf             Json?
+  chitthi             Json?
+
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  user                User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company             Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([dueDate])
+  @@index([status])
+  @@map("bills")
+}

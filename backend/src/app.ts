@@ -1,8 +1,16 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
 import healthRoutes from './routes/health.routes.js';
+import authRoutes from './routes/auth.routes.js';
+import companyRoutes from './routes/company.routes.js';
+import billRoutes from './routes/bill.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 import docsRouter from './docs/swagger.js';
 
 const app: Application = express();
+
+// Security and CORS middleware
+app.use(cors());
 
 // Body parsing middleware
 app.use(express.json());
@@ -13,10 +21,22 @@ app.get('/', (_req: Request, res: Response) => {
   res.status(200).json({
     name: 'My_Business Backend API',
     version: '1.0.0',
-    stage: 'Stage 1: Foundation & PostgreSQL Connectivity',
+    stage: 'Phase 2: Authentication & Multi-Tenancy',
     status: 'running',
     endpoints: {
       health: '/api/health',
+      auth: {
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login',
+        me: 'GET /api/auth/me',
+      },
+      companies: '/api/companies',
+      bills: {
+        list: 'GET /api/bills',
+        summary: 'GET /api/bills/summary',
+        create: 'POST /api/bills',
+      },
+      uploads: 'POST /api/uploads',
       docs: '/docs',
       openapi: '/openapi.json',
     },
@@ -27,6 +47,10 @@ app.get('/', (_req: Request, res: Response) => {
 app.use(docsRouter);
 
 // Register route modules
+app.use('/api/auth', authRoutes);
+app.use('/api/companies', companyRoutes);
+app.use('/api/bills', billRoutes);
+app.use('/api/uploads', uploadRoutes);
 app.use('/api', healthRoutes);
 
 // Fallback 404 handler

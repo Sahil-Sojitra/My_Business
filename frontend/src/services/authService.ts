@@ -37,13 +37,22 @@ class MockAuthService implements IAuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     await this.delay(300);
 
-    const emailTrimmed = credentials.email.trim().toLowerCase();
-    const found = this.users.find(
-      u => u.user.email.toLowerCase() === emailTrimmed
-    );
+    const cleanPhone = (credentials.phone || credentials.mobileNumber || '').replace(/\D/g, '');
+    const emailTrimmed = credentials.email?.trim().toLowerCase();
+
+    const found = this.users.find(u => {
+      const userPhone = (u.user.phone || u.user.mobileNumber || '').replace(/\D/g, '');
+      if (cleanPhone && userPhone === cleanPhone) {
+        return true;
+      }
+      if (emailTrimmed && u.user.email?.toLowerCase() === emailTrimmed) {
+        return true;
+      }
+      return false;
+    });
 
     if (!found || found.passwordHash !== credentials.password) {
-      throw new Error('Invalid email or password');
+      throw new Error('Invalid phone number or password');
     }
 
     this.currentUser = found.user;
@@ -56,20 +65,24 @@ class MockAuthService implements IAuthService {
   async register(data: RegisterData): Promise<AuthResponse> {
     await this.delay(350);
 
-    const emailTrimmed = data.email.trim().toLowerCase();
-    const existing = this.users.find(
-      u => u.user.email.toLowerCase() === emailTrimmed
-    );
+    const cleanPhone = (data.phone || data.mobileNumber || '').replace(/\D/g, '');
+    const emailTrimmed = data.email?.trim().toLowerCase();
+
+    const existing = this.users.find(u => {
+      const userPhone = (u.user.phone || u.user.mobileNumber || '').replace(/\D/g, '');
+      return Boolean(cleanPhone && userPhone === cleanPhone);
+    });
 
     if (existing) {
-      throw new Error('An account with this email already exists');
+      throw new Error('An account with this phone number already exists');
     }
 
     const newUser: User = {
       id: `usr_${Date.now()}`,
       name: data.name.trim(),
+      phone: cleanPhone,
+      mobileNumber: cleanPhone,
       email: emailTrimmed,
-      phone: data.phone?.trim(),
       businessName: data.businessName?.trim() || 'My Business',
       createdAt: new Date().toISOString(),
     };
