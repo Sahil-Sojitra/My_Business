@@ -5,3 +5,5 @@ export {
   transactionService,
   type ITransactionService,
 } from './transactionService';
+export { sessionPersistence, type StoredSession } from './storage';
+

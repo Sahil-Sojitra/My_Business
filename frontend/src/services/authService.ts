@@ -5,7 +5,8 @@ import {
   UpdateProfileData,
   User,
 } from '../types/auth';
-import { apiClient, request } from './apiClient';
+import { ApiError, apiClient, request } from './apiClient';
+import { sessionPersistence } from './storage';
 
 export interface IAuthService {
   login(credentials: LoginCredentials): Promise<AuthResponse>;
@@ -20,6 +21,7 @@ export interface IAuthService {
 
 /**
  * Real API client implementation of IAuthService connected to backend /api/auth endpoints.
+ * Integrates with persistent storage so user remains logged in across app restarts.
  */
 class RealAuthService implements IAuthService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -35,6 +37,7 @@ class RealAuthService implements IAuthService {
 
     apiClient.setAuthToken(response.token);
     apiClient.setCurrentUser(response.user);
+    await sessionPersistence.saveSession(response.token, response.user);
     return response;
   }
 
@@ -54,27 +57,58 @@ class RealAuthService implements IAuthService {
 
     apiClient.setAuthToken(response.token);
     apiClient.setCurrentUser(response.user);
+    await sessionPersistence.saveSession(response.token, response.user);
     return response;
   }
 
   async logout(): Promise<void> {
     apiClient.setAuthToken(null);
     apiClient.setCurrentUser(null);
+    await sessionPersistence.clearSession();
   }
 
   async getCurrentUser(): Promise<User | null> {
-    const token = apiClient.getAuthToken();
+    let token = apiClient.getAuthToken();
+    let cachedUser = apiClient.getCurrentUser();
+
+    // If token or cached user is not in memory (e.g. app just restarted), load from disk
+    if (!token || !cachedUser) {
+      const stored = await sessionPersistence.getSession();
+      token = stored.token;
+      cachedUser = stored.user;
+
+      if (token) {
+        apiClient.setAuthToken(token);
+      }
+      if (cachedUser) {
+        apiClient.setCurrentUser(cachedUser);
+      }
+    }
+
+    // If no stored credentials exist, user is unauthenticated
     if (!token) {
-      return apiClient.getCurrentUser();
+      return null;
     }
 
     try {
-      const user = await request<User>('/auth/me');
-      apiClient.setCurrentUser(user);
-      return user;
-    } catch {
-      apiClient.setAuthToken(null);
-      apiClient.setCurrentUser(null);
+      const freshUser = await request<User>('/auth/me');
+      apiClient.setCurrentUser(freshUser);
+      await sessionPersistence.updateUser(freshUser);
+      return freshUser;
+    } catch (err: unknown) {
+      // If server returned 401 Unauthorized, token has expired or is revoked
+      if (err instanceof ApiError && err.statusCode === 401) {
+        console.log('[Auth] Token expired (401), logging out.');
+        await this.logout();
+        return null;
+      }
+
+      // If network error (offline, slow connection, backend restart), keep cached user!
+      // This prevents unnecessary logouts when user opens app in poor reception
+      if (cachedUser) {
+        return cachedUser;
+      }
+
       return null;
     }
   }
@@ -101,6 +135,9 @@ class RealAuthService implements IAuthService {
 
     if (response.token) {
       apiClient.setAuthToken(response.token);
+      await sessionPersistence.saveSession(response.token, response.user);
+    } else {
+      await sessionPersistence.updateUser(response.user);
     }
     apiClient.setCurrentUser(response.user);
     return response;

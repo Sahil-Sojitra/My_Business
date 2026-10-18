@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { authService } from '../../services';
+import { authService, sessionPersistence, apiClient } from '../../services';
 import {
   LoginCredentials,
   RegisterData,
@@ -22,7 +22,7 @@ interface AuthContextValue {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: UpdateProfileData) => Promise<User>;
-  deleteAccount: (password?: string) => Promise<void>;
+  deleteAccount(password?: string): Promise<void>;
   clearError: () => void;
 }
 
@@ -36,18 +36,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check initial authentication state
-    authService
-      .getCurrentUser()
-      .then(currentUser => {
-        setUser(currentUser);
-      })
-      .catch(() => {
-        setUser(null);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    let isMounted = true;
+
+    const initializeAuth = async () => {
+      try {
+        // 1. Instant recovery from local persistent storage so Home screen loads immediately
+        const stored = await sessionPersistence.getSession();
+        if (stored.token && stored.user && isMounted) {
+          apiClient.setAuthToken(stored.token);
+          apiClient.setCurrentUser(stored.user);
+          setUser(stored.user);
+          setIsLoading(false);
+        }
+
+        // 2. Validate/refresh session in background
+        const verifiedUser = await authService.getCurrentUser();
+        if (isMounted) {
+          setUser(verifiedUser);
+        }
+      } catch (err) {
+        console.warn('[AuthContext] Session initialization error:', err);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const clearError = useCallback(() => {
