@@ -11,7 +11,12 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { CheckIcon, SearchIcon, XIcon } from '../../../components/common/Icon';
+import {
+  CheckIcon,
+  PlusIcon,
+  SearchIcon,
+  XIcon,
+} from '../../../components/common/Icon';
 import { Company } from '../../../types/company';
 import { styles } from '../TransactionFormStyles';
 
@@ -121,7 +126,8 @@ export const CompanyPickerModal: React.FC<CompanyPickerModalProps> = ({
             style={styles.modalAddCompBtn}
             onPress={onAddNewCompany}
             activeOpacity={0.7}>
-            <Text style={styles.modalAddCompText}>+ Add New Buyer Firm</Text>
+            <PlusIcon size={15} color="#2563EB" strokeWidth={2.6} />
+            <Text style={styles.modalAddCompText}>Add New Buyer Firm</Text>
           </TouchableOpacity>
 
           {/* Company List Scroll */}

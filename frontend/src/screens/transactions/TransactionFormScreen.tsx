@@ -51,6 +51,7 @@ export const TransactionFormScreen: React.FC = () => {
             selectedCompany={form.selectedCompany}
             error={form.errors.company}
             onPress={() => form.setShowCompanyModal(true)}
+            onAddNewCompany={() => form.navigation.navigate('CompanyForm')}
           />
 
           {/* Bill Amount */}

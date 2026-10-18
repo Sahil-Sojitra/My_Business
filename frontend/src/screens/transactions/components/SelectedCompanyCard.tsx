@@ -14,6 +14,7 @@ interface SelectedCompanyCardProps {
   selectedCompany?: Company;
   error?: string;
   onPress: () => void;
+  onAddNewCompany: () => void;
 }
 
 export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
@@ -21,6 +22,7 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
   selectedCompany,
   error,
   onPress,
+  onAddNewCompany,
 }) => {
   return (
     <>
@@ -29,21 +31,32 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
           <Text style={styles.fieldLabel}>Buyer Company / Firm</Text>
           <Text style={styles.requiredMark}> *</Text>
         </View>
-        <TouchableOpacity
-          onPress={onPress}
-          activeOpacity={0.7}
-          style={styles.browseAllBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Search buyer firms">
-          <Text style={styles.browseAllText}>
-            {companiesCount > 0 ? `Search ${companiesCount} Firms` : '+ Add Firm'}
-          </Text>
+
+        <View style={styles.headerRightActions}>
           {companiesCount > 0 ? (
-            <ChevronDown size={13} color="#2563EB" strokeWidth={2.4} />
-          ) : (
-            <PlusIcon size={12} color="#2563EB" strokeWidth={2.4} />
-          )}
-        </TouchableOpacity>
+            <TouchableOpacity
+              onPress={onPress}
+              activeOpacity={0.7}
+              style={styles.searchFirmsHeaderBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Search firms">
+              <Text style={styles.searchFirmsHeaderText}>
+                Search ({companiesCount})
+              </Text>
+              <ChevronDown size={11} color="#475569" strokeWidth={2.4} />
+            </TouchableOpacity>
+          ) : null}
+
+          <TouchableOpacity
+            onPress={onAddNewCompany}
+            activeOpacity={0.8}
+            style={styles.addFirmPrimaryBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Add new buyer firm">
+            <PlusIcon size={13} color="#FFFFFF" strokeWidth={1.5} />
+            <Text style={styles.addFirmPrimaryBtnText}>Add Firm</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {selectedCompany ? (
@@ -68,6 +81,29 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
           <View style={styles.changeCompanyBadge}>
             <Text style={styles.changeCompanyBadgeText}>Change</Text>
             <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+          </View>
+        </TouchableOpacity>
+      ) : companiesCount === 0 ? (
+        <TouchableOpacity
+          style={[styles.emptyFirmPromptBtn, Boolean(error) && styles.inputErrorBorder]}
+          onPress={onAddNewCompany}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Add your first buyer firm">
+          <View style={styles.buildingIconBadge}>
+            <BuildingIcon size={20} color="#2563EB" />
+          </View>
+          <View style={styles.emptyFirmPromptContent}>
+            <Text style={styles.emptyFirmPromptTitle}>
+              No buyer firms registered yet
+            </Text>
+            <Text style={styles.emptyFirmPromptSub}>
+              Tap here to create & add your first firm
+            </Text>
+          </View>
+          <View style={styles.emptyFirmActionBadge}>
+            <PlusIcon size={12} color="#FFFFFF" strokeWidth={1.5} />
+            <Text style={styles.emptyFirmActionBadgeText}>Add</Text>
           </View>
         </TouchableOpacity>
       ) : (
