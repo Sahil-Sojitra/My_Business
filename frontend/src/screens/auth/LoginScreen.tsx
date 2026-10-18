@@ -20,8 +20,8 @@ export const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
   const { login, error: authError, clearError } = useAuth();
 
-  const [phone, setPhone] = useState<string>('9876543210');
-  const [password, setPassword] = useState<string>('password123');
+  const [phone, setPhone] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<{
     phone?: string;
@@ -65,13 +65,6 @@ export const LoginScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const fillDemoCredentials = () => {
-    setPhone('9876543210');
-    setPassword('password123');
-    setValidationErrors({});
-    clearError();
   };
 
   return (
@@ -150,15 +143,6 @@ export const LoginScreen: React.FC = () => {
             size="lg"
             style={styles.submitBtn}
           />
-
-          <TouchableOpacity
-            onPress={fillDemoCredentials}
-            style={styles.demoFillBtn}
-            activeOpacity={0.7}>
-            <Text style={styles.demoFillText}>
-              ⚡ Quick Fill Demo Credentials
-            </Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.footerRow}>
@@ -243,18 +227,6 @@ const styles = StyleSheet.create({
   },
   submitBtn: {
     marginTop: 8,
-  },
-  demoFillBtn: {
-    marginTop: 14,
-    paddingVertical: 11,
-    alignItems: 'center',
-    borderRadius: 10,
-    backgroundColor: '#F1F5F9',
-  },
-  demoFillText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#334155',
   },
   footerRow: {
     flexDirection: 'row',

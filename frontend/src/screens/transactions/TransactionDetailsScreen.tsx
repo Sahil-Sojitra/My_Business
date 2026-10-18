@@ -338,7 +338,7 @@ export const TransactionDetailsScreen: React.FC = () => {
                   CONSIGNMENT DELIVERY CHITTHI
                 </Text>
                 <Text style={styles.chitthiPaperNo}>
-                  BILL REF: {bill?.billNumber || 'LOT-409'}
+                  BILL REF: {bill?.billNumber || 'UNASSIGNED'}
                 </Text>
               </View>
               <View style={styles.chitthiDottedDivider} />

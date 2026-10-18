@@ -3,6 +3,7 @@ import {
   Transaction,
   UpdateBillInput,
 } from '../types/transaction';
+import { request, ApiError } from './apiClient';
 
 export interface ITransactionService {
   getAll(companyId?: string): Promise<Transaction[]>;
@@ -13,225 +14,126 @@ export interface ITransactionService {
   deleteByCompanyId(companyId: string): Promise<number>;
 }
 
-const INITIAL_BILLS: Transaction[] = [
-  {
-    id: 'tx_1',
-    companyId: 'cmp_1',
-    companyName: 'Apex Global Traders',
-    billNumber: 'INV-2026-081',
-    billPdf: {
-      name: 'Invoice_INV-2026-081.pdf',
-      type: 'pdf',
-      size: '284 KB',
-      date: '2026-09-01',
-    },
-    chitthi: {
-      name: 'Chitthi_Delivery_Slip_Lot409.jpg',
-      type: 'photo',
-      size: '1.2 MB',
-      date: '2026-09-01',
-    },
-    amount: 145000,
-    dalaliRate: 1.5,
-    dalaliAmount: 2175,
-    monthlyInterestRate: 1.5, // 1.5% per month
-    interestRate: 18,
-    date: '2026-09-01',
-    dueDate: '2026-10-18', // Near due date
-    interestStartDate: '2026-09-01',
-    status: 'PENDING',
-    description: 'Yarn consignment lot #409 batch delivery',
-    createdAt: new Date(Date.now() - 42 * 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 42 * 86400000).toISOString(),
-  },
-  {
-    id: 'tx_2',
-    companyId: 'cmp_1',
-    companyName: 'Apex Global Traders',
-    billNumber: 'INV-2026-094',
-    amount: 75000,
-    dalaliRate: 1.0,
-    dalaliAmount: 750,
-    monthlyInterestRate: 1.0, // 1.0% per month
-    interestRate: 12,
-    date: '2026-09-20',
-    dueDate: '2026-10-15', // Closest due date!
-    interestStartDate: '2026-09-20',
-    status: 'PENDING',
-    description: 'Cotton fabric shipment bill',
-    createdAt: new Date(Date.now() - 23 * 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 23 * 86400000).toISOString(),
-  },
-  {
-    id: 'tx_3',
-    companyId: 'cmp_2',
-    companyName: 'Metro Textile Mills',
-    billNumber: 'INV-9022',
-    amount: 82000,
-    dalaliRate: 2.0,
-    dalaliAmount: 1640,
-    monthlyInterestRate: 2.0, // 2.0% per month
-    interestRate: 24,
-    date: '2026-08-15',
-    dueDate: '2026-09-15', // Overdue
-    interestStartDate: '2026-08-15',
-    status: 'OVERDUE',
-    description: 'Fabric processing & finishing lot brokerage',
-    createdAt: new Date(Date.now() - 59 * 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 59 * 86400000).toISOString(),
-  },
-  {
-    id: 'tx_4',
-    companyId: 'cmp_3',
-    companyName: 'Sunrise Polymers & Weaving',
-    billNumber: 'INV-4411',
-    amount: 325000,
-    dalaliRate: 1.25,
-    dalaliAmount: 4062.5,
-    monthlyInterestRate: 1.25, // 1.25% per month
-    interestRate: 15,
-    date: '2026-10-01',
-    dueDate: '2026-10-31',
-    interestStartDate: '2026-10-01',
-    status: 'PENDING',
-    description: 'Polymer raw materials supply brokerage invoice',
-    createdAt: new Date(Date.now() - 12 * 86400000).toISOString(),
-    updatedAt: new Date(Date.now() - 12 * 86400000).toISOString(),
-  },
-];
-
-class MockTransactionService implements ITransactionService {
-  private transactions: Transaction[] = [...INITIAL_BILLS];
-
+/**
+ * Real API client implementation of ITransactionService connected to backend /api/bills endpoints.
+ * Note: Searching is handled client-side on the frontend for zero-latency instant filtering.
+ */
+class RealTransactionService implements ITransactionService {
   async getAll(companyId?: string): Promise<Transaction[]> {
-    await this.delay(100);
-    const filtered = companyId
-      ? this.transactions.filter(t => t.companyId === companyId)
-      : this.transactions;
-
-    return [...filtered];
+    const endpoint = companyId
+      ? `/bills?companyId=${encodeURIComponent(companyId)}`
+      : '/bills';
+    return request<Transaction[]>(endpoint);
   }
 
   async getById(id: string): Promise<Transaction | null> {
-    await this.delay(50);
-    const item = this.transactions.find(t => t.id === id);
-    return item ? { ...item } : null;
+    try {
+      return await request<Transaction>(`/bills/${id}`);
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.statusCode === 404) {
+        return null;
+      }
+      throw err;
+    }
   }
 
   async create(data: CreateBillInput): Promise<Transaction> {
-    await this.delay(150);
-
-    const now = new Date().toISOString();
-    const amount = Number(data.amount);
-    const dalaliRate =
-      data.dalaliRate !== undefined
-        ? Number(data.dalaliRate)
-        : data.monthlyInterestRate !== undefined
-        ? Number(data.monthlyInterestRate)
-        : 1.5;
-    const dalaliAmount =
-      data.dalaliAmount !== undefined
-        ? Number(data.dalaliAmount)
-        : (amount * dalaliRate) / 100;
-    const monthlyRate =
-      data.monthlyInterestRate !== undefined
-        ? Number(data.monthlyInterestRate)
-        : dalaliRate;
-
-    const newBill: Transaction = {
-      id: `bill_${Date.now()}`,
+    const body: Record<string, unknown> = {
       companyId: data.companyId,
       companyName: data.companyName,
-      billNumber: data.billNumber?.trim(),
-      amount,
-      dalaliRate,
-      dalaliAmount,
-      monthlyInterestRate: monthlyRate,
-      interestRate: monthlyRate * 12,
+      billNumber: data.billNumber?.trim() || undefined,
+      amount: Number(data.amount),
+      dalaliRate:
+        data.dalaliRate !== undefined ? Number(data.dalaliRate) : 1.5,
       date: data.date,
-      dueDate: data.dueDate,
-      interestStartDate: data.interestStartDate || data.date,
-      status: 'PENDING', // Always defaults to PENDING on creation
-      description: data.description?.trim(),
-      createdAt: now,
-      updatedAt: now,
+      status: data.status || 'PENDING',
     };
 
-    this.transactions.push(newBill);
-    return { ...newBill };
+    if (data.dalaliAmount !== undefined) {
+      body.dalaliAmount = Number(data.dalaliAmount);
+    }
+    if (data.dueDate && data.dueDate.trim()) {
+      body.dueDate = data.dueDate.trim();
+    }
+    if (data.description && data.description.trim()) {
+      body.description = data.description.trim();
+    }
+    if (data.billPdf) {
+      body.billPdf = data.billPdf;
+    }
+    if (data.chitthi) {
+      body.chitthi = data.chitthi;
+    }
+
+    return request<Transaction>('/bills', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
   }
 
   async update(id: string, data: UpdateBillInput): Promise<Transaction> {
-    await this.delay(150);
+    const body: Record<string, unknown> = {};
 
-    const index = this.transactions.findIndex(t => t.id === id);
-    if (index === -1) {
-      throw new Error('Bill not found');
+    if (data.companyId !== undefined) {
+      body.companyId = data.companyId;
+    }
+    if (data.companyName !== undefined) {
+      body.companyName = data.companyName;
+    }
+    if (data.billNumber !== undefined) {
+      body.billNumber = data.billNumber.trim();
+    }
+    if (data.amount !== undefined) {
+      body.amount = Number(data.amount);
+    }
+    if (data.dalaliRate !== undefined) {
+      body.dalaliRate = Number(data.dalaliRate);
+    }
+    if (data.dalaliAmount !== undefined) {
+      body.dalaliAmount = Number(data.dalaliAmount);
+    }
+    if (data.date !== undefined) {
+      body.date = data.date;
+    }
+    if (data.dueDate !== undefined) {
+      body.dueDate = data.dueDate.trim();
+    }
+    if (data.status !== undefined) {
+      body.status = data.status;
+    }
+    if (data.description !== undefined) {
+      body.description = data.description.trim();
+    }
+    if (data.billPdf !== undefined) {
+      body.billPdf = data.billPdf;
+    }
+    if (data.chitthi !== undefined) {
+      body.chitthi = data.chitthi;
     }
 
-    const current = this.transactions[index];
-    const amount =
-      data.amount !== undefined ? Number(data.amount) : current.amount;
-    const dalaliRate =
-      data.dalaliRate !== undefined
-        ? Number(data.dalaliRate)
-        : data.monthlyInterestRate !== undefined
-        ? Number(data.monthlyInterestRate)
-        : current.dalaliRate ?? current.monthlyInterestRate ?? 1.5;
-    const dalaliAmount =
-      data.dalaliAmount !== undefined
-        ? Number(data.dalaliAmount)
-        : (amount * dalaliRate) / 100;
-    const monthlyRate =
-      data.monthlyInterestRate !== undefined
-        ? Number(data.monthlyInterestRate)
-        : dalaliRate;
-
-    const updated: Transaction = {
-      ...current,
-      ...data,
-      amount,
-      dalaliRate,
-      dalaliAmount,
-      monthlyInterestRate: monthlyRate,
-      interestRate: monthlyRate * 12,
-      billNumber:
-        data.billNumber !== undefined
-          ? data.billNumber.trim()
-          : current.billNumber,
-      interestStartDate:
-        data.interestStartDate !== undefined
-          ? data.interestStartDate
-          : current.interestStartDate,
-      description:
-        data.description !== undefined
-          ? data.description.trim()
-          : current.description,
-      updatedAt: new Date().toISOString(),
-    };
-
-    this.transactions[index] = updated;
-    return { ...updated };
+    return request<Transaction>(`/bills/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
   }
 
   async delete(id: string): Promise<boolean> {
-    await this.delay(100);
-    const initialLength = this.transactions.length;
-    this.transactions = this.transactions.filter(t => t.id !== id);
-    return this.transactions.length < initialLength;
+    await request<{ success: boolean }>(`/bills/${id}`, {
+      method: 'DELETE',
+    });
+    return true;
   }
 
   async deleteByCompanyId(companyId: string): Promise<number> {
-    await this.delay(50);
-    const beforeCount = this.transactions.length;
-    this.transactions = this.transactions.filter(t => t.companyId !== companyId);
-    return beforeCount - this.transactions.length;
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    const res = await request<{ success: boolean; count: number }>(
+      `/bills/company/${encodeURIComponent(companyId)}`,
+      {
+        method: 'DELETE',
+      }
+    );
+    return res.count ?? 0;
   }
 }
 
 export const transactionService: ITransactionService =
-  new MockTransactionService();
+  new RealTransactionService();
