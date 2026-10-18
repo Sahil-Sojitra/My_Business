@@ -13,30 +13,6 @@ export const styles = StyleSheet.create({
   welcomeBanner: {
     marginBottom: 14,
   },
-  welcomeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  welcomeTextWrap: {
-    flex: 1,
-    marginRight: 10,
-  },
-  welcomeProfileBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1.5,
-    borderColor: '#BFDBFE',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 2,
-  },
   greeting: {
     fontSize: 23,
     fontWeight: '800',

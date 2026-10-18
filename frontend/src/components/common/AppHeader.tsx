@@ -18,10 +18,13 @@ interface AppHeaderProps {
   showBack?: boolean;
   onBack?: () => void;
   rightAction?: {
-    label: string;
+    label?: string;
+    icon?: React.ReactNode;
     onPress: () => void;
-    variant?: 'primary' | 'danger' | 'ghost';
+    variant?: 'primary' | 'danger' | 'ghost' | 'icon';
+    accessibilityLabel?: string;
   };
+  rightComponent?: React.ReactNode;
 }
 
 export const AppHeader: React.FC<AppHeaderProps> = ({
@@ -30,6 +33,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   showBack = false,
   onBack,
   rightAction,
+  rightComponent,
 }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -75,26 +79,39 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           </View>
         </View>
 
-        {rightAction && (
+        {rightComponent ? (
+          rightComponent
+        ) : rightAction ? (
           <TouchableOpacity
             onPress={rightAction.onPress}
             style={[
-              styles.rightButton,
+              rightAction.icon || rightAction.variant === 'icon'
+                ? styles.rightIconButton
+                : styles.rightButton,
               rightAction.variant === 'primary' && styles.rightButtonPrimary,
               rightAction.variant === 'danger' && styles.rightButtonDanger,
             ]}
             activeOpacity={0.8}
-            accessibilityRole="button">
-            <Text
-              style={[
-                styles.rightButtonText,
-                rightAction.variant === 'primary' && styles.rightButtonTextPrimary,
-                rightAction.variant === 'danger' && styles.rightButtonTextDanger,
-              ]}>
-              {rightAction.label}
-            </Text>
+            accessibilityRole="button"
+            accessibilityLabel={
+              rightAction.accessibilityLabel || rightAction.label || 'Action'
+            }>
+            {rightAction.icon ? (
+              rightAction.icon
+            ) : (
+              <Text
+                style={[
+                  styles.rightButtonText,
+                  rightAction.variant === 'primary' &&
+                    styles.rightButtonTextPrimary,
+                  rightAction.variant === 'danger' &&
+                    styles.rightButtonTextDanger,
+                ]}>
+                {rightAction.label}
+              </Text>
+            )}
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -167,5 +184,20 @@ const styles = StyleSheet.create({
   },
   rightButtonTextDanger: {
     color: '#DC2626',
+  },
+  rightIconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

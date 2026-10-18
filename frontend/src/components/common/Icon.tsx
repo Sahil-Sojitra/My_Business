@@ -402,6 +402,70 @@ export const TrashIcon: React.FC<IconProps> = ({
   );
 };
 
+/**
+ * Modern vector Calendar icon
+ */
+export const CalendarIcon: React.FC<IconProps> = ({
+  size = 18,
+  color = '#2563EB',
+  strokeWidth = 2,
+}) => {
+  const w = Math.round(size * 0.82);
+  const h = Math.round(size * 0.78);
+  const hookSize = Math.round(size * 0.22);
+
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      {/* Outer Calendar Box */}
+      <View
+        style={{
+          width: w,
+          height: h,
+          borderRadius: 4,
+          borderWidth: strokeWidth,
+          borderColor: color,
+          position: 'absolute',
+          bottom: 1,
+        }}>
+        {/* Top Header Line */}
+        <View
+          style={{
+            width: '100%',
+            height: strokeWidth,
+            backgroundColor: color,
+            position: 'absolute',
+            top: Math.round(h * 0.28),
+          }}
+        />
+      </View>
+      {/* Left Binding Hook */}
+      <View
+        style={{
+          width: strokeWidth,
+          height: hookSize,
+          backgroundColor: color,
+          borderRadius: strokeWidth / 2,
+          position: 'absolute',
+          top: 0,
+          left: Math.round(size * 0.26),
+        }}
+      />
+      {/* Right Binding Hook */}
+      <View
+        style={{
+          width: strokeWidth,
+          height: hookSize,
+          backgroundColor: color,
+          borderRadius: strokeWidth / 2,
+          position: 'absolute',
+          top: 0,
+          right: Math.round(size * 0.26),
+        }}
+      />
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',

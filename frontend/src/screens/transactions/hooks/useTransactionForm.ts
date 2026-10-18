@@ -67,9 +67,13 @@ export function useTransactionForm() {
   const [showChitthiModal, setShowChitthiModal] = useState<boolean>(false);
   const [showChitthiViewer, setShowChitthiViewer] = useState<boolean>(false);
 
-  const [date, setDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
+  const [date, setDate] = useState<string>(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  });
   const [dueDate, setDueDate] = useState<string>('');
   const [description, setDescription] = useState<string>('');
 
@@ -165,7 +169,7 @@ export function useTransactionForm() {
     }
 
     if (!date.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
-      newErrors.date = 'Date must be in YYYY-MM-DD format (e.g. 2026-10-13)';
+      newErrors.date = 'Please select a valid bill date';
     }
 
     setErrors(newErrors);

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { UserIcon } from '../../components/common/Icon';
@@ -80,9 +80,9 @@ export const HomeScreen: React.FC = () => {
         title="My Business"
         subtitle={user?.businessName || 'Brokerage Portfolio'}
         rightAction={{
-          label: 'Profile',
+          icon: <UserIcon size={20} color="#2563EB" />,
           onPress: () => navigation.navigate('Profile'),
-          variant: 'primary',
+          accessibilityLabel: 'User Profile',
         }}
       />
 
@@ -96,23 +96,12 @@ export const HomeScreen: React.FC = () => {
         }>
         {/* Welcome Section */}
         <View style={styles.welcomeBanner}>
-          <View style={styles.welcomeRow}>
-            <View style={styles.welcomeTextWrap}>
-              <Text style={styles.greeting}>Welcome, {user?.name || 'Broker'}</Text>
-              <Text style={styles.greetingSub}>
-                {user?.businessName
-                  ? `${user.businessName} • Dalali Portfolio`
-                  : 'Brokerage deal & Dalali commission tracking'}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={styles.welcomeProfileBtn}
-              onPress={() => navigation.navigate('Profile')}
-              activeOpacity={0.8}
-              accessibilityLabel="View and edit profile">
-              <UserIcon size={18} color="#2563EB" />
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.greeting}>Welcome, {user?.name || 'Broker'}</Text>
+          <Text style={styles.greetingSub}>
+            {user?.businessName
+              ? `${user.businessName} • Dalali Portfolio`
+              : 'Brokerage deal & Dalali commission tracking'}
+          </Text>
         </View>
 
         {/* Hero Card: Brokerage / Dalali Receivable */}

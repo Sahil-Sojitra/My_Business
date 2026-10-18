@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Keyboard,
+  KeyboardEvent,
   Modal,
+  Platform,
   ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { CheckIcon, SearchIcon, XIcon } from '../../../components/common/Icon';
@@ -32,6 +36,26 @@ export const CompanyPickerModal: React.FC<CompanyPickerModalProps> = ({
   onSearchChange,
   onAddNewCompany,
 }) => {
+  const [keyboardHeight, setKeyboardHeight] = useState<number>(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e: KeyboardEvent) => {
+        setKeyboardHeight(e?.endCoordinates?.height || 280);
+      }
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0)
+    );
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const filteredCompanies = companies.filter(c => {
     if (!searchQuery.trim()) {
       return true;
@@ -49,8 +73,12 @@ export const CompanyPickerModal: React.FC<CompanyPickerModalProps> = ({
       visible={visible}
       animationType="slide"
       transparent={true}
+      statusBarTranslucent={true}
       onRequestClose={onClose}>
       <View style={styles.modalOverlay}>
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={styles.modalBackdropDismiss} />
+        </TouchableWithoutFeedback>
         <View style={styles.companyModalContent}>
           <View style={styles.modalHeader}>
             <View>
@@ -99,7 +127,11 @@ export const CompanyPickerModal: React.FC<CompanyPickerModalProps> = ({
           {/* Company List Scroll */}
           <ScrollView
             style={styles.companyListScroll}
-            keyboardShouldPersistTaps="handled">
+            contentContainerStyle={{
+              paddingBottom: keyboardHeight > 0 ? keyboardHeight + 24 : 32,
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}>
             {filteredCompanies.length === 0 ? (
               <View style={styles.emptySearchWrap}>
                 <Text style={styles.emptySearchEmoji}>🔍</Text>

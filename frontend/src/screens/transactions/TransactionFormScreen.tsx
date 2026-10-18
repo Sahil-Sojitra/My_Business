@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
 import { Button } from '../../components/common/Button';
+import { DatePickerField } from '../../components/common/DatePickerField';
 import { Input } from '../../components/common/Input';
 import {
   KeyboardAwareScrollView,
@@ -95,35 +96,37 @@ export const TransactionFormScreen: React.FC = () => {
             />
 
             {/* Quick preset pills for non-tech broker convenience */}
-            <View style={styles.presetsRow}>
+            <View style={styles.presetsContainer}>
               <Text style={styles.presetLabel}>Quick Select:</Text>
-              {['1.0', '1.5', '2.0', '2.5', '3.0'].map(pRate => (
-                <TouchableOpacity
-                  key={pRate}
-                  onPress={() => {
-                    form.setDalaliRate(pRate);
-                    form.recalculateDalali(form.amount, pRate);
-                    if (form.errors.dalaliRate) {
-                      form.setErrors(prev => ({
-                        ...prev,
-                        dalaliRate: undefined,
-                      }));
-                    }
-                  }}
-                  style={[
-                    styles.presetPill,
-                    form.dalaliRate === pRate && styles.presetPillActive,
-                  ]}
-                  activeOpacity={0.7}>
-                  <Text
+              <View style={styles.presetsRow}>
+                {['1.0', '1.5', '2.0', '2.5', '3.0'].map(pRate => (
+                  <TouchableOpacity
+                    key={pRate}
+                    onPress={() => {
+                      form.setDalaliRate(pRate);
+                      form.recalculateDalali(form.amount, pRate);
+                      if (form.errors.dalaliRate) {
+                        form.setErrors(prev => ({
+                          ...prev,
+                          dalaliRate: undefined,
+                        }));
+                      }
+                    }}
                     style={[
-                      styles.presetPillText,
-                      form.dalaliRate === pRate && styles.presetPillTextActive,
-                    ]}>
-                    {pRate}%
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                      styles.presetPill,
+                      form.dalaliRate === pRate && styles.presetPillActive,
+                    ]}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.presetPillText,
+                        form.dalaliRate === pRate && styles.presetPillTextActive,
+                      ]}>
+                      {pRate}%
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           </View>
 
@@ -188,27 +191,30 @@ export const TransactionFormScreen: React.FC = () => {
           />
 
           {/* Bill Date */}
-          <Input
-            label="Bill Date (YYYY-MM-DD) *"
+          <DatePickerField
+            label="Bill Date"
             value={form.date}
-            onChangeText={val => {
+            onChange={val => {
               form.setDate(val);
               if (form.errors.date) {
                 form.setErrors(prev => ({ ...prev, date: undefined }));
               }
             }}
-            placeholder="2026-10-13"
+            placeholder="Select bill date"
+            mode="billDate"
             error={form.errors.date}
             required
           />
 
           {/* Payment Due Date */}
-          <Input
-            label="Payment Due Date (YYYY-MM-DD)"
+          <DatePickerField
+            label="Payment Due Date"
             value={form.dueDate}
-            onChangeText={form.setDueDate}
-            placeholder="2026-11-13"
-            helperText="Settlement deadline (closest due date appears first on firm list)"
+            onChange={form.setDueDate}
+            placeholder="Select payment due date (Optional)"
+            mode="dueDate"
+            referenceDate={form.date}
+            helperText="Credit settlement deadline (closest due date appears first on firm list)"
           />
 
           {/* Description */}

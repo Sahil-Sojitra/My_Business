@@ -9,14 +9,15 @@ import React, {
   useState,
 } from 'react';
 import {
-  findNodeHandle,
+  Dimensions,
   Keyboard,
   KeyboardEvent,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Platform,
   ScrollView,
   ScrollViewProps,
   StyleSheet,
-  View,
 } from 'react-native';
 
 export interface KeyboardAwareScrollViewRef {
@@ -50,35 +51,155 @@ export const KeyboardAwareScrollView = forwardRef<
   (
     {
       children,
-      extraScrollHeight = 80,
+      extraScrollHeight = 85,
       contentContainerStyle,
       style,
       keyboardShouldPersistTaps = 'handled',
       keyboardDismissMode = 'on-drag',
-      automaticallyAdjustKeyboardInsets = true,
+      automaticallyAdjustKeyboardInsets = Platform.OS === 'ios',
+      onScroll,
+      onLayout,
       ...restProps
     },
     ref
   ) => {
     const scrollRef = useRef<any>(null);
     const [keyboardHeight, setKeyboardHeight] = useState<number>(0);
+    const lastKnownKeyboardHeight = useRef<number>(290);
     const lastFocusedRef = useRef<any>(null);
+    const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Track scroll position and scrollview layout
+    const scrollYRef = useRef<number>(0);
+    const scrollViewLayout = useRef<{ y: number; height: number }>({
+      y: 0,
+      height: Dimensions.get('window').height,
+    });
+
+    const executeScroll = useCallback(
+      (targetRef: any, activeKbHeight: number) => {
+        const targetInstance = targetRef?.current || targetRef;
+        const scrollInstance = scrollRef.current;
+        if (!targetInstance || !scrollInstance) {
+          return;
+        }
+
+        const measureCallback = (
+          _x: number,
+          y: number,
+          _width: number,
+          height: number
+        ) => {
+          if (typeof y !== 'number' || isNaN(y)) {
+            return;
+          }
+
+          const windowHeight = Dimensions.get('window').height;
+          const svLayout = scrollViewLayout.current;
+          const currentScrollY = scrollYRef.current;
+
+          // Always account for the soft keyboard height when determining visible space
+          const effectiveKb =
+            activeKbHeight > 0
+              ? activeKbHeight
+              : lastKnownKeyboardHeight.current > 0
+              ? lastKnownKeyboardHeight.current
+              : 290;
+
+          // Visible boundary above the soft keyboard
+          const visibleBottom = windowHeight - effectiveKb;
+
+          const targetTop = y;
+          const targetBottom = y + height;
+          const clearance = extraScrollHeight;
+
+          // Check if target is obscured by the soft keyboard
+          if (targetBottom > visibleBottom - clearance) {
+            const diff = targetBottom - (visibleBottom - clearance);
+            if (diff > 4) {
+              scrollInstance.scrollTo({
+                y: Math.max(0, currentScrollY + diff),
+                animated: true,
+              });
+            }
+          } else if (targetTop < svLayout.y + 10) {
+            // Check if target is obscured under the top header
+            const diff = targetTop - (svLayout.y + 10);
+            if (Math.abs(diff) > 4) {
+              scrollInstance.scrollTo({
+                y: Math.max(0, currentScrollY + diff),
+                animated: true,
+              });
+            }
+          }
+        };
+
+        if (typeof targetInstance.measureInWindow === 'function') {
+          targetInstance.measureInWindow(measureCallback);
+        } else if (typeof targetInstance.measure === 'function') {
+          targetInstance.measure(
+            (
+              _x: number,
+              _y: number,
+              _w: number,
+              h: number,
+              _px: number,
+              py: number
+            ) => {
+              measureCallback(_px, py ?? _y, _w, h);
+            }
+          );
+        }
+      },
+      [extraScrollHeight]
+    );
+
+    // Debounced smooth scroll trigger
+    const triggerScroll = useCallback(
+      (targetRef: any, activeKbHeight?: number) => {
+        if (scrollTimerRef.current) {
+          clearTimeout(scrollTimerRef.current);
+        }
+        const kbHeightToUse =
+          activeKbHeight !== undefined && activeKbHeight > 0
+            ? activeKbHeight
+            : keyboardHeight > 0
+            ? keyboardHeight
+            : lastKnownKeyboardHeight.current || 290;
+
+        scrollTimerRef.current = setTimeout(() => {
+          executeScroll(targetRef, kbHeightToUse);
+        }, 70);
+      },
+      [executeScroll, keyboardHeight]
+    );
 
     // Track keyboard show and hide on both Android and iOS
     useEffect(() => {
       const onKeyboardShow = (event: KeyboardEvent) => {
-        const height = event?.endCoordinates?.height || 280;
+        const height = event?.endCoordinates?.height || 290;
+        lastKnownKeyboardHeight.current = height;
         setKeyboardHeight(height);
 
-        // If a field was just focused, re-scroll it into view after the keyboard has fully expanded
+        // When keyboard finishes expanding, align the focused input comfortably in view
         if (lastFocusedRef.current) {
-          triggerScroll(lastFocusedRef.current, height);
+          if (scrollTimerRef.current) {
+            clearTimeout(scrollTimerRef.current);
+          }
+          scrollTimerRef.current = setTimeout(() => {
+            if (lastFocusedRef.current) {
+              executeScroll(lastFocusedRef.current, height);
+            }
+          }, 60);
         }
       };
 
       const onKeyboardHide = () => {
         setKeyboardHeight(0);
         lastFocusedRef.current = null;
+        if (scrollTimerRef.current) {
+          clearTimeout(scrollTimerRef.current);
+        }
       };
 
       const showSubscription = Keyboard.addListener(
@@ -91,77 +212,18 @@ export const KeyboardAwareScrollView = forwardRef<
       );
 
       return () => {
+        if (scrollTimerRef.current) {
+          clearTimeout(scrollTimerRef.current);
+        }
         showSubscription.remove();
         hideSubscription.remove();
       };
-    }, []);
-
-    const triggerScroll = useCallback(
-      (
-        targetRef: any,
-        activeKeyboardHeight: number = keyboardHeight
-      ) => {
-        if (!targetRef?.current || !scrollRef.current) {
-          return;
-        }
-
-        const executeMeasureAndScroll = () => {
-          try {
-            const scrollInstance = scrollRef.current;
-            const targetInstance = targetRef.current;
-            if (!scrollInstance || !targetInstance) {
-              return;
-            }
-
-            const scrollNode =
-              typeof findNodeHandle === 'function'
-                ? findNodeHandle(scrollInstance) || scrollInstance
-                : scrollInstance;
-
-            if (!scrollNode) {
-              return;
-            }
-
-            if (typeof targetInstance.measureLayout === 'function') {
-              targetInstance.measureLayout(
-                scrollNode,
-                (_left: number, top: number, _width: number, _height: number) => {
-                  // Generous offset so the input label and input container sit comfortably in view
-                  const desiredOffset = Math.max(0, top - extraScrollHeight);
-                  scrollRef.current?.scrollTo({
-                    y: desiredOffset,
-                    animated: true,
-                  });
-                },
-                () => {
-                  scrollRef.current?.scrollTo({
-                    y: Math.max(0, activeKeyboardHeight / 2),
-                    animated: true,
-                  });
-                }
-              );
-            } else {
-              scrollRef.current?.scrollTo({
-                y: Math.max(0, activeKeyboardHeight / 2),
-                animated: true,
-              });
-            }
-          } catch {
-            // Safe fallback
-          }
-        };
-
-        // Dual-tick execution: immediate tick for instant feedback + delayed tick when soft keyboard finishes slide-in
-        setTimeout(executeMeasureAndScroll, 60);
-        setTimeout(executeMeasureAndScroll, 220);
-      },
-      [extraScrollHeight, keyboardHeight]
-    );
+    }, [executeScroll]);
 
     const scrollToInput = useCallback(
       (inputRef: any) => {
         lastFocusedRef.current = inputRef;
-        triggerScroll(inputRef);
+        triggerScroll(inputRef, lastKnownKeyboardHeight.current || 290);
       },
       [triggerScroll]
     );
@@ -180,11 +242,32 @@ export const KeyboardAwareScrollView = forwardRef<
         ? flattenedContainerStyle.paddingBottom
         : 24;
 
-    // Dynamically expand bottom padding so user can scroll any field completely clear of the keyboard
+    // Expand bottom padding when keyboard is open so the user has sufficient scroll travel
+    // for bottom-most inputs (like Consignment / Deal Notes) to reach above the keyboard
+    const currentKb =
+      keyboardHeight > 0
+        ? keyboardHeight
+        : lastKnownKeyboardHeight.current > 0
+        ? lastKnownKeyboardHeight.current
+        : 290;
+
     const dynamicPaddingBottom =
       keyboardHeight > 0
-        ? basePaddingBottom + keyboardHeight + extraScrollHeight
-        : basePaddingBottom;
+        ? basePaddingBottom + currentKb + extraScrollHeight
+        : basePaddingBottom + 60;
+
+    const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollYRef.current = event.nativeEvent.contentOffset.y;
+      onScroll?.(event);
+    };
+
+    const handleLayout = (event: any) => {
+      scrollViewLayout.current = {
+        y: event.nativeEvent.layout.y,
+        height: event.nativeEvent.layout.height,
+      };
+      onLayout?.(event);
+    };
 
     return (
       <KeyboardScrollContext.Provider
@@ -200,6 +283,9 @@ export const KeyboardAwareScrollView = forwardRef<
             contentContainerStyle,
             { paddingBottom: dynamicPaddingBottom },
           ]}
+          onScroll={handleScroll}
+          onLayout={handleLayout}
+          scrollEventThrottle={16}
           keyboardShouldPersistTaps={keyboardShouldPersistTaps}
           keyboardDismissMode={keyboardDismissMode}
           automaticallyAdjustKeyboardInsets={automaticallyAdjustKeyboardInsets}

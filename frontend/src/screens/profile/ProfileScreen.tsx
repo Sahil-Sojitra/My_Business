@@ -299,7 +299,7 @@ export const ProfileScreen: React.FC = () => {
 
         {/* Session Management */}
         <Button
-          title="Sign Out of Session"
+          title="Log Out"
           onPress={() => setShowLogoutModal(true)}
           variant="outline"
           size="md"
@@ -340,12 +340,12 @@ export const ProfileScreen: React.FC = () => {
         onCancel={() => setShowDeleteModal(false)}
       />
 
-      {/* Sign Out Modal */}
+      {/* Log Out Modal */}
       <ConfirmModal
         visible={showLogoutModal}
-        title="Sign Out"
-        message="Are you sure you want to sign out from your account?"
-        confirmText="Sign Out"
+        title="Log Out"
+        message="Are you sure you want to log out of your account?"
+        confirmText="Log Out"
         cancelText="Cancel"
         destructive={true}
         loading={loggingOut}
