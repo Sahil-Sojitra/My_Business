@@ -4,7 +4,6 @@ import {
   Platform,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -14,6 +13,7 @@ import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
+import { styles } from './AuthStyles';
 
 export const LoginScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -59,7 +59,6 @@ export const LoginScreen: React.FC = () => {
     setLoading(true);
     try {
       await login({ phone: phone.trim().replace(/\D/g, ''), password });
-      // Navigation state will automatically transition to Home via AuthContext listener
     } catch {
       // error is set in auth context
     } finally {
@@ -73,7 +72,7 @@ export const LoginScreen: React.FC = () => {
       style={styles.keyboardContainer}>
       <ScrollView
         contentContainerStyle={[
-          styles.scrollContent,
+          styles.loginScrollContent,
           {
             paddingTop:
               Math.max(
@@ -84,17 +83,17 @@ export const LoginScreen: React.FC = () => {
           },
         ]}
         keyboardShouldPersistTaps="handled">
-        <View style={styles.header}>
+        <View style={styles.loginHeader}>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>My Business Mobile MVP</Text>
+            <Text style={styles.badgeText}>My Business Mobile</Text>
           </View>
-          <Text style={styles.title}>Broker Portal</Text>
-          <Text style={styles.subtitle}>
+          <Text style={styles.loginTitle}>Broker Portal</Text>
+          <Text style={styles.loginSubtitle}>
             Sign in to manage companies, bills, and calculate interest
           </Text>
         </View>
 
-        <View style={styles.card}>
+        <View style={styles.loginCard}>
           {authError ? (
             <View style={styles.errorAlert}>
               <Text style={styles.errorAlertText}>{authError}</Text>
@@ -105,7 +104,6 @@ export const LoginScreen: React.FC = () => {
             label="Mobile Number"
             value={phone}
             onChangeText={text => {
-              // Only allow numbers and limit to 10 digits
               const numeric = text.replace(/\D/g, '').slice(0, 10);
               setPhone(numeric);
               if (validationErrors.phone) {
@@ -157,90 +155,3 @@ export const LoginScreen: React.FC = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  keyboardContainer: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 20,
-    justifyContent: 'center',
-  },
-  header: {
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  badge: {
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-    marginBottom: 12,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1D4ED8',
-  },
-  title: {
-    fontSize: 29,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#64748B',
-    textAlign: 'center',
-    marginTop: 6,
-    maxWidth: 300,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 22,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  errorAlert: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorAlertText: {
-    color: '#B91C1C',
-    fontSize: 13.5,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  submitBtn: {
-    marginTop: 8,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  footerText: {
-    fontSize: 15,
-    color: '#64748B',
-  },
-  footerLink: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#2563EB',
-  },
-});

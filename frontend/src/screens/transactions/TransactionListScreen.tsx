@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -10,15 +9,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/common/AppHeader';
-import { Badge } from '../../components/common/Badge';
-import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
+import { PlusIcon } from '../../components/common/Icon';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
 import { Transaction, TransactionStatus } from '../../types/transaction';
-import { formatCurrency, formatDate } from '../../utils/formatters';
-import { ChevronRight, PlusIcon } from '../../components/common/Icon';
+import { TransactionListItemCard } from './components/TransactionListItemCard';
+import { TransactionListSummaryBar } from './components/TransactionListSummaryBar';
+import { styles } from './TransactionListStyles';
 
 type FilterTab = 'ALL' | TransactionStatus;
 
@@ -55,12 +54,9 @@ export const TransactionListScreen: React.FC = () => {
   };
 
   const filteredBills = transactions.filter(item => {
-    // Status filter
     if (filterTab !== 'ALL' && item.status !== filterTab) {
       return false;
     }
-
-    // Search query
     if (!searchQuery.trim()) {
       return true;
     }
@@ -72,7 +68,6 @@ export const TransactionListScreen: React.FC = () => {
     );
   });
 
-  // Calculate overall Dalali metrics
   const totalPrincipal = transactions.reduce((acc, t) => acc + t.amount, 0);
   const totalDalali = transactions.reduce((acc, t) => {
     const rate = t.dalaliRate ?? t.monthlyInterestRate ?? 1.5;
@@ -88,21 +83,10 @@ export const TransactionListScreen: React.FC = () => {
       />
 
       {/* Aggregate Dalali Summary Card */}
-      <View style={styles.summaryBar}>
-        <View style={styles.summaryCol}>
-          <Text style={styles.summaryLabel}>Total Bill Turnover</Text>
-          <Text style={styles.summaryVal}>
-            {formatCurrency(totalPrincipal)}
-          </Text>
-        </View>
-        <View style={styles.summaryDivider} />
-        <View style={styles.summaryCol}>
-          <Text style={styles.summaryLabel}>Total Dalali Receivable</Text>
-          <Text style={[styles.summaryVal, styles.interestVal]}>
-            +{formatCurrency(totalDalali)}
-          </Text>
-        </View>
-      </View>
+      <TransactionListSummaryBar
+        totalPrincipal={totalPrincipal}
+        totalDalali={totalDalali}
+      />
 
       {/* Status Filter Tabs */}
       <View style={styles.tabsContainer}>
@@ -179,64 +163,20 @@ export const TransactionListScreen: React.FC = () => {
               }
             />
           }
-          renderItem={({ item }) => {
-            const dalaliRate =
-              item.dalaliRate ??
-              item.monthlyInterestRate ??
-              (item.interestRate ? item.interestRate / 12 : 1.5);
-            const dalaliAmount =
-              item.dalaliAmount ?? (item.amount * dalaliRate) / 100;
-
-            return (
-              <Card
-                onPress={() =>
-                  navigation.navigate('TransactionDetails', {
-                    transactionId: item.id,
-                  })
-                }
-                style={styles.txCard}>
-                <View style={styles.txHeader}>
-                  <View style={styles.companyInfo}>
-                    <Text style={styles.companyName} numberOfLines={1}>
-                      {item.companyName}
-                    </Text>
-                    <Text style={styles.billNumber}>
-                      {item.billNumber ? `Inv: ${item.billNumber} · ` : ''}
-                      {formatDate(item.date)}
-                    </Text>
-                  </View>
-
-                  <View style={styles.amountContainer}>
-                    <Text style={styles.totalAmount}>
-                      {formatCurrency(dalaliAmount)}
-                    </Text>
-                    <Text style={styles.interestSub}>
-                      {dalaliRate}% on {formatCurrency(item.amount)}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.txFooter}>
-                  <View style={styles.badgeRow}>
-                    <Badge status={item.status} />
-                    <View style={styles.rateTag}>
-                      <Text style={styles.rateTagText}>
-                        {dalaliRate}% Dalali
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.viewLinkRow}>
-                    <Text style={styles.viewLink}>View details</Text>
-                    <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
-                  </View>
-                </View>
-              </Card>
-            );
-          }}
+          renderItem={({ item }) => (
+            <TransactionListItemCard
+              item={item}
+              onPress={() =>
+                navigation.navigate('TransactionDetails', {
+                  transactionId: item.id,
+                })
+              }
+            />
+          )}
         />
       )}
 
-      {/* Floating Action Button (FAB) for effortless 1-hand thumb reach */}
+      {/* Floating Action Button */}
       <TouchableOpacity
         style={[
           styles.fabButton,
@@ -256,191 +196,3 @@ export const TransactionListScreen: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  summaryBar: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  summaryCol: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  summaryDivider: {
-    width: 1,
-    backgroundColor: '#E2E8F0',
-  },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#64748B',
-    marginBottom: 3,
-    fontWeight: '500',
-  },
-  summaryVal: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  interestVal: {
-    color: '#15803D',
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 8,
-    gap: 8,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 9,
-    borderRadius: 9,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-  },
-  tabButtonActive: {
-    backgroundColor: '#2563EB',
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#64748B',
-  },
-  tabTextActive: {
-    color: '#FFFFFF',
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  searchInput: {
-    flex: 1,
-    height: 46,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    fontSize: 15,
-    color: '#0F172A',
-  },
-  clearBtn: {
-    paddingHorizontal: 8,
-  },
-  clearBtnText: {
-    fontSize: 15,
-    color: '#64748B',
-  },
-  listContent: {
-    padding: 16,
-    paddingBottom: 100, // ensure last card isn't obscured by floating FAB
-  },
-  txCard: {
-    padding: 17,
-    borderRadius: 14,
-    marginBottom: 12,
-  },
-  txHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 10,
-  },
-  companyInfo: {
-    flex: 1,
-    marginRight: 12,
-  },
-  companyName: {
-    fontSize: 16.5,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  billNumber: {
-    fontSize: 13,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  amountContainer: {
-    alignItems: 'flex-end',
-  },
-  totalAmount: {
-    fontSize: 17.5,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  interestSub: {
-    fontSize: 12.5,
-    fontWeight: '600',
-    color: '#15803D',
-    marginTop: 2,
-  },
-  txFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: 10,
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  rateTag: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 5,
-  },
-  rateTagText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '600',
-  },
-  viewLinkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  viewLink: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#2563EB',
-  },
-  fabButton: {
-    position: 'absolute',
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2563EB',
-    paddingVertical: 14,
-    paddingHorizontal: 22,
-    borderRadius: 30,
-    gap: 8,
-    elevation: 8,
-    shadowColor: '#1D4ED8',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    zIndex: 999,
-  },
-  fabButtonText: {
-    fontSize: 15.5,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    letterSpacing: 0.3,
-  },
-});

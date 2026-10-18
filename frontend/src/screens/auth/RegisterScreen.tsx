@@ -4,7 +4,6 @@ import {
   Platform,
   ScrollView,
   StatusBar,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -15,6 +14,7 @@ import { ArrowLeft } from '../../components/common/Icon';
 import { Input } from '../../components/common/Input';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
+import { styles } from './AuthStyles';
 
 export const RegisterScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -87,7 +87,6 @@ export const RegisterScreen: React.FC = () => {
         businessName: businessName.trim() || undefined,
         password,
       });
-      // Auth state changes to authenticated, navigator handles transition
     } catch {
       // error set in AuthContext
     } finally {
@@ -242,84 +241,3 @@ export const RegisterScreen: React.FC = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    flexGrow: 1,
-  },
-  header: {
-    marginBottom: 20,
-  },
-  backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 12,
-  },
-  backText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2563EB',
-  },
-  title: {
-    fontSize: 27,
-    fontWeight: '800',
-    color: '#0F172A',
-    letterSpacing: -0.4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 4,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  errorAlert: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 16,
-  },
-  errorAlertText: {
-    color: '#B91C1C',
-    fontSize: 13.5,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  submitBtn: {
-    marginTop: 10,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  footerText: {
-    fontSize: 14.5,
-    color: '#64748B',
-  },
-  footerLink: {
-    fontSize: 14.5,
-    fontWeight: '700',
-    color: '#2563EB',
-  },
-});
