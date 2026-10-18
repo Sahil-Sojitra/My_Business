@@ -40,3 +40,35 @@ export const loginSchema = z
   });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+/**
+ * Validation schema for updating user profile
+ */
+export const updateProfileSchema = z.object({
+  name: z.string().trim().min(2, 'Name must be at least 2 characters').optional(),
+  mobileNumber: z.string().optional(),
+  phone: z.string().optional(),
+  email: z
+    .string()
+    .trim()
+    .email('Invalid email address format')
+    .optional()
+    .or(z.literal('')),
+  businessName: z.string().trim().optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z
+    .string()
+    .min(6, 'New password must be at least 6 characters')
+    .optional(),
+});
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+/**
+ * Validation schema for account deletion
+ */
+export const deleteAccountSchema = z.object({
+  password: z.string().optional(),
+});
+
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;

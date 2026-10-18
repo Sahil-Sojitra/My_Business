@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { UserIcon } from '../../components/common/Icon';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
@@ -79,9 +80,9 @@ export const HomeScreen: React.FC = () => {
         title="My Business"
         subtitle={user?.businessName || 'Brokerage Portfolio'}
         rightAction={{
-          label: 'Logout',
-          onPress: () => setShowLogoutModal(true),
-          variant: 'danger',
+          label: 'Profile',
+          onPress: () => navigation.navigate('Profile'),
+          variant: 'primary',
         }}
       />
 
@@ -95,10 +96,23 @@ export const HomeScreen: React.FC = () => {
         }>
         {/* Welcome Section */}
         <View style={styles.welcomeBanner}>
-          <Text style={styles.greeting}>Welcome, {user?.name || 'Broker'}</Text>
-          <Text style={styles.greetingSub}>
-            Brokerage deal & Dalali commission tracking
-          </Text>
+          <View style={styles.welcomeRow}>
+            <View style={styles.welcomeTextWrap}>
+              <Text style={styles.greeting}>Welcome, {user?.name || 'Broker'}</Text>
+              <Text style={styles.greetingSub}>
+                {user?.businessName
+                  ? `${user.businessName} • Dalali Portfolio`
+                  : 'Brokerage deal & Dalali commission tracking'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.welcomeProfileBtn}
+              onPress={() => navigation.navigate('Profile')}
+              activeOpacity={0.8}
+              accessibilityLabel="View and edit profile">
+              <UserIcon size={18} color="#2563EB" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Hero Card: Brokerage / Dalali Receivable */}

@@ -6,7 +6,12 @@ import React, {
   useState,
 } from 'react';
 import { authService } from '../../services';
-import { LoginCredentials, RegisterData, User } from '../../types/auth';
+import {
+  LoginCredentials,
+  RegisterData,
+  UpdateProfileData,
+  User,
+} from '../../types/auth';
 
 interface AuthContextValue {
   user: User | null;
@@ -16,6 +21,8 @@ interface AuthContextValue {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (data: UpdateProfileData) => Promise<User>;
+  deleteAccount: (password?: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -91,6 +98,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  const updateProfile = useCallback(async (data: UpdateProfileData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authService.updateProfile(data);
+      setUser(response.user);
+      return response.user;
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to update profile. Please try again.';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const deleteAccount = useCallback(async (password?: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await authService.deleteAccount(password);
+      setUser(null);
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to delete account. Please try again.';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -101,6 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         register,
         logout,
+        updateProfile,
+        deleteAccount,
         clearError,
       }}>
       {children}

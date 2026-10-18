@@ -302,6 +302,106 @@ export const PlusIcon: React.FC<IconProps> = ({
   );
 };
 
+/**
+ * Modern vector User / Profile icon
+ */
+export const UserIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = '#2563EB',
+  strokeWidth = 2,
+}) => {
+  const headSize = Math.round(size * 0.38);
+  const bodyWidth = Math.round(size * 0.72);
+  const bodyHeight = Math.round(size * 0.36);
+
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      {/* Head */}
+      <View
+        style={{
+          width: headSize,
+          height: headSize,
+          borderRadius: headSize / 2,
+          borderWidth: strokeWidth,
+          borderColor: color,
+          position: 'absolute',
+          top: Math.round(size * 0.1),
+        }}
+      />
+      {/* Torso */}
+      <View
+        style={{
+          width: bodyWidth,
+          height: bodyHeight,
+          borderTopLeftRadius: bodyWidth / 2,
+          borderTopRightRadius: bodyWidth / 2,
+          borderWidth: strokeWidth,
+          borderBottomWidth: 0,
+          borderColor: color,
+          position: 'absolute',
+          bottom: Math.round(size * 0.1),
+        }}
+      />
+    </View>
+  );
+};
+
+/**
+ * Modern vector Trash / Delete icon
+ */
+export const TrashIcon: React.FC<IconProps> = ({
+  size = 18,
+  color = '#DC2626',
+  strokeWidth = 1.8,
+}) => {
+  const canWidth = Math.round(size * 0.58);
+  const canHeight = Math.round(size * 0.55);
+  const lidWidth = Math.round(size * 0.75);
+
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      {/* Handle */}
+      <View
+        style={{
+          width: Math.round(size * 0.32),
+          height: strokeWidth * 2.2,
+          borderTopLeftRadius: 2,
+          borderTopRightRadius: 2,
+          borderWidth: strokeWidth,
+          borderBottomWidth: 0,
+          borderColor: color,
+          position: 'absolute',
+          top: Math.round(size * 0.1),
+        }}
+      />
+      {/* Lid bar */}
+      <View
+        style={{
+          width: lidWidth,
+          height: strokeWidth,
+          backgroundColor: color,
+          borderRadius: strokeWidth / 2,
+          position: 'absolute',
+          top: Math.round(size * 0.24),
+        }}
+      />
+      {/* Can Body */}
+      <View
+        style={{
+          width: canWidth,
+          height: canHeight,
+          borderBottomLeftRadius: 4,
+          borderBottomRightRadius: 4,
+          borderWidth: strokeWidth,
+          borderColor: color,
+          position: 'absolute',
+          bottom: Math.round(size * 0.12),
+        }}
+      />
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',

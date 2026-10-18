@@ -20,6 +20,15 @@ export interface RegisterData {
   businessName?: string;
 }
 
+export interface UpdateProfileData {
+  name?: string;
+  phone?: string;
+  email?: string;
+  businessName?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 export interface AuthResponse {
   user: User;
   token: string;

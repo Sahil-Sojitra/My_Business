@@ -2,7 +2,11 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
 import { normalizeMobileNumber, isValidMobileNumber } from '../utils/phone.js';
-import { RegisterInput, LoginInput } from '../schemas/auth.schema.js';
+import {
+  RegisterInput,
+  LoginInput,
+  UpdateProfileInput,
+} from '../schemas/auth.schema.js';
 
 const JWT_SECRET =
   process.env.JWT_SECRET ||
@@ -178,6 +182,133 @@ export const authService = {
       email: user.email,
       businessName: user.businessName,
       createdAt: user.createdAt.toISOString(),
+    };
+  },
+
+  async updateProfile(
+    userId: string,
+    data: UpdateProfileInput
+  ): Promise<AuthResult> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AuthError('User account not found', 404);
+    }
+
+    const updates: {
+      name?: string;
+      mobileNumber?: string;
+      email?: string | null;
+      businessName?: string;
+      passwordHash?: string;
+    } = {};
+
+    if (data.name !== undefined && data.name.trim().length >= 2) {
+      updates.name = data.name.trim();
+    }
+
+    if (data.businessName !== undefined) {
+      updates.businessName = data.businessName.trim() || 'My Business';
+    }
+
+    if (data.email !== undefined) {
+      updates.email = data.email ? data.email.trim().toLowerCase() : null;
+    }
+
+    const rawMobile = data.mobileNumber || data.phone;
+    if (rawMobile !== undefined && rawMobile.trim().length > 0) {
+      const normalizedMobile = normalizeMobileNumber(rawMobile);
+      if (!isValidMobileNumber(normalizedMobile)) {
+        throw new AuthError('Please provide a valid 10-digit mobile number', 400);
+      }
+
+      if (normalizedMobile !== user.mobileNumber) {
+        const existing = await prisma.user.findUnique({
+          where: { mobileNumber: normalizedMobile },
+        });
+        if (existing && existing.id !== user.id) {
+          throw new AuthError(
+            'This mobile number is already registered to another account',
+            409
+          );
+        }
+        updates.mobileNumber = normalizedMobile;
+      }
+    }
+
+    if (data.newPassword) {
+      if (!data.currentPassword) {
+        throw new AuthError(
+          'Current password is required to change your password',
+          400
+        );
+      }
+      const isPasswordValid = await bcrypt.compare(
+        data.currentPassword,
+        user.passwordHash
+      );
+      if (!isPasswordValid) {
+        throw new AuthError('Current password is incorrect', 400);
+      }
+      updates.passwordHash = await bcrypt.hash(data.newPassword, 10);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updates,
+    });
+
+    const token = this.generateToken({
+      userId: updatedUser.id,
+      mobileNumber: updatedUser.mobileNumber,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      businessName: updatedUser.businessName,
+    });
+
+    return {
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        mobileNumber: updatedUser.mobileNumber,
+        phone: updatedUser.mobileNumber,
+        email: updatedUser.email,
+        businessName: updatedUser.businessName,
+        createdAt: updatedUser.createdAt.toISOString(),
+      },
+      token,
+    };
+  },
+
+  async deleteAccount(
+    userId: string,
+    password?: string
+  ): Promise<{ success: boolean; message: string }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new AuthError('User account not found', 404);
+    }
+
+    if (password) {
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      if (!isPasswordValid) {
+        throw new AuthError('Incorrect password provided for account deletion', 400);
+      }
+    }
+
+    // Cascade delete user and all associated companies, bills, and data
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return {
+      success: true,
+      message: 'Account and all associated business data permanently deleted.',
     };
   },
 };

@@ -2,6 +2,7 @@ export type RootScreenName =
   | 'Login'
   | 'Register'
   | 'Home'
+  | 'Profile'
   | 'CompanyList'
   | 'CompanyDetails'
   | 'CompanyForm'
@@ -15,6 +16,7 @@ export interface ScreenParams {
   Login: undefined;
   Register: undefined;
   Home: undefined;
+  Profile: undefined;
   CompanyList: undefined;
   CompanyDetails: { companyId: string };
   CompanyForm: { companyId?: string };

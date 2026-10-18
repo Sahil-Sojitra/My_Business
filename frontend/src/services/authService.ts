@@ -2,6 +2,7 @@ import {
   AuthResponse,
   LoginCredentials,
   RegisterData,
+  UpdateProfileData,
   User,
 } from '../types/auth';
 import { apiClient, request } from './apiClient';
@@ -11,6 +12,10 @@ export interface IAuthService {
   register(data: RegisterData): Promise<AuthResponse>;
   logout(): Promise<void>;
   getCurrentUser(): Promise<User | null>;
+  updateProfile(data: UpdateProfileData): Promise<AuthResponse>;
+  deleteAccount(
+    password?: string
+  ): Promise<{ success: boolean; message: string }>;
 }
 
 /**
@@ -72,6 +77,48 @@ class RealAuthService implements IAuthService {
       apiClient.setCurrentUser(null);
       return null;
     }
+  }
+
+  async updateProfile(data: UpdateProfileData): Promise<AuthResponse> {
+    const cleanPhone = data.phone
+      ? data.phone.trim().replace(/\D/g, '')
+      : undefined;
+
+    const payload: Record<string, any> = {};
+    if (data.name !== undefined) payload.name = data.name.trim();
+    if (cleanPhone !== undefined && cleanPhone.length > 0)
+      payload.mobileNumber = cleanPhone;
+    if (data.email !== undefined) payload.email = data.email.trim();
+    if (data.businessName !== undefined)
+      payload.businessName = data.businessName.trim();
+    if (data.currentPassword) payload.currentPassword = data.currentPassword;
+    if (data.newPassword) payload.newPassword = data.newPassword;
+
+    const response = await request<AuthResponse>('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    });
+
+    if (response.token) {
+      apiClient.setAuthToken(response.token);
+    }
+    apiClient.setCurrentUser(response.user);
+    return response;
+  }
+
+  async deleteAccount(
+    password?: string
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await request<{ success: boolean; message: string }>(
+      '/auth/account',
+      {
+        method: 'DELETE',
+        body: JSON.stringify({ password }),
+      }
+    );
+
+    await this.logout();
+    return response;
   }
 }
 

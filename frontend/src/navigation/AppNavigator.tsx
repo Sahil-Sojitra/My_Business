@@ -9,6 +9,7 @@ import { CompanyDetailsScreen } from '../screens/companies/CompanyDetailsScreen'
 import { CompanyFormScreen } from '../screens/companies/CompanyFormScreen';
 import { CompanyListScreen } from '../screens/companies/CompanyListScreen';
 import { HomeScreen } from '../screens/home/HomeScreen';
+import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { TransactionDetailsScreen } from '../screens/transactions/TransactionDetailsScreen';
 import { TransactionFormScreen } from '../screens/transactions/TransactionFormScreen';
 import { TransactionListScreen } from '../screens/transactions/TransactionListScreen';
@@ -35,6 +36,8 @@ export const AppNavigator: React.FC = () => {
     switch (currentScreen) {
       case 'Home':
         return <HomeScreen />;
+      case 'Profile':
+        return <ProfileScreen />;
       case 'CompanyList':
         return <CompanyListScreen />;
       case 'CompanyDetails':
