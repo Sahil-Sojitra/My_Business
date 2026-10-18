@@ -55,7 +55,7 @@ export const TransactionFormScreen: React.FC = () => {
 
           {/* Bill Amount */}
           <Input
-            label="Bill Amount (₹) *"
+            label="Bill Amount (₹)"
             value={form.amount}
             onChangeText={val => {
               form.setAmount(val);
@@ -74,7 +74,7 @@ export const TransactionFormScreen: React.FC = () => {
           {/* Dalali / Commission Percentage User Input */}
           <View style={styles.dalaliInputWrapper}>
             <Input
-              label="Dalali / Commission Rate (%) *"
+              label="Dalali / Commission Rate (%)"
               value={form.dalaliRate}
               onChangeText={val => {
                 form.setDalaliRate(val);

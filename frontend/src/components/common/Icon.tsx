@@ -466,6 +466,111 @@ export const CalendarIcon: React.FC<IconProps> = ({
   );
 };
 
+/**
+ * Modern sleek ChevronDown icon
+ */
+export const ChevronDown: React.FC<IconProps> = ({
+  size = 18,
+  color = '#64748B',
+  strokeWidth = 2.4,
+}) => {
+  const arm = Math.round(size * 0.44);
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      <View
+        style={[
+          styles.chevronDown,
+          {
+            width: arm,
+            height: arm,
+            borderRightWidth: strokeWidth,
+            borderBottomWidth: strokeWidth,
+            borderColor: color,
+            transform: [{ rotate: '45deg' }, { translateY: -Math.round(arm * 0.2) }],
+          },
+        ]}
+      />
+    </View>
+  );
+};
+
+/**
+ * Modern vector Building / Firm icon
+ */
+export const BuildingIcon: React.FC<IconProps> = ({
+  size = 18,
+  color = '#2563EB',
+  strokeWidth = 1.8,
+}) => {
+  const w = Math.round(size * 0.74);
+  const h = Math.round(size * 0.84);
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      {/* Outer building facade */}
+      <View
+        style={{
+          width: w,
+          height: h,
+          borderRadius: 3,
+          borderWidth: strokeWidth,
+          borderColor: color,
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingVertical: 2,
+        }}>
+        {/* Upper Windows row */}
+        <View style={{ flexDirection: 'row', gap: 2.5, marginTop: 1 }}>
+          <View
+            style={{
+              width: 2.5,
+              height: 2.5,
+              backgroundColor: color,
+              borderRadius: 0.5,
+            }}
+          />
+          <View
+            style={{
+              width: 2.5,
+              height: 2.5,
+              backgroundColor: color,
+              borderRadius: 0.5,
+            }}
+          />
+        </View>
+        {/* Mid Windows row */}
+        <View style={{ flexDirection: 'row', gap: 2.5 }}>
+          <View
+            style={{
+              width: 2.5,
+              height: 2.5,
+              backgroundColor: color,
+              borderRadius: 0.5,
+            }}
+          />
+          <View
+            style={{
+              width: 2.5,
+              height: 2.5,
+              backgroundColor: color,
+              borderRadius: 0.5,
+            }}
+          />
+        </View>
+        {/* Ground Door */}
+        <View
+          style={{
+            width: 5,
+            height: 4,
+            borderTopLeftRadius: 1.5,
+            borderTopRightRadius: 1.5,
+            backgroundColor: color,
+          }}
+        />
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
@@ -490,6 +595,10 @@ const styles = StyleSheet.create({
     borderRadius: 1.5,
   },
   chevronRight: {
+    backgroundColor: 'transparent',
+    borderRadius: 1.5,
+  },
+  chevronDown: {
     backgroundColor: 'transparent',
     borderRadius: 1.5,
   },

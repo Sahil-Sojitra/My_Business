@@ -22,10 +22,24 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   fieldLabel: {
     fontSize: 14.5,
     fontWeight: '700',
     color: '#0F172A',
+  },
+  requiredMark: {
+    color: '#DC2626',
+    fontWeight: '700',
+    fontSize: 14.5,
+  },
+  browseAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   browseAllText: {
     fontSize: 13,
@@ -102,19 +116,22 @@ export const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  buildingIcon: {
-    fontSize: 16,
-    marginRight: 8,
+  buildingIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
   },
   companySelectPlaceholder: {
     fontSize: 14,
     color: '#64748B',
     fontWeight: '500',
-  },
-  dropdownCaret: {
-    fontSize: 16,
-    color: '#64748B',
-    fontWeight: '700',
+    flex: 1,
   },
   inputErrorBorder: {
     borderColor: '#EF4444',
