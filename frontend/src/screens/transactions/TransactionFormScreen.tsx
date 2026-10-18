@@ -59,14 +59,16 @@ export const TransactionFormScreen: React.FC = () => {
             label="Bill Amount (₹)"
             value={form.amount}
             onChangeText={val => {
-              form.setAmount(val);
-              form.recalculateDalali(val, form.dalaliRate);
+              const clean = val.replace(/[^0-9.]/g, '').slice(0, 12);
+              form.setAmount(clean);
+              form.recalculateDalali(clean, form.dalaliRate);
               if (form.errors.amount) {
                 form.setErrors(prev => ({ ...prev, amount: undefined }));
               }
             }}
             placeholder="e.g. 145000"
             keyboardType="numeric"
+            maxLength={12}
             error={form.errors.amount}
             required
             style={styles.inputMargin}
@@ -78,8 +80,9 @@ export const TransactionFormScreen: React.FC = () => {
               label="Dalali / Commission Rate (%)"
               value={form.dalaliRate}
               onChangeText={val => {
-                form.setDalaliRate(val);
-                form.recalculateDalali(form.amount, val);
+                const clean = val.replace(/[^0-9.]/g, '').slice(0, 5);
+                form.setDalaliRate(clean);
+                form.recalculateDalali(form.amount, clean);
                 if (form.errors.dalaliRate) {
                   form.setErrors(prev => ({
                     ...prev,
@@ -89,6 +92,7 @@ export const TransactionFormScreen: React.FC = () => {
               }}
               placeholder="e.g. 1.0, 1.5, 2.0"
               keyboardType="numeric"
+              maxLength={5}
               error={form.errors.dalaliRate}
               helperText="Broker commission percentage on this bill amount"
               required
@@ -139,10 +143,14 @@ export const TransactionFormScreen: React.FC = () => {
               <TextInput
                 style={styles.dalaliGreenInput}
                 value={form.dalaliAmount}
-                onChangeText={form.setDalaliAmount}
+                onChangeText={val => {
+                  const clean = val.replace(/[^0-9.]/g, '').slice(0, 12);
+                  form.setDalaliAmount(clean);
+                }}
                 placeholder="0.00"
                 placeholderTextColor="#15803D"
                 keyboardType="numeric"
+                maxLength={12}
                 onFocus={() => {
                   scrollRef.current?.scrollToInput(dalaliSectionRef);
                 }}
@@ -168,8 +176,9 @@ export const TransactionFormScreen: React.FC = () => {
           <Input
             label="Bill / Invoice Number"
             value={form.billNumber}
-            onChangeText={form.setBillNumber}
+            onChangeText={val => form.setBillNumber(val.slice(0, 30))}
             placeholder="e.g. INV-2026-104 or LOT-409"
+            maxLength={30}
             autoCapitalize="characters"
           />
 
@@ -220,8 +229,9 @@ export const TransactionFormScreen: React.FC = () => {
           <Input
             label="Consignment / Deal Notes"
             value={form.description}
-            onChangeText={form.setDescription}
+            onChangeText={val => form.setDescription(val.slice(0, 500))}
             placeholder="Yarn counts, meter quantity, transport LR number..."
+            maxLength={500}
             multiline
             numberOfLines={3}
             style={styles.inputMargin}

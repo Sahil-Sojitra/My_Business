@@ -222,7 +222,7 @@ export const ProfileScreen: React.FC = () => {
           <Input
             label="Mobile Number (Login Identifier)"
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={val => setPhone(val.replace(/\D/g, '').slice(0, 10))}
             placeholder="10-digit mobile number"
             keyboardType="phone-pad"
             maxLength={10}
