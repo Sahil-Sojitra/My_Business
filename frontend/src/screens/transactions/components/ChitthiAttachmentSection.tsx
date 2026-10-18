@@ -66,7 +66,7 @@ export const ChitthiAttachmentSection: React.FC<ChitthiAttachmentSectionProps> =
           <View style={styles.chitthiActionGroup}>
             <TouchableOpacity
               style={styles.retakeBtn}
-              onPress={onUploadPress}
+              onPress={chitthi.type === 'photo' ? onCameraPress : onUploadPress}
               activeOpacity={0.7}>
               <Text style={styles.retakeBtnText}>Change</Text>
             </TouchableOpacity>
@@ -98,7 +98,7 @@ export const ChitthiAttachmentSection: React.FC<ChitthiAttachmentSectionProps> =
             <Text style={styles.chitthiActionIcon}>📁</Text>
             <Text style={styles.chitthiUploadTitle}>Upload PDF</Text>
             <Text style={styles.chitthiActionSub}>
-              Choose PDF or Gallery
+              Select PDF from phone
             </Text>
           </TouchableOpacity>
         </View>

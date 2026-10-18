@@ -16,9 +16,7 @@ import {
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { formatCurrency } from '../../utils/formatters';
 import { BillPdfAttachmentSection } from './components/BillPdfAttachmentSection';
-import { BillPdfModal } from './components/BillPdfModal';
 import { ChitthiAttachmentSection } from './components/ChitthiAttachmentSection';
-import { ChitthiModal } from './components/ChitthiModal';
 import { ChitthiViewerModal } from './components/ChitthiViewerModal';
 import { CompanyPickerModal } from './components/CompanyPickerModal';
 import { SelectedCompanyCard } from './components/SelectedCompanyCard';
@@ -177,7 +175,7 @@ export const TransactionFormScreen: React.FC = () => {
           {/* Bill PDF File Attachment */}
           <BillPdfAttachmentSection
             billPdf={form.billPdf}
-            onAttachPress={() => form.setShowBillPdfModal(true)}
+            onAttachPress={form.handlePickBillPdfNative}
             onRemove={() => form.setBillPdf(null)}
           />
 
@@ -186,7 +184,7 @@ export const TransactionFormScreen: React.FC = () => {
             chitthi={form.chitthi}
             onPreviewPress={() => form.setShowChitthiViewer(true)}
             onCameraPress={form.handleAttachChitthiCamera}
-            onUploadPress={() => form.setShowChitthiModal(true)}
+            onUploadPress={form.handleAttachChitthiPdf}
             onRemove={() => form.setChitthi(null)}
           />
 
@@ -257,31 +255,7 @@ export const TransactionFormScreen: React.FC = () => {
         }}
       />
 
-      {/* 2. Modal: Bill PDF Picker */}
-      <BillPdfModal
-        visible={form.showBillPdfModal}
-        onClose={() => form.setShowBillPdfModal(false)}
-        onPickPdfNative={form.handlePickBillPdfNative}
-        customPdfName={form.customPdfName}
-        onCustomPdfNameChange={form.setCustomPdfName}
-        onAttachCustomPdf={() => {
-          if (form.customPdfName.trim()) {
-            form.handleAttachBillPdf(form.customPdfName.trim(), 'Custom Size');
-          }
-        }}
-        onAttachSample={form.handleAttachBillPdf}
-      />
-
-      {/* 3. Modal: Chitthi Picker */}
-      <ChitthiModal
-        visible={form.showChitthiModal}
-        onClose={() => form.setShowChitthiModal(false)}
-        onCameraSelect={form.handleAttachChitthiCamera}
-        onGallerySelect={form.handleAttachChitthiGallery}
-        onPdfSelect={form.handleAttachChitthiPdf}
-      />
-
-      {/* 4. Modal: Chitthi Fullscreen Preview */}
+      {/* 2. Modal: Chitthi Fullscreen Preview */}
       <ChitthiViewerModal
         visible={form.showChitthiViewer}
         onClose={() => form.setShowChitthiViewer(false)}
