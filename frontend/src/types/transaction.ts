@@ -8,6 +8,9 @@ export interface AttachmentFile {
   size?: string;
   date?: string;
   uri?: string;
+  url?: string;
+  key?: string;
+  status?: 'PENDING' | 'SUCCESSFUL' | 'FAILED';
 }
 
 export interface Bill {

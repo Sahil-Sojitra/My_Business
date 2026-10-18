@@ -31,6 +31,7 @@ import {
   pickChitthiFromGallery,
   pickChitthiPdf,
   takeChitthiPhoto,
+  uploadToStorageAsync,
 } from '../../services/attachmentService';
 
 export const TransactionFormScreen: React.FC = () => {
@@ -272,6 +273,10 @@ export const TransactionFormScreen: React.FC = () => {
       if (file) {
         setBillPdf(file);
         setShowBillPdfModal(false);
+        // Non-blocking asynchronous direct upload to Backblaze B2 in the background
+        uploadToStorageAsync(file, 'bill', updated => {
+          setBillPdf(prev => (prev?.name === updated.name ? updated : prev));
+        });
       }
     } catch (err) {
       Alert.alert(
@@ -283,14 +288,19 @@ export const TransactionFormScreen: React.FC = () => {
 
   // Attach sample/custom bill PDF
   const handleAttachBillPdf = (name: string, size = '340 KB') => {
-    setBillPdf({
+    const file: AttachmentFile = {
       name,
       type: 'pdf',
       size,
       date: new Date().toISOString().split('T')[0],
-    });
+      status: 'PENDING',
+    };
+    setBillPdf(file);
     setShowBillPdfModal(false);
     setCustomPdfName('');
+    uploadToStorageAsync(file, 'bill', updated => {
+      setBillPdf(prev => (prev?.name === updated.name ? updated : prev));
+    });
   };
 
   // Click Photo with physical camera
@@ -300,6 +310,10 @@ export const TransactionFormScreen: React.FC = () => {
       if (file) {
         setChitthi(file);
         setShowChitthiModal(false);
+        // Non-blocking asynchronous direct upload to Backblaze B2 in the background
+        uploadToStorageAsync(file, 'chitthi', updated => {
+          setChitthi(prev => (prev?.name === updated.name ? updated : prev));
+        });
       }
     } catch (err) {
       Alert.alert(
@@ -316,6 +330,10 @@ export const TransactionFormScreen: React.FC = () => {
       if (file) {
         setChitthi(file);
         setShowChitthiModal(false);
+        // Non-blocking asynchronous direct upload to Backblaze B2 in the background
+        uploadToStorageAsync(file, 'chitthi', updated => {
+          setChitthi(prev => (prev?.name === updated.name ? updated : prev));
+        });
       }
     } catch (err) {
       Alert.alert(
@@ -332,6 +350,10 @@ export const TransactionFormScreen: React.FC = () => {
       if (file) {
         setChitthi(file);
         setShowChitthiModal(false);
+        // Non-blocking asynchronous direct upload to Backblaze B2 in the background
+        uploadToStorageAsync(file, 'chitthi', updated => {
+          setChitthi(prev => (prev?.name === updated.name ? updated : prev));
+        });
       }
     } catch (err) {
       Alert.alert(
@@ -546,7 +568,10 @@ export const TransactionFormScreen: React.FC = () => {
                     {billPdf.name}
                   </Text>
                   <Text style={styles.attachedMeta}>
-                    {billPdf.size || 'PDF Document'} • Uploaded
+                    {billPdf.size || 'PDF Document'} •{' '}
+                    {billPdf.status === 'PENDING'
+                      ? 'Syncing to Cloud...'
+                      : 'Cloud Synced'}
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -619,7 +644,10 @@ export const TransactionFormScreen: React.FC = () => {
                     {chitthi.name}
                   </Text>
                   <Text style={styles.attachedMeta}>
-                    {chitthi.size || 'Attachment'} • Physical Voucher
+                    {chitthi.size || 'Attachment'} •{' '}
+                    {chitthi.status === 'PENDING'
+                      ? 'Syncing to Cloud...'
+                      : 'Cloud Synced'}
                   </Text>
                 </View>
                 <View style={styles.chitthiActionGroup}>

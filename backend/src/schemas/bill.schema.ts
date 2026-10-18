@@ -11,6 +11,8 @@ export const attachmentSchema = z
     date: z.string().optional(),
     uri: z.string().optional(),
     url: z.string().optional(),
+    key: z.string().optional(),
+    status: z.enum(['PENDING', 'SUCCESSFUL', 'FAILED']).optional(),
   })
   .nullable()
   .optional();
