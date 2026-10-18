@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
-  KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StatusBar,
   Text,
   TouchableOpacity,
@@ -11,6 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { KeyboardAwareScrollView } from '../../components/common/KeyboardAwareScrollView';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { styles } from './AuthStyles';
@@ -67,22 +66,20 @@ export const LoginScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.keyboardContainer}>
-      <ScrollView
+    <View style={styles.keyboardContainer}>
+      <KeyboardAwareScrollView
+        extraScrollHeight={80}
         contentContainerStyle={[
           styles.loginScrollContent,
           {
             paddingTop:
               Math.max(
                 insets.top,
-                Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 24,
+                Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 24
               ) + 24,
             paddingBottom: Math.max(insets.bottom, 24) + 16,
           },
-        ]}
-        keyboardShouldPersistTaps="handled">
+        ]}>
         <View style={styles.loginHeader}>
           <View style={styles.badge}>
             <Text style={styles.badgeText}>My Business Mobile</Text>
@@ -151,7 +148,7 @@ export const LoginScreen: React.FC = () => {
             <Text style={styles.footerLink}>Register here</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 };

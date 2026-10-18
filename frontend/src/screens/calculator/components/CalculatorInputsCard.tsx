@@ -4,7 +4,7 @@ import { Button } from '../../../components/common/Button';
 import { Card } from '../../../components/common/Card';
 import { Input } from '../../../components/common/Input';
 import { formatCurrency } from '../../../utils/formatters';
-import { styles } from '../InterestCalculatorStyles';
+import { styles } from '../dalaliCalculatorStyles';
 
 const PRESET_RATES = ['1.0', '1.5', '2.0', '2.5', '3.0'];
 

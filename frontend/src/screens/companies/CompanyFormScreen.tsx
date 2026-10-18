@@ -1,13 +1,9 @@
 import React from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  View,
-} from 'react-native';
+import { View } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { KeyboardAwareScrollView } from '../../components/common/KeyboardAwareScrollView';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { styles } from './CompanyFormStyles';
 import { useCompanyForm } from './hooks/useCompanyForm';
@@ -20,18 +16,16 @@ export const CompanyFormScreen: React.FC = () => {
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.screen}>
+    <View style={styles.screen}>
       <AppHeader
         title={form.isEditing ? 'Edit Company' : 'Add New Company'}
         subtitle={form.isEditing ? form.name : 'Register client company'}
         showBack={true}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView
+        extraScrollHeight={90}
+        contentContainerStyle={styles.scrollContent}>
         <View style={styles.formCard}>
           <Input
             label="Company Name"
@@ -126,7 +120,7 @@ export const CompanyFormScreen: React.FC = () => {
             style={styles.saveBtn}
           />
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 };

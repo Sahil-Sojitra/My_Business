@@ -1,8 +1,5 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -11,6 +8,10 @@ import {
 import { AppHeader } from '../../components/common/AppHeader';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import {
+  KeyboardAwareScrollView,
+  KeyboardAwareScrollViewRef,
+} from '../../components/common/KeyboardAwareScrollView';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { formatCurrency } from '../../utils/formatters';
 import { BillPdfAttachmentSection } from './components/BillPdfAttachmentSection';
@@ -25,24 +26,25 @@ import { styles } from './TransactionFormStyles';
 
 export const TransactionFormScreen: React.FC = () => {
   const form = useTransactionForm();
+  const scrollRef = useRef<KeyboardAwareScrollViewRef | null>(null);
+  const dalaliSectionRef = useRef<any>(null);
 
   if (form.loadingInitial) {
     return <LoadingSpinner message="Loading bill form..." />;
   }
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.screen}>
+    <View style={styles.screen}>
       <AppHeader
         title={form.isEditing ? 'Edit Bill' : 'Record Bill'}
         subtitle="Record bill, Dalali & attachments"
         showBack={true}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView
+        ref={scrollRef}
+        extraScrollHeight={90}
+        contentContainerStyle={styles.scrollContent}>
         <View style={styles.formCard}>
           {/* Buyer Firm / Client Picker */}
           <SelectedCompanyCard
@@ -125,8 +127,8 @@ export const TransactionFormScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Dalali Amount Section (Auto-Calculated) */}
-          <View style={styles.dalaliGreenSection}>
+          {/* Dalali Amount Section (Auto-Calculated) with dedicated focus auto-scroll */}
+          <View ref={dalaliSectionRef} style={styles.dalaliGreenSection}>
             <Text style={styles.dalaliGreenLabel}>
               Dalali Amount (Brokerage) (₹) *
             </Text>
@@ -139,6 +141,9 @@ export const TransactionFormScreen: React.FC = () => {
                 placeholder="0.00"
                 placeholderTextColor="#15803D"
                 keyboardType="numeric"
+                onFocus={() => {
+                  scrollRef.current?.scrollToInput(dalaliSectionRef);
+                }}
               />
               <View style={styles.dalaliAutoBadge}>
                 <Text style={styles.dalaliAutoBadgeText}>
@@ -229,7 +234,7 @@ export const TransactionFormScreen: React.FC = () => {
             style={styles.saveBtn}
           />
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       {/* 1. Modal: Searchable Company Selector */}
       <CompanyPickerModal
@@ -282,6 +287,6 @@ export const TransactionFormScreen: React.FC = () => {
         dalaliAmount={form.dalaliAmount}
         date={form.date}
       />
-    </KeyboardAvoidingView>
+    </View>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   KeyboardTypeOptions,
   StyleSheet,
@@ -8,6 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { useKeyboardScroll } from './KeyboardAwareScrollView';
 
 interface InputProps {
   label?: string;
@@ -24,6 +25,8 @@ interface InputProps {
   maxLength?: number;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   style?: ViewStyle;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -41,15 +44,32 @@ export const Input: React.FC<InputProps> = ({
   maxLength,
   autoCapitalize = 'sentences',
   style,
+  onFocus,
+  onBlur,
 }) => {
+  const containerRef = useRef<any>(null);
+  const keyboardScroll = useKeyboardScroll();
+
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const [isPasswordVisible, setIsPasswordVisible] =
     useState<boolean>(!secureTextEntry);
 
   const hasError = Boolean(error);
 
+  const handleFocus = () => {
+    setIsFocused(true);
+    // Automatically auto-scroll to this input so user can clearly see what they are typing
+    keyboardScroll?.scrollToInput(containerRef);
+    onFocus?.();
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    onBlur?.();
+  };
+
   return (
-    <View style={[styles.wrapper, style]}>
+    <View ref={containerRef} style={[styles.wrapper, style]}>
       {label ? (
         <View style={styles.labelRow}>
           <Text style={styles.label}>{label}</Text>
@@ -75,8 +95,8 @@ export const Input: React.FC<InputProps> = ({
           numberOfLines={numberOfLines}
           maxLength={maxLength}
           autoCapitalize={autoCapitalize}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           style={[styles.input, multiline && styles.multilineInput]}
         />
 

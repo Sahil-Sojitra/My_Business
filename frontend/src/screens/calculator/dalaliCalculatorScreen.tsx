@@ -1,28 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   Text,
   View,
 } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
+import { KeyboardAwareScrollView } from '../../components/common/KeyboardAwareScrollView';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { DalaliResult } from '../../types/calculator';
 import { calculateDalali, validateDalaliInput } from '../../utils/calculator';
 import { CalculatorInputsCard } from './components/CalculatorInputsCard';
 import { CalculatorResultsCard } from './components/CalculatorResultsCard';
-import { styles } from './InterestCalculatorStyles';
+import { styles } from './dalaliCalculatorStyles';
 
 export const InterestCalculatorScreen: React.FC = () => {
   const navigation = useNavigation();
   const navParams = navigation.params as
     | {
-        initialBillAmount?: number;
-        initialDalaliRate?: number;
-        initialPrincipal?: number;
-        initialRate?: number;
-      }
+      initialBillAmount?: number;
+      initialDalaliRate?: number;
+      initialPrincipal?: number;
+      initialRate?: number;
+    }
     | undefined;
 
   const [billAmount, setBillAmount] = useState<string>(() => {
@@ -121,18 +119,16 @@ export const InterestCalculatorScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.screen}>
+    <View style={styles.screen}>
       <AppHeader
         title="Dalali Calculator"
         subtitle="Brokerage commission computation"
         showBack={true}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView
+        extraScrollHeight={80}
+        contentContainerStyle={styles.scrollContent}>
         {/* Intro Banner */}
         <View style={styles.banner}>
           <Text style={styles.bannerTitle}>Brokerage (Dalali) Engine</Text>
@@ -162,8 +158,8 @@ export const InterestCalculatorScreen: React.FC = () => {
             onRecordBillWithDalali={handleCreateBillWithDalali}
           />
         ) : null}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 };
 

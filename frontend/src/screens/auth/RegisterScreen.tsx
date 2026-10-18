@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
-  KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StatusBar,
   Text,
   TouchableOpacity,
@@ -12,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '../../components/common/Button';
 import { ArrowLeft } from '../../components/common/Icon';
 import { Input } from '../../components/common/Input';
+import { KeyboardAwareScrollView } from '../../components/common/KeyboardAwareScrollView';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { styles } from './AuthStyles';
@@ -95,22 +94,20 @@ export const RegisterScreen: React.FC = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}>
-      <ScrollView
+    <View style={styles.container}>
+      <KeyboardAwareScrollView
+        extraScrollHeight={90}
         contentContainerStyle={[
           styles.scrollContent,
           {
             paddingTop:
               Math.max(
                 insets.top,
-                Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 24,
+                Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 24
               ) + 24,
-            paddingBottom: Math.max(insets.bottom, 24) + 16,
+            paddingBottom: Math.max(insets.bottom, 24) + 20,
           },
-        ]}
-        keyboardShouldPersistTaps="handled">
+        ]}>
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => navigation.navigate('Login')}
@@ -237,7 +234,7 @@ export const RegisterScreen: React.FC = () => {
             <Text style={styles.footerLink}>Sign in</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 };

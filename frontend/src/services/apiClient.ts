@@ -5,10 +5,12 @@ import { User } from '../types/auth';
  * Android emulator routes host machine loopback to 10.0.2.2.
  * iOS Simulator, macOS, and Web route to localhost directly.
  */
-const DEFAULT_HOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-const DEFAULT_BASE_URL = `http://${DEFAULT_HOST}:5000/api`;
+const CANDIDATE_HOSTS =
+  Platform.OS === 'android' ? ['localhost', '10.0.2.2'] : ['localhost'];
+let candidateIndex = 0;
+let isHostLocked = false;
 
-let apiBaseUrl: string = DEFAULT_BASE_URL;
+let apiBaseUrl: string = `http://${CANDIDATE_HOSTS[0]}:5000/api`;
 let activeAuthToken: string | null = null;
 let activeUser: User | null = null;
 
@@ -19,6 +21,7 @@ export const apiClient = {
 
   setBaseUrl(url: string): void {
     apiBaseUrl = url.replace(/\/+$/, '');
+    isHostLocked = true;
   },
 
   getAuthToken(): string | null {
@@ -51,7 +54,8 @@ export class ApiError extends Error {
 }
 
 /**
- * Centralized HTTP request dispatcher with automatic Bearer token injection
+ * Centralized HTTP request dispatcher with automatic Bearer token injection,
+ * automatic physical device USB (localhost) / emulator (10.0.2.2) fallback,
  * and normalized error response handling.
  */
 export async function request<T>(
@@ -59,7 +63,6 @@ export async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${apiClient.getBaseUrl()}${cleanEndpoint}`;
 
   const headers: Record<string, string> = {
     Accept: 'application/json',
@@ -74,17 +77,39 @@ export async function request<T>(
 
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await fetch(`${apiClient.getBaseUrl()}${cleanEndpoint}`, {
       ...options,
       headers,
     });
+    // Successful connection locks the working host
+    isHostLocked = true;
   } catch (err: unknown) {
-    const originalMessage =
-      err instanceof Error ? err.message : 'Network request failed';
-    throw new ApiError(
-      `Cannot connect to backend at ${apiClient.getBaseUrl()}. Please ensure the backend is running (npm run dev) and accessible: ${originalMessage}`,
-      0
-    );
+    // If not locked and another host candidate exists (e.g. switching from localhost to 10.0.2.2 for emulator)
+    if (!isHostLocked && candidateIndex < CANDIDATE_HOSTS.length - 1) {
+      candidateIndex++;
+      apiBaseUrl = `http://${CANDIDATE_HOSTS[candidateIndex]}:5000/api`;
+      try {
+        response = await fetch(`${apiClient.getBaseUrl()}${cleanEndpoint}`, {
+          ...options,
+          headers,
+        });
+        isHostLocked = true;
+      } catch (retryErr: unknown) {
+        const originalMessage =
+          retryErr instanceof Error ? retryErr.message : 'Network request failed';
+        throw new ApiError(
+          `Cannot connect to backend at ${apiClient.getBaseUrl()}. Please ensure the backend is running (npm run dev) and accessible: ${originalMessage}`,
+          0
+        );
+      }
+    } else {
+      const originalMessage =
+        err instanceof Error ? err.message : 'Network request failed';
+      throw new ApiError(
+        `Cannot connect to backend at ${apiClient.getBaseUrl()}. Please ensure the backend is running (npm run dev) and accessible: ${originalMessage}`,
+        0
+      );
+    }
   }
 
   let data: any = null;

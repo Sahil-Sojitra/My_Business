@@ -4,7 +4,7 @@ import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useAuth } from '../features/auth/AuthContext';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
-import { InterestCalculatorScreen } from '../screens/calculator/InterestCalculatorScreen';
+import { InterestCalculatorScreen } from '../screens/calculator/dalaliCalculatorScreen';
 import { CompanyDetailsScreen } from '../screens/companies/CompanyDetailsScreen';
 import { CompanyFormScreen } from '../screens/companies/CompanyFormScreen';
 import { CompanyListScreen } from '../screens/companies/CompanyListScreen';

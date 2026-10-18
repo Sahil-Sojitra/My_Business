@@ -4,7 +4,7 @@ import { Card } from '../../../components/common/Card';
 import { ChevronRight } from '../../../components/common/Icon';
 import { DalaliResult } from '../../../types/calculator';
 import { formatCurrency } from '../../../utils/formatters';
-import { styles } from '../InterestCalculatorStyles';
+import { styles } from '../dalaliCalculatorStyles';
 
 interface CalculatorResultsCardProps {
   result: DalaliResult;
