@@ -301,10 +301,12 @@ export const authService = {
       }
     }
 
-    // Cascade delete user and all associated companies, bills, and data
-    await prisma.user.delete({
-      where: { id: userId },
-    });
+    // Cascade delete user and all associated companies, bills, and data in an atomic transaction
+    await prisma.$transaction([
+      prisma.bill.deleteMany({ where: { userId } }),
+      prisma.company.deleteMany({ where: { userId } }),
+      prisma.user.delete({ where: { id: userId } }),
+    ]);
 
     return {
       success: true,
