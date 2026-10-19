@@ -571,6 +571,182 @@ export const BuildingIcon: React.FC<IconProps> = ({
   );
 };
 
+/**
+ * Modern vector AlertCircle icon (circle + exclamation mark)
+ */
+export const AlertCircleIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = '#EF4444',
+  strokeWidth = 2,
+}) => {
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: strokeWidth,
+          borderColor: color,
+        },
+      ]}>
+      <View
+        style={{
+          width: strokeWidth,
+          height: Math.round(size * 0.35),
+          backgroundColor: color,
+          borderRadius: strokeWidth / 2,
+          position: 'absolute',
+          top: Math.round(size * 0.18),
+        }}
+      />
+      <View
+        style={{
+          width: strokeWidth * 1.2,
+          height: strokeWidth * 1.2,
+          backgroundColor: color,
+          borderRadius: (strokeWidth * 1.2) / 2,
+          position: 'absolute',
+          bottom: Math.round(size * 0.18),
+        }}
+      />
+    </View>
+  );
+};
+
+/**
+ * Modern vector InfoIcon (circle + 'i')
+ */
+export const InfoIcon: React.FC<IconProps> = ({
+  size = 20,
+  color = '#2563EB',
+  strokeWidth = 2,
+}) => {
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: strokeWidth,
+          borderColor: color,
+        },
+      ]}>
+      <View
+        style={{
+          width: strokeWidth * 1.2,
+          height: strokeWidth * 1.2,
+          backgroundColor: color,
+          borderRadius: (strokeWidth * 1.2) / 2,
+          position: 'absolute',
+          top: Math.round(size * 0.18),
+        }}
+      />
+      <View
+        style={{
+          width: strokeWidth,
+          height: Math.round(size * 0.35),
+          backgroundColor: color,
+          borderRadius: strokeWidth / 2,
+          position: 'absolute',
+          bottom: Math.round(size * 0.18),
+        }}
+      />
+    </View>
+  );
+};
+
+/**
+ * Modern vector EyeIcon (almond eye + pupil)
+ */
+export const EyeIcon: React.FC<IconProps> = ({
+  size = 18,
+  color = '#2563EB',
+  strokeWidth = 2,
+}) => {
+  const w = Math.round(size * 0.88);
+  const h = Math.round(size * 0.54);
+  const pupil = Math.round(size * 0.28);
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      <View
+        style={{
+          width: w,
+          height: h,
+          borderRadius: h / 2,
+          borderWidth: strokeWidth,
+          borderColor: color,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}>
+        <View
+          style={{
+            width: pupil,
+            height: pupil,
+            borderRadius: pupil / 2,
+            backgroundColor: color,
+          }}
+        />
+      </View>
+    </View>
+  );
+};
+
+/**
+ * Modern vector FileText / Document icon
+ */
+export const FileTextIcon: React.FC<IconProps> = ({
+  size = 18,
+  color = '#2563EB',
+  strokeWidth = 1.8,
+}) => {
+  const w = Math.round(size * 0.72);
+  const h = Math.round(size * 0.88);
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      <View
+        style={{
+          width: w,
+          height: h,
+          borderRadius: 3,
+          borderWidth: strokeWidth,
+          borderColor: color,
+          paddingHorizontal: Math.round(w * 0.18),
+          justifyContent: 'center',
+          gap: 2.5,
+        }}>
+        <View
+          style={{
+            width: '100%',
+            height: strokeWidth,
+            backgroundColor: color,
+            borderRadius: 1,
+          }}
+        />
+        <View
+          style={{
+            width: '70%',
+            height: strokeWidth,
+            backgroundColor: color,
+            borderRadius: 1,
+          }}
+        />
+        <View
+          style={{
+            width: '85%',
+            height: strokeWidth,
+            backgroundColor: color,
+            borderRadius: 1,
+          }}
+        />
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',

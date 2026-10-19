@@ -6,6 +6,7 @@
 import React from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AlertProvider } from './src/context/AlertContext';
 import { AuthProvider } from './src/features/auth/AuthContext';
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { NavigationProvider } from './src/navigation/NavigationContext';
@@ -16,13 +17,15 @@ function App(): React.JSX.Element {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AuthProvider>
-        <NavigationProvider>
-          <View style={styles.container}>
-            <AppNavigator />
-          </View>
-        </NavigationProvider>
-      </AuthProvider>
+      <AlertProvider>
+        <AuthProvider>
+          <NavigationProvider>
+            <View style={styles.container}>
+              <AppNavigator />
+            </View>
+          </NavigationProvider>
+        </AuthProvider>
+      </AlertProvider>
     </SafeAreaProvider>
   );
 }

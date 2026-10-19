@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
+import { AttachmentViewerModal } from '../../components/common/AttachmentViewerModal';
 import { Button } from '../../components/common/Button';
 import { DatePickerField } from '../../components/common/DatePickerField';
 import { Input } from '../../components/common/Input';
@@ -14,10 +15,12 @@ import {
   KeyboardAwareScrollViewRef,
 } from '../../components/common/KeyboardAwareScrollView';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { alertService } from '../../context/AlertContext';
+import { openAttachment } from '../../services/attachmentService';
+import { AttachmentFile } from '../../types/transaction';
 import { formatCurrency } from '../../utils/formatters';
 import { BillPdfAttachmentSection } from './components/BillPdfAttachmentSection';
 import { ChitthiAttachmentSection } from './components/ChitthiAttachmentSection';
-import { ChitthiViewerModal } from './components/ChitthiViewerModal';
 import { CompanyPickerModal } from './components/CompanyPickerModal';
 import { SelectedCompanyCard } from './components/SelectedCompanyCard';
 import { useTransactionForm } from './hooks/useTransactionForm';
@@ -27,6 +30,19 @@ export const TransactionFormScreen: React.FC = () => {
   const form = useTransactionForm();
   const scrollRef = useRef<KeyboardAwareScrollViewRef | null>(null);
   const dalaliSectionRef = useRef<any>(null);
+
+  const handleOpenPdf = async (file: AttachmentFile | null) => {
+    if (!file) return;
+    try {
+      alertService.showToast('info', 'Opening PDF...', file.name);
+      await openAttachment(file);
+    } catch (err: unknown) {
+      alertService.showError(
+        'Could Not Open PDF',
+        err instanceof Error ? err.message : 'No application found to view this PDF.'
+      );
+    }
+  };
 
   if (form.loadingInitial) {
     return <LoadingSpinner message="Loading bill form..." />;
@@ -186,13 +202,20 @@ export const TransactionFormScreen: React.FC = () => {
           <BillPdfAttachmentSection
             billPdf={form.billPdf}
             onAttachPress={form.handlePickBillPdfNative}
+            onPreviewPress={() => handleOpenPdf(form.billPdf)}
             onRemove={() => form.setBillPdf(null)}
           />
 
           {/* Chitthi Delivery Slip / Voucher Attachment */}
           <ChitthiAttachmentSection
             chitthi={form.chitthi}
-            onPreviewPress={() => form.setShowChitthiViewer(true)}
+            onPreviewPress={() => {
+              if (form.chitthi?.type === 'pdf') {
+                handleOpenPdf(form.chitthi);
+              } else {
+                form.setShowChitthiViewer(true);
+              }
+            }}
             onCameraPress={form.handleAttachChitthiCamera}
             onUploadPress={form.handleAttachChitthiPdf}
             onRemove={() => form.setChitthi(null)}
@@ -266,17 +289,12 @@ export const TransactionFormScreen: React.FC = () => {
         }}
       />
 
-      {/* 2. Modal: Chitthi Fullscreen Preview */}
-      <ChitthiViewerModal
+      {/* 2. Modal: Chitthi Photo Fullscreen Viewer */}
+      <AttachmentViewerModal
         visible={form.showChitthiViewer}
         onClose={() => form.setShowChitthiViewer(false)}
-        chitthi={form.chitthi}
-        billNumber={form.billNumber}
-        selectedCompany={form.selectedCompany}
-        amount={form.numAmt}
-        dalaliRate={form.numDalaliRate}
-        dalaliAmount={form.dalaliAmount}
-        date={form.date}
+        attachment={form.chitthi}
+        title="Chitthi Delivery Photo"
       />
     </View>
   );

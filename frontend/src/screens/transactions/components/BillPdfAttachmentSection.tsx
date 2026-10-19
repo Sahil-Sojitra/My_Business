@@ -7,19 +7,31 @@ import { styles } from '../TransactionFormStyles';
 interface BillPdfAttachmentSectionProps {
   billPdf: AttachmentFile | null;
   onAttachPress: () => void;
+  onPreviewPress?: () => void;
   onRemove: () => void;
 }
 
 export const BillPdfAttachmentSection: React.FC<BillPdfAttachmentSectionProps> = ({
   billPdf,
   onAttachPress,
+  onPreviewPress,
   onRemove,
 }) => {
   return (
     <View style={styles.attachmentSection}>
-      <Text style={styles.attachmentLabel}>Bill / Invoice PDF Document</Text>
+      <View style={styles.chitthiHeaderRow}>
+        <Text style={styles.attachmentLabel}>Bill / Invoice PDF Document</Text>
+        {billPdf && onPreviewPress ? (
+          <TouchableOpacity onPress={onPreviewPress} activeOpacity={0.7}>
+            <Text style={styles.viewSlipLink}>👁️ Preview PDF</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
       {billPdf ? (
-        <View style={styles.attachedCard}>
+        <TouchableOpacity
+          style={styles.attachedCard}
+          onPress={onPreviewPress}
+          activeOpacity={onPreviewPress ? 0.8 : 1}>
           <View style={styles.pdfIconBadge}>
             <Text style={styles.pdfIconBadgeText}>PDF</Text>
           </View>
@@ -38,7 +50,7 @@ export const BillPdfAttachmentSection: React.FC<BillPdfAttachmentSectionProps> =
             activeOpacity={0.7}>
             <XIcon size={14} color="#64748B" />
           </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
       ) : (
         <TouchableOpacity
           style={styles.uploadDashedBox}

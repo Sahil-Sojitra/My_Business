@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { alertService } from '../../../context/AlertContext';
 import { useNavigation } from '../../../navigation/NavigationContext';
 import { companyService } from '../../../services';
 
@@ -91,16 +91,16 @@ export function useCompanyForm() {
 
       if (isEditing && companyId) {
         await companyService.update(companyId, payload);
-        Alert.alert('Success', 'Company profile updated successfully.');
+        alertService.showSuccess('Success', 'Company profile updated successfully.');
         navigation.navigate('CompanyDetails', { companyId });
       } else {
         const created = await companyService.create(payload);
-        Alert.alert('Success', 'New company created successfully.');
+        alertService.showSuccess('Success', 'New company created successfully.');
         navigation.navigate('CompanyDetails', { companyId: created.id });
       }
     } catch (err) {
-      Alert.alert(
-        'Error',
+      alertService.showError(
+        'Failed to Save Profile',
         err instanceof Error ? err.message : 'Failed to save company profile'
       );
     } finally {

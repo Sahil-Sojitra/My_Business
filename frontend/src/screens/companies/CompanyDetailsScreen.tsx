@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
 import { Button } from '../../components/common/Button';
 import { Card } from '../../components/common/Card';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { alertService } from '../../context/AlertContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { companyService, transactionService } from '../../services';
 import { Company } from '../../types/company';
@@ -58,14 +59,14 @@ export const CompanyDetailsScreen: React.FC = () => {
         transactionService.deleteByCompanyId(companyId),
       ]);
       setShowDeleteModal(false);
-      Alert.alert(
+      alertService.showSuccess(
         'Company Deleted',
         'The company and associated bill records were removed.'
       );
       navigation.navigate('CompanyList');
     } catch (err) {
-      Alert.alert(
-        'Error',
+      alertService.showError(
+        'Failed to Delete Company',
         err instanceof Error ? err.message : 'Failed to delete company'
       );
     } finally {

@@ -10,12 +10,14 @@ interface BillDetailsCardProps {
   bill: Transaction;
   onCompanyPress: () => void;
   onChitthiPreviewPress: () => void;
+  onBillPdfPress?: () => void;
 }
 
 export const BillDetailsCard: React.FC<BillDetailsCardProps> = ({
   bill,
   onCompanyPress,
   onChitthiPreviewPress,
+  onBillPdfPress,
 }) => {
   return (
     <Card style={styles.detailsCard}>
@@ -64,7 +66,10 @@ export const BillDetailsCard: React.FC<BillDetailsCardProps> = ({
           <Text style={styles.attachmentSectionHeading}>
             Attached Bill Document
           </Text>
-          <View style={styles.attachCard}>
+          <TouchableOpacity
+            style={styles.attachCard}
+            onPress={onBillPdfPress}
+            activeOpacity={0.8}>
             <View style={styles.attachPdfBadge}>
               <Text style={styles.attachPdfBadgeText}>PDF</Text>
             </View>
@@ -73,10 +78,11 @@ export const BillDetailsCard: React.FC<BillDetailsCardProps> = ({
                 {bill.billPdf.name}
               </Text>
               <Text style={styles.attachMeta}>
-                Invoice PDF Document • {bill.billPdf.size || 'Attached'}
+                Invoice PDF (Tap to Open) • {bill.billPdf.size || 'Attached'}
               </Text>
             </View>
-          </View>
+            <ChevronRight size={14} color="#2563EB" />
+          </TouchableOpacity>
         </View>
       ) : null}
 
@@ -113,7 +119,10 @@ export const BillDetailsCard: React.FC<BillDetailsCardProps> = ({
                 {bill.chitthi.name}
               </Text>
               <Text style={styles.attachMeta}>
-                Physical Slip (Tap to View) • {bill.chitthi.size || 'Voucher'}
+                {bill.chitthi.type === 'photo'
+                  ? 'Physical Slip Photo (Tap to View)'
+                  : 'Chitthi PDF (Tap to Open)'}{' '}
+                • {bill.chitthi.size || 'Attached'}
               </Text>
             </View>
             <ChevronRight size={14} color="#2563EB" />

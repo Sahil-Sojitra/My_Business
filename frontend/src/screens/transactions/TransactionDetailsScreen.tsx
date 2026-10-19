@@ -1,15 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
+import { AttachmentViewerModal } from '../../components/common/AttachmentViewerModal';
 import { Button } from '../../components/common/Button';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { alertService } from '../../context/AlertContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
-import { Transaction } from '../../types/transaction';
+import { openAttachment } from '../../services/attachmentService';
+import { AttachmentFile, Transaction } from '../../types/transaction';
 import { BillDetailsCard } from './components/BillDetailsCard';
 import { BrokerageSummaryCard } from './components/BrokerageSummaryCard';
-import { ChitthiPreviewModal } from './components/ChitthiPreviewModal';
 import { HeroDalaliCard } from './components/HeroDalaliCard';
 import { styles } from './TransactionDetailsStyles';
 
@@ -20,8 +22,23 @@ export const TransactionDetailsScreen: React.FC = () => {
   const [bill, setBill] = useState<Transaction | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-  const [showChitthiPreview, setShowChitthiPreview] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
+
+  // Photo viewer state (photos only)
+  const [activePhoto, setActivePhoto] = useState<AttachmentFile | null>(null);
+  const [showPhotoViewer, setShowPhotoViewer] = useState<boolean>(false);
+
+  const handleOpenPdf = async (file: AttachmentFile) => {
+    try {
+      alertService.showToast('info', 'Opening PDF...', file.name);
+      await openAttachment(file);
+    } catch (err: unknown) {
+      alertService.showError(
+        'Could Not Open PDF',
+        err instanceof Error ? err.message : 'No application found to view this PDF.'
+      );
+    }
+  };
 
   const loadBill = useCallback(async () => {
     if (!transactionId) {
@@ -50,12 +67,15 @@ export const TransactionDetailsScreen: React.FC = () => {
     try {
       await transactionService.delete(transactionId);
       setShowDeleteModal(false);
-      Alert.alert('Deleted', 'Bill has been deleted successfully.');
+      alertService.showSuccess(
+        'Bill Deleted',
+        'Bill record has been deleted successfully.'
+      );
       navigation.goBack();
     } catch (err) {
-      Alert.alert(
-        'Error',
-        err instanceof Error ? err.message : 'Failed to delete bill'
+      alertService.showError(
+        'Failed to Delete Bill',
+        err instanceof Error ? err.message : 'Please try again later.'
       );
     } finally {
       setDeleting(false);
@@ -129,7 +149,21 @@ export const TransactionDetailsScreen: React.FC = () => {
               companyId: bill.companyId,
             })
           }
-          onChitthiPreviewPress={() => setShowChitthiPreview(true)}
+          onBillPdfPress={() => {
+            if (bill.billPdf) {
+              handleOpenPdf(bill.billPdf);
+            }
+          }}
+          onChitthiPreviewPress={() => {
+            if (bill.chitthi) {
+              if (bill.chitthi.type === 'pdf') {
+                handleOpenPdf(bill.chitthi);
+              } else {
+                setActivePhoto(bill.chitthi);
+                setShowPhotoViewer(true);
+              }
+            }
+          }}
         />
 
         {/* Action Buttons */}
@@ -154,13 +188,12 @@ export const TransactionDetailsScreen: React.FC = () => {
         onCancel={() => setShowDeleteModal(false)}
       />
 
-      {/* Modal to Preview Chitthi Voucher */}
-      <ChitthiPreviewModal
-        visible={showChitthiPreview}
-        onClose={() => setShowChitthiPreview(false)}
-        bill={bill}
-        dalaliRate={dalaliRate}
-        dalaliAmount={dalaliAmount}
+      {/* Clean Fullscreen Photo Viewer Modal */}
+      <AttachmentViewerModal
+        visible={showPhotoViewer}
+        onClose={() => setShowPhotoViewer(false)}
+        attachment={activePhoto}
+        title="Chitthi Delivery Photo"
       />
     </View>
   );

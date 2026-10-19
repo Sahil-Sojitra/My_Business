@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { alertService } from '../../../context/AlertContext';
 import { useNavigation } from '../../../navigation/NavigationContext';
 import { companyService, transactionService } from '../../../services';
 import { Company } from '../../../types/company';
@@ -183,7 +183,7 @@ export function useTransactionForm() {
 
     const selectedCompany = companies.find(c => c.id === selectedCompanyId);
     if (!selectedCompany) {
-      Alert.alert('Error', 'Selected company could not be found');
+      alertService.showError('Error', 'Selected company could not be found');
       return;
     }
 
@@ -214,19 +214,19 @@ export function useTransactionForm() {
 
       if (isEditing && transactionId) {
         await transactionService.update(transactionId, payload);
-        Alert.alert('Success', 'Bill updated successfully');
+        alertService.showSuccess('Success', 'Bill updated successfully');
         navigation.navigate('TransactionDetails', { transactionId });
       } else {
         const created = await transactionService.create(payload);
-        Alert.alert('Success', 'Bill recorded successfully');
+        alertService.showSuccess('Success', 'Bill recorded successfully');
         navigation.navigate('TransactionDetails', {
           transactionId: created.id,
         });
       }
     } catch (err) {
-      Alert.alert(
-        'Error',
-        err instanceof Error ? err.message : 'Failed to save bill'
+      alertService.showError(
+        'Failed to Save Bill',
+        err instanceof Error ? err.message : 'An error occurred while saving the bill'
       );
     } finally {
       setSaving(false);
@@ -244,7 +244,7 @@ export function useTransactionForm() {
         });
       }
     } catch (err) {
-      Alert.alert(
+      alertService.showError(
         'Document Selection',
         err instanceof Error ? err.message : 'Could not pick document from device'
       );
@@ -278,8 +278,8 @@ export function useTransactionForm() {
         });
       }
     } catch (err) {
-      Alert.alert(
-        'Camera',
+      alertService.showError(
+        'Camera Error',
         err instanceof Error ? err.message : 'Could not open device camera'
       );
     }
@@ -296,8 +296,8 @@ export function useTransactionForm() {
         });
       }
     } catch (err) {
-      Alert.alert(
-        'Gallery',
+      alertService.showError(
+        'Gallery Error',
         err instanceof Error ? err.message : 'Could not open photo gallery'
       );
     }
@@ -314,7 +314,7 @@ export function useTransactionForm() {
         });
       }
     } catch (err) {
-      Alert.alert(
+      alertService.showError(
         'Document Selection',
         err instanceof Error ? err.message : 'Could not pick PDF slip'
       );
