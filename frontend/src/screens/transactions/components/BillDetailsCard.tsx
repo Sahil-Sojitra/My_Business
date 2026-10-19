@@ -120,7 +120,7 @@ export const BillDetailsCard: React.FC<BillDetailsCardProps> = ({
               </Text>
               <Text style={styles.attachMeta}>
                 {bill.chitthi.type === 'photo'
-                  ? 'Physical Slip Photo (Tap to View)'
+                  ? 'Physical Slip Photo (Tap to Open)'
                   : 'Chitthi PDF (Tap to Open)'}{' '}
                 • {bill.chitthi.size || 'Attached'}
               </Text>

@@ -43,26 +43,33 @@ export const ChitthiAttachmentSection: React.FC<ChitthiAttachmentSectionProps> =
             styles.attachedCard,
             chitthi.type === 'photo' && styles.attachedCardPhoto,
           ]}>
-          <View
-            style={[
-              styles.chitthiTypeBadge,
-              chitthi.type === 'photo'
-                ? styles.chitthiBadgePhoto
-                : styles.chitthiBadgePdf,
-            ]}>
-            <Text style={styles.chitthiTypeBadgeText}>
-              {chitthi.type === 'photo' ? '📷 PHOTO' : '📄 PDF'}
-            </Text>
-          </View>
-          <View style={styles.attachedInfo}>
-            <Text style={styles.attachedName} numberOfLines={1}>
-              {chitthi.name}
-            </Text>
-            <Text style={styles.attachedMeta}>
-              {chitthi.size || 'Attachment'} •{' '}
-              {chitthi.status === 'PENDING' ? 'Syncing to Cloud...' : 'Cloud Synced'}
-            </Text>
-          </View>
+          <TouchableOpacity
+            style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
+            onPress={onPreviewPress}
+            activeOpacity={0.75}>
+            <View
+              style={[
+                styles.chitthiTypeBadge,
+                chitthi.type === 'photo'
+                  ? styles.chitthiBadgePhoto
+                  : styles.chitthiBadgePdf,
+              ]}>
+              <Text style={styles.chitthiTypeBadgeText}>
+                {chitthi.type === 'photo' ? '📷 PHOTO' : '📄 PDF'}
+              </Text>
+            </View>
+            <View style={styles.attachedInfo}>
+              <Text style={styles.attachedName} numberOfLines={1}>
+                {chitthi.name}
+              </Text>
+              <Text style={styles.attachedMeta}>
+                {chitthi.type === 'photo'
+                  ? 'Physical Photo (Tap to Open)'
+                  : 'Chitthi PDF (Tap to Open)'}{' '}
+                • {chitthi.size || 'Attachment'}
+              </Text>
+            </View>
+          </TouchableOpacity>
           <View style={styles.chitthiActionGroup}>
             <TouchableOpacity
               style={styles.retakeBtn}
