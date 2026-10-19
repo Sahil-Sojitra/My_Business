@@ -1,16 +1,21 @@
+import { API_BASE_URL } from '@env';
 import { Platform } from 'react-native';
 import { User } from '../types/auth';
 
 /**
- * Android emulator routes host machine loopback to 10.0.2.2.
- * iOS Simulator, macOS, and Web route to localhost directly.
+ * Primary Backend URL loaded dynamically from .env (API_BASE_URL)
+ * with automatic fallback to local emulator (10.0.2.2) and localhost USB.
  */
-const CANDIDATE_HOSTS =
-  Platform.OS === 'android' ? ['localhost', '10.0.2.2'] : ['localhost'];
+const configuredEnvUrl = API_BASE_URL ? API_BASE_URL.replace(/\/+$/, '') : null;
+const CANDIDATE_BASE_URLS: string[] = [
+  configuredEnvUrl || 'https://plausibly-groin-subfloor.ngrok-free.dev/api',
+  Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5000/api',
+  'http://localhost:5000/api',
+];
 let candidateIndex = 0;
 let isHostLocked = false;
 
-let apiBaseUrl: string = `http://${CANDIDATE_HOSTS[0]}:5000/api`;
+let apiBaseUrl: string = CANDIDATE_BASE_URLS[0];
 let activeAuthToken: string | null = null;
 let activeUser: User | null = null;
 
@@ -55,6 +60,7 @@ export class ApiError extends Error {
 
 /**
  * Centralized HTTP request dispatcher with automatic Bearer token injection,
+ * ngrok-skip-browser-warning header for free ngrok tunnels,
  * automatic physical device USB (localhost) / emulator (10.0.2.2) fallback,
  * and normalized error response handling.
  */
@@ -67,6 +73,7 @@ export async function request<T>(
   const headers: Record<string, string> = {
     Accept: 'application/json',
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true',
     ...(options.headers as Record<string, string>),
   };
 
@@ -84,10 +91,10 @@ export async function request<T>(
     // Successful connection locks the working host
     isHostLocked = true;
   } catch (err: unknown) {
-    // If not locked and another host candidate exists (e.g. switching from localhost to 10.0.2.2 for emulator)
-    if (!isHostLocked && candidateIndex < CANDIDATE_HOSTS.length - 1) {
+    // If not locked and another host candidate exists
+    if (!isHostLocked && candidateIndex < CANDIDATE_BASE_URLS.length - 1) {
       candidateIndex++;
-      apiBaseUrl = `http://${CANDIDATE_HOSTS[candidateIndex]}:5000/api`;
+      apiBaseUrl = CANDIDATE_BASE_URLS[candidateIndex];
       try {
         response = await fetch(`${apiClient.getBaseUrl()}${cleanEndpoint}`, {
           ...options,
@@ -98,7 +105,7 @@ export async function request<T>(
         const originalMessage =
           retryErr instanceof Error ? retryErr.message : 'Network request failed';
         throw new ApiError(
-          `Cannot connect to backend at ${apiClient.getBaseUrl()}. Please ensure the backend is running (npm run dev) and accessible: ${originalMessage}`,
+          `Cannot connect to backend at ${apiClient.getBaseUrl()}. Please ensure backend is running and reachable: ${originalMessage}`,
           0
         );
       }
@@ -106,7 +113,7 @@ export async function request<T>(
       const originalMessage =
         err instanceof Error ? err.message : 'Network request failed';
       throw new ApiError(
-        `Cannot connect to backend at ${apiClient.getBaseUrl()}. Please ensure the backend is running (npm run dev) and accessible: ${originalMessage}`,
+        `Cannot connect to backend at ${apiClient.getBaseUrl()}. Please ensure backend is running and reachable: ${originalMessage}`,
         0
       );
     }
