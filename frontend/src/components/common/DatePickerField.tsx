@@ -26,6 +26,7 @@ interface DatePickerFieldProps {
   style?: ViewStyle;
   mode?: 'billDate' | 'dueDate';
   referenceDate?: string; // Optional bill date from which credit days (+15, +30) are calculated
+  hidePresets?: boolean;
 }
 
 const MONTH_NAMES = [
@@ -94,6 +95,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
   style,
   mode = 'billDate',
   referenceDate,
+  hidePresets = false,
 }) => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
@@ -287,61 +289,63 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
             </View>
 
             {/* Quick Presets (Broker Credit & Mandi Shortcuts) */}
-            <View style={styles.presetsContainer}>
-              <Text style={styles.presetsHeader}>Quick Select:</Text>
-              <View style={styles.presetButtonsRow}>
-                {mode === 'billDate' ? (
-                  <>
-                    <TouchableOpacity
-                      style={styles.presetChip}
-                      onPress={() => {
-                        const now = new Date();
-                        const s = toISODateString(now);
-                        setTempSelectedDate(s);
-                        setViewYear(now.getFullYear());
-                        setViewMonth(now.getMonth());
-                      }}>
-                      <Text style={styles.presetChipText}>Today</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.presetChip}
-                      onPress={() => applyPresetDays(-1)}>
-                      <Text style={styles.presetChipText}>Yesterday</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.presetChip}
-                      onPress={() => applyPresetDays(-2)}>
-                      <Text style={styles.presetChipText}>2 Days Ago</Text>
-                    </TouchableOpacity>
-                  </>
-                ) : (
-                  <>
-                    <TouchableOpacity
-                      style={styles.presetChip}
-                      onPress={() => applyPresetDays(15)}>
-                      <Text style={styles.presetChipText}>+15 Days</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.presetChip, styles.presetChipHighlight]}
-                      onPress={() => applyPresetDays(30)}>
-                      <Text style={[styles.presetChipText, styles.presetChipTextHighlight]}>
-                        +30 Days (1M)
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.presetChip}
-                      onPress={() => applyPresetDays(45)}>
-                      <Text style={styles.presetChipText}>+45 Days</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.presetChip}
-                      onPress={() => applyPresetDays(60)}>
-                      <Text style={styles.presetChipText}>+60 Days</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
+            {!hidePresets ? (
+              <View style={styles.presetsContainer}>
+                <Text style={styles.presetsHeader}>Quick Select:</Text>
+                <View style={styles.presetButtonsRow}>
+                  {mode === 'billDate' ? (
+                    <>
+                      <TouchableOpacity
+                        style={styles.presetChip}
+                        onPress={() => {
+                          const now = new Date();
+                          const s = toISODateString(now);
+                          setTempSelectedDate(s);
+                          setViewYear(now.getFullYear());
+                          setViewMonth(now.getMonth());
+                        }}>
+                        <Text style={styles.presetChipText}>Today</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.presetChip}
+                        onPress={() => applyPresetDays(-1)}>
+                        <Text style={styles.presetChipText}>Yesterday</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.presetChip}
+                        onPress={() => applyPresetDays(-2)}>
+                        <Text style={styles.presetChipText}>2 Days Ago</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <>
+                      <TouchableOpacity
+                        style={styles.presetChip}
+                        onPress={() => applyPresetDays(15)}>
+                        <Text style={styles.presetChipText}>+15 Days</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.presetChip, styles.presetChipHighlight]}
+                        onPress={() => applyPresetDays(30)}>
+                        <Text style={[styles.presetChipText, styles.presetChipTextHighlight]}>
+                          +30 Days (1M)
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.presetChip}
+                        onPress={() => applyPresetDays(45)}>
+                        <Text style={styles.presetChipText}>+45 Days</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.presetChip}
+                        onPress={() => applyPresetDays(60)}>
+                        <Text style={styles.presetChipText}>+60 Days</Text>
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
               </View>
-            </View>
+            ) : null}
 
             {/* Month & Year Navigator */}
             <View style={styles.monthNavigator}>

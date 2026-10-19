@@ -12,6 +12,45 @@ import {
   uploadToStorageAsync,
 } from '../../../services/attachmentService';
 
+/**
+ * Calculates YYYY-MM-DD date by adding days to a base YYYY-MM-DD date
+ */
+export function addDaysToIsoDate(baseIsoDate: string, daysCount: number): string {
+  const base =
+    baseIsoDate && /^\d{4}-\d{2}-\d{2}$/.test(baseIsoDate)
+      ? baseIsoDate
+      : new Date().toISOString().split('T')[0];
+
+  const [y, m, d] = base.split('-').map(Number);
+  const dateObj = new Date(y, m - 1, d);
+  dateObj.setDate(dateObj.getDate() + daysCount);
+  const ry = dateObj.getFullYear();
+  const rm = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const rd = String(dateObj.getDate()).padStart(2, '0');
+  return `${ry}-${rm}-${rd}`;
+}
+
+/**
+ * Calculates days difference between two YYYY-MM-DD dates
+ */
+export function getDaysDifference(baseIsoDate: string, dueIsoDate: string): string {
+  if (
+    !baseIsoDate ||
+    !dueIsoDate ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(baseIsoDate) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(dueIsoDate)
+  ) {
+    return '';
+  }
+  const [by, bm, bd] = baseIsoDate.split('-').map(Number);
+  const [dy, dm, dd] = dueIsoDate.split('-').map(Number);
+  const baseObj = new Date(by, bm - 1, bd);
+  const dueObj = new Date(dy, dm - 1, dd);
+  const diffTime = dueObj.getTime() - baseObj.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays > 0 ? String(diffDays) : '';
+}
+
 export function useTransactionForm() {
   const navigation = useNavigation();
   const transactionId = navigation.params?.transactionId as string | undefined;
@@ -75,6 +114,7 @@ export function useTransactionForm() {
     return `${y}-${m}-${d}`;
   });
   const [dueDate, setDueDate] = useState<string>('');
+  const [creditDays, setCreditDays] = useState<string>('');
   const [description, setDescription] = useState<string>('');
 
   const [loadingInitial, setLoadingInitial] = useState<boolean>(true);
@@ -94,6 +134,45 @@ export function useTransactionForm() {
       setDalaliAmount(val % 1 === 0 ? String(val) : val.toFixed(2));
     } else {
       setDalaliAmount('');
+    }
+  };
+
+  const applyCreditDays = (daysVal: number | string) => {
+    const cleanDays = String(daysVal).replace(/[^0-9]/g, '');
+    setCreditDays(cleanDays);
+    const numDays = parseInt(cleanDays, 10);
+    if (!isNaN(numDays) && numDays > 0) {
+      const calculated = addDaysToIsoDate(date, numDays);
+      setDueDate(calculated);
+    } else {
+      setDueDate('');
+    }
+  };
+
+  const handleCreditDaysChange = (val: string) => {
+    const clean = val.replace(/[^0-9]/g, '').slice(0, 4);
+    applyCreditDays(clean);
+  };
+
+  const handleBillDateChange = (newBillDate: string) => {
+    setDate(newBillDate);
+    if (errors.date) {
+      setErrors(prev => ({ ...prev, date: undefined }));
+    }
+    const numDays = parseInt(creditDays, 10);
+    if (!isNaN(numDays) && numDays > 0) {
+      const calculated = addDaysToIsoDate(newBillDate, numDays);
+      setDueDate(calculated);
+    }
+  };
+
+  const handleDueDateChange = (newDueDate: string) => {
+    setDueDate(newDueDate);
+    if (newDueDate) {
+      const diff = getDaysDifference(date, newDueDate);
+      setCreditDays(diff);
+    } else {
+      setCreditDays('');
     }
   };
 
@@ -132,6 +211,9 @@ export function useTransactionForm() {
             }
             setDate(tx.date);
             setDueDate(tx.dueDate || '');
+            if (tx.date && tx.dueDate) {
+              setCreditDays(getDaysDifference(tx.date, tx.dueDate));
+            }
             setDescription(tx.description || '');
           }
         } else if (defaultCompanyId) {
@@ -360,6 +442,12 @@ export function useTransactionForm() {
     setDate,
     dueDate,
     setDueDate,
+    creditDays,
+    setCreditDays,
+    applyCreditDays,
+    handleCreditDaysChange,
+    handleBillDateChange,
+    handleDueDateChange,
     description,
     setDescription,
     loadingInitial,

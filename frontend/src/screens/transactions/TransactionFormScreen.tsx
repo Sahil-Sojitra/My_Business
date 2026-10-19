@@ -227,28 +227,87 @@ export const TransactionFormScreen: React.FC = () => {
           <DatePickerField
             label="Bill Date"
             value={form.date}
-            onChange={val => {
-              form.setDate(val);
-              if (form.errors.date) {
-                form.setErrors(prev => ({ ...prev, date: undefined }));
-              }
-            }}
+            onChange={form.handleBillDateChange}
             placeholder="Select bill date"
             mode="billDate"
             error={form.errors.date}
             required
           />
 
-          {/* Payment Due Date */}
-          <DatePickerField
-            label="Payment Due Date"
-            value={form.dueDate}
-            onChange={form.setDueDate}
-            placeholder="Select payment due date (Optional)"
-            mode="dueDate"
-            referenceDate={form.date}
-            helperText="Credit settlement deadline (closest due date appears first on firm list)"
-          />
+          {/* Payment Terms & Due Date Section */}
+          <View style={styles.dueDateCard}>
+            <View style={styles.dueDateCardHeader}>
+              <Text style={styles.dueDateCardTitle}>Payment Terms & Due Date</Text>
+              {form.creditDays ? (
+                <View style={styles.dueDateBadge}>
+                  <Text style={styles.dueDateBadgeText}>
+                    +{form.creditDays} Days Credit
+                  </Text>
+                </View>
+              ) : null}
+            </View>
+
+            {/* Custom Credit Days Input */}
+            <Input
+              label="Credit Period (Days)"
+              value={form.creditDays}
+              onChangeText={form.handleCreditDaysChange}
+              placeholder="e.g. 15, 30, 45, 60"
+              keyboardType="numeric"
+              maxLength={4}
+              helperText="Days from Bill Date to auto-calculate Payment Due Date"
+            />
+
+            {/* Quick Select Days Preset Pills (Outside in form list) */}
+            <View style={styles.presetsContainer}>
+              <Text style={styles.presetLabel}>Quick Select Days:</Text>
+              <View style={styles.presetsRow}>
+                {[
+                  { label: '+15 Days', days: '15' },
+                  { label: '+30 Days (1M)', days: '30' },
+                  { label: '+45 Days', days: '45' },
+                  { label: '+60 Days (2M)', days: '60' },
+                  { label: '+90 Days (3M)', days: '90' },
+                ].map(preset => {
+                  const isActive = form.creditDays === preset.days;
+                  return (
+                    <TouchableOpacity
+                      key={preset.days}
+                      onPress={() => form.applyCreditDays(preset.days)}
+                      style={[
+                        styles.presetPill,
+                        isActive && styles.presetPillActive,
+                      ]}
+                      activeOpacity={0.7}>
+                      <Text
+                        style={[
+                          styles.presetPillText,
+                          isActive && styles.presetPillTextActive,
+                        ]}>
+                        {preset.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Payment Due Date Picker Field (Auto-filled from days or picked via calendar) */}
+            <DatePickerField
+              label="Payment Due Date"
+              value={form.dueDate}
+              onChange={form.handleDueDateChange}
+              placeholder="Select payment due date (Optional)"
+              mode="dueDate"
+              hidePresets={true}
+              referenceDate={form.date}
+              helperText={
+                form.creditDays && form.dueDate
+                  ? `Due in ${form.creditDays} days from Bill Date`
+                  : 'Credit settlement deadline (closest due date appears first on firm list)'
+              }
+            />
+          </View>
 
           {/* Description */}
           <Input
