@@ -64,7 +64,7 @@ export const ChitthiAttachmentSection: React.FC<ChitthiAttachmentSectionProps> =
               </Text>
               <Text style={styles.attachedMeta}>
                 {chitthi.type === 'photo'
-                  ? 'Physical Photo (Tap to Open)'
+                  ? 'Physical Photo (Tap to View)'
                   : 'Chitthi PDF (Tap to Open)'}{' '}
                 • {chitthi.size || 'Attachment'}
               </Text>

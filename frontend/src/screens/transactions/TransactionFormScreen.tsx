@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
+import { AttachmentViewerModal } from '../../components/common/AttachmentViewerModal';
 import { Button } from '../../components/common/Button';
 import { DatePickerField } from '../../components/common/DatePickerField';
 import { Input } from '../../components/common/Input';
@@ -30,24 +31,15 @@ export const TransactionFormScreen: React.FC = () => {
   const scrollRef = useRef<KeyboardAwareScrollViewRef | null>(null);
   const dalaliSectionRef = useRef<any>(null);
 
-  const handleOpenAttachment = async (file: AttachmentFile | null) => {
+  const handleOpenPdf = async (file: AttachmentFile | null) => {
     if (!file) return;
-    const isPhoto =
-      file.type === 'photo' ||
-      Boolean(file.name?.match(/\.(jpe?g|png|webp|heic)$/i));
     try {
-      alertService.showToast(
-        'info',
-        isPhoto ? 'Opening Photo...' : 'Opening PDF...',
-        file.name
-      );
+      alertService.showToast('info', 'Opening PDF...', file.name);
       await openAttachment(file);
     } catch (err: unknown) {
       alertService.showError(
-        isPhoto ? 'Could Not Open Photo' : 'Could Not Open PDF',
-        err instanceof Error
-          ? err.message
-          : 'No application found to view this file.'
+        'Could Not Open PDF',
+        err instanceof Error ? err.message : 'No application found to view this PDF.'
       );
     }
   };
@@ -210,14 +202,20 @@ export const TransactionFormScreen: React.FC = () => {
           <BillPdfAttachmentSection
             billPdf={form.billPdf}
             onAttachPress={form.handlePickBillPdfNative}
-            onPreviewPress={() => handleOpenAttachment(form.billPdf)}
+            onPreviewPress={() => handleOpenPdf(form.billPdf)}
             onRemove={() => form.setBillPdf(null)}
           />
 
           {/* Chitthi Delivery Slip / Voucher Attachment */}
           <ChitthiAttachmentSection
             chitthi={form.chitthi}
-            onPreviewPress={() => handleOpenAttachment(form.chitthi)}
+            onPreviewPress={() => {
+              if (form.chitthi?.type === 'pdf') {
+                handleOpenPdf(form.chitthi);
+              } else {
+                form.setShowChitthiViewer(true);
+              }
+            }}
             onCameraPress={form.handleAttachChitthiCamera}
             onUploadPress={form.handleAttachChitthiPdf}
             onRemove={() => form.setChitthi(null)}
@@ -348,6 +346,14 @@ export const TransactionFormScreen: React.FC = () => {
           form.setShowCompanyModal(false);
           form.navigation.navigate('CompanyForm');
         }}
+      />
+
+      {/* 2. Modal: Chitthi Photo Fullscreen Viewer */}
+      <AttachmentViewerModal
+        visible={form.showChitthiViewer}
+        onClose={() => form.setShowChitthiViewer(false)}
+        attachment={form.chitthi}
+        title="Chitthi Delivery Photo"
       />
     </View>
   );

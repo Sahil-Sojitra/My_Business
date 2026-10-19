@@ -342,7 +342,7 @@ export async function getAttachmentViewUrl(
 }
 
 /**
- * Opens an attachment (PDF or Photo) using Android's native Document Viewer or system viewer
+ * Opens a PDF or document attachment using Android's native Document Viewer
  */
 export async function openAttachment(
   attachment: AttachmentFile
@@ -351,19 +351,7 @@ export async function openAttachment(
     attachment.type === 'pdf' ||
     Boolean(attachment.name?.toLowerCase().endsWith('.pdf'));
 
-  const isPng = Boolean(attachment.name?.toLowerCase().endsWith('.png'));
-  const isJpg = Boolean(attachment.name?.toLowerCase().match(/\.(jpe?g)$/i));
-
-  let mimeType = 'application/pdf';
-  if (!isPdf) {
-    if (isPng) {
-      mimeType = 'image/png';
-    } else if (isJpg) {
-      mimeType = 'image/jpeg';
-    } else {
-      mimeType = 'image/*';
-    }
-  }
+  const mimeType = isPdf ? 'application/pdf' : 'application/*';
 
   // Prioritize local content URI if available, or resolve download/presigned URL
   const localUri = attachment.uri;
@@ -374,13 +362,13 @@ export async function openAttachment(
     throw new Error('No viewable URL or file path available for this document.');
   }
 
-  // 1. On Android, use the native DocumentViewer module to open directly in the mobile document/gallery viewer
+  // 1. On Android, use the native DocumentViewer module to open directly in the mobile document viewer
   if (Platform.OS === 'android' && DocumentViewer) {
     try {
       await DocumentViewer.openDocument(
         fileToOpen,
         mimeType,
-        isPdf ? 'Open PDF with...' : 'Open photo with...'
+        'Open document with...'
       );
       return;
     } catch (err: unknown) {
@@ -391,7 +379,7 @@ export async function openAttachment(
           await DocumentViewer.openDocument(
             targetUrl,
             mimeType,
-            isPdf ? 'Open PDF with...' : 'Open photo with...'
+            'Open document with...'
           );
           return;
         } catch (innerErr) {

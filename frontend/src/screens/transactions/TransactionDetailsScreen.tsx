@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
+import { AttachmentViewerModal } from '../../components/common/AttachmentViewerModal';
 import { Button } from '../../components/common/Button';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -23,23 +24,18 @@ export const TransactionDetailsScreen: React.FC = () => {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
 
-  const handleOpenAttachment = async (file: AttachmentFile) => {
-    const isPhoto =
-      file.type === 'photo' ||
-      Boolean(file.name?.match(/\.(jpe?g|png|webp|heic)$/i));
+  // Photo viewer state (in-app viewer for photos only)
+  const [activePhoto, setActivePhoto] = useState<AttachmentFile | null>(null);
+  const [showPhotoViewer, setShowPhotoViewer] = useState<boolean>(false);
+
+  const handleOpenPdf = async (file: AttachmentFile) => {
     try {
-      alertService.showToast(
-        'info',
-        isPhoto ? 'Opening Photo...' : 'Opening PDF...',
-        file.name
-      );
+      alertService.showToast('info', 'Opening PDF...', file.name);
       await openAttachment(file);
     } catch (err: unknown) {
       alertService.showError(
-        isPhoto ? 'Could Not Open Photo' : 'Could Not Open PDF',
-        err instanceof Error
-          ? err.message
-          : 'No application found to view this file.'
+        'Could Not Open PDF',
+        err instanceof Error ? err.message : 'No application found to view this PDF.'
       );
     }
   };
@@ -155,12 +151,17 @@ export const TransactionDetailsScreen: React.FC = () => {
           }
           onBillPdfPress={() => {
             if (bill.billPdf) {
-              handleOpenAttachment(bill.billPdf);
+              handleOpenPdf(bill.billPdf);
             }
           }}
           onChitthiPreviewPress={() => {
             if (bill.chitthi) {
-              handleOpenAttachment(bill.chitthi);
+              if (bill.chitthi.type === 'pdf') {
+                handleOpenPdf(bill.chitthi);
+              } else {
+                setActivePhoto(bill.chitthi);
+                setShowPhotoViewer(true);
+              }
             }
           }}
         />
@@ -185,6 +186,14 @@ export const TransactionDetailsScreen: React.FC = () => {
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setShowDeleteModal(false)}
+      />
+
+      {/* Clean Fullscreen Photo Viewer Modal */}
+      <AttachmentViewerModal
+        visible={showPhotoViewer}
+        onClose={() => setShowPhotoViewer(false)}
+        attachment={activePhoto}
+        title="Chitthi Delivery Photo"
       />
     </View>
   );
