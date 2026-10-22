@@ -1,4 +1,8 @@
+
 {
   "name": "My_Business",
-  "displayName": "My Business"
+  "displayName": "My Business",
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-2151370452701930~4203111995"
+  }
 }

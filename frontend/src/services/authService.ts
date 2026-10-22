@@ -96,9 +96,9 @@ class RealAuthService implements IAuthService {
       await sessionPersistence.updateUser(freshUser);
       return freshUser;
     } catch (err: unknown) {
-      // If server returned 401 Unauthorized, token has expired or is revoked
-      if (err instanceof ApiError && err.statusCode === 401) {
-        console.log('[Auth] Token expired (401), logging out.');
+      // If server returned 401 Unauthorized or 404 Not Found (user deleted/reset on backend), clear session
+      if (err instanceof ApiError && (err.statusCode === 401 || err.statusCode === 404)) {
+        console.log(`[Auth] Session invalid (${err.statusCode}), clearing stale token and logging out.`);
         await this.logout();
         return null;
       }
