@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
@@ -12,11 +12,16 @@ import { AppHeader } from '../../components/common/AppHeader';
 import { EmptyState } from '../../components/common/EmptyState';
 import { PlusIcon } from '../../components/common/Icon';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { NativeAdCard } from '../../components/common/NativeAdCard';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { companyService } from '../../services';
 import { Company } from '../../types/company';
 import { CompanyListItemCard } from './components/CompanyListItemCard';
 import { styles } from './CompanyListStyles';
+
+type CompanyListItem =
+  | { type: 'company'; data: Company }
+  | { type: 'native_ad'; id: string };
 
 export const CompanyListScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -61,6 +66,23 @@ export const CompanyListScreen: React.FC = () => {
     );
   });
 
+  const listData: CompanyListItem[] = useMemo(() => {
+    // Only show an ad slot when there are at least 6 actual companies available
+    if (filteredCompanies.length < 6) {
+      return filteredCompanies.map(c => ({ type: 'company', data: c }));
+    }
+
+    const items: CompanyListItem[] = [];
+    for (let i = 0; i < filteredCompanies.length; i++) {
+      if (i === 5) {
+        // Place it after the fifth company (between index 4 and index 5)
+        items.push({ type: 'native_ad', id: 'company-list-native-ad-1' });
+      }
+      items.push({ type: 'company', data: filteredCompanies[i] });
+    }
+    return items;
+  }, [filteredCompanies]);
+
   return (
     <View style={styles.screen}>
       <AppHeader
@@ -91,8 +113,10 @@ export const CompanyListScreen: React.FC = () => {
         <LoadingSpinner message="Loading companies..." />
       ) : (
         <FlatList
-          data={filteredCompanies}
-          keyExtractor={item => item.id}
+          data={listData}
+          keyExtractor={item =>
+            item.type === 'company' ? item.data.id : item.id
+          }
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -118,14 +142,21 @@ export const CompanyListScreen: React.FC = () => {
               }
             />
           }
-          renderItem={({ item }) => (
-            <CompanyListItemCard
-              item={item}
-              onPress={() =>
-                navigation.navigate('CompanyDetails', { companyId: item.id })
-              }
-            />
-          )}
+          renderItem={({ item }) => {
+            if (item.type === 'native_ad') {
+              return <NativeAdCard />;
+            }
+            return (
+              <CompanyListItemCard
+                item={item.data}
+                onPress={() =>
+                  navigation.navigate('CompanyDetails', {
+                    companyId: item.data.id,
+                  })
+                }
+              />
+            );
+          }}
         />
       )}
 
