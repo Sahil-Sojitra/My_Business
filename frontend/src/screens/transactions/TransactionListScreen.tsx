@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
   RefreshControl,
@@ -12,6 +12,7 @@ import { AppHeader } from '../../components/common/AppHeader';
 import { EmptyState } from '../../components/common/EmptyState';
 import { PlusIcon } from '../../components/common/Icon';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { NativeAdCard } from '../../components/common/NativeAdCard';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
 import { Transaction, TransactionStatus } from '../../types/transaction';
@@ -20,6 +21,10 @@ import { TransactionListSummaryBar } from './components/TransactionListSummaryBa
 import { styles } from './TransactionListStyles';
 
 type FilterTab = 'ALL' | TransactionStatus;
+
+type TransactionListItem =
+  | { type: 'transaction'; data: Transaction }
+  | { type: 'native_ad'; id: string };
 
 export const TransactionListScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -67,6 +72,23 @@ export const TransactionListScreen: React.FC = () => {
       (item.description && item.description.toLowerCase().includes(q))
     );
   });
+
+  const listData: TransactionListItem[] = useMemo(() => {
+    // Only show an ad slot when there are at least 6 actual transaction records available
+    if (filteredBills.length < 6) {
+      return filteredBills.map(b => ({ type: 'transaction', data: b }));
+    }
+
+    const items: TransactionListItem[] = [];
+    for (let i = 0; i < filteredBills.length; i++) {
+      if (i === 5) {
+        // Place it after the fifth transaction (between index 4 and index 5)
+        items.push({ type: 'native_ad', id: 'tx-list-native-ad-1' });
+      }
+      items.push({ type: 'transaction', data: filteredBills[i] });
+    }
+    return items;
+  }, [filteredBills]);
 
   const totalPrincipal = transactions.reduce((acc, t) => acc + t.amount, 0);
   const totalDalali = transactions.reduce((acc, t) => {
@@ -135,8 +157,10 @@ export const TransactionListScreen: React.FC = () => {
         <LoadingSpinner message="Loading bills & interest..." />
       ) : (
         <FlatList
-          data={filteredBills}
-          keyExtractor={item => item.id}
+          data={listData}
+          keyExtractor={item =>
+            item.type === 'transaction' ? item.data.id : item.id
+          }
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -163,16 +187,21 @@ export const TransactionListScreen: React.FC = () => {
               }
             />
           }
-          renderItem={({ item }) => (
-            <TransactionListItemCard
-              item={item}
-              onPress={() =>
-                navigation.navigate('TransactionDetails', {
-                  transactionId: item.id,
-                })
-              }
-            />
-          )}
+          renderItem={({ item }) => {
+            if (item.type === 'native_ad') {
+              return <NativeAdCard />;
+            }
+            return (
+              <TransactionListItemCard
+                item={item.data}
+                onPress={() =>
+                  navigation.navigate('TransactionDetails', {
+                    transactionId: item.data.id,
+                  })
+                }
+              />
+            );
+          }}
         />
       )}
 

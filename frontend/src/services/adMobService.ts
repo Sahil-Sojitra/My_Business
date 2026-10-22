@@ -7,10 +7,22 @@ import mobileAds from 'react-native-google-mobile-ads';
 export const ADMOB_TEST_BANNER_ID = 'ca-app-pub-3940256099942544/6300978111';
 
 /**
+ * Official Google AdMob Test Ad Unit ID for Android Native Ads
+ * @see https://developers.google.com/admob/android/test-ads#sample_ad_units
+ */
+export const ADMOB_TEST_NATIVE_ID = 'ca-app-pub-3940256099942544/2247696110';
+
+/**
  * Active Banner Ad Unit ID.
  * Kept in this centralized service for straightforward transition to production IDs later.
  */
 export const ACTIVE_BANNER_AD_UNIT_ID = ADMOB_TEST_BANNER_ID;
+
+/**
+ * Active Native Ad Unit ID.
+ * Kept in this centralized service for straightforward transition to production IDs later.
+ */
+export const ACTIVE_NATIVE_AD_UNIT_ID = ADMOB_TEST_NATIVE_ID;
 
 let isSdkInitialized = false;
 let initPromise: Promise<void> | null = null;
