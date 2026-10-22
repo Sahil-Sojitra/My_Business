@@ -67,7 +67,7 @@ export const CompanyListScreen: React.FC = () => {
   });
 
   const listData: CompanyListItem[] = useMemo(() => {
-    // Only show an ad slot when there are at least 6 actual companies available
+    // Only show ad slots when there are at least 6 actual companies available
     if (filteredCompanies.length < 6) {
       return filteredCompanies.map(c => ({ type: 'company', data: c }));
     }
@@ -75,8 +75,14 @@ export const CompanyListScreen: React.FC = () => {
     const items: CompanyListItem[] = [];
     for (let i = 0; i < filteredCompanies.length; i++) {
       if (i === 5) {
-        // Place it after the fifth company (between index 4 and index 5)
+        // Place first ad after the fifth company (between index 4 and index 5)
         items.push({ type: 'native_ad', id: 'company-list-native-ad-1' });
+      } else if (i === 15 && filteredCompanies.length >= 16) {
+        // Place second ad after the 15th company (between index 14 and index 15)
+        items.push({ type: 'native_ad', id: 'company-list-native-ad-2' });
+      } else if (i === 25 && filteredCompanies.length >= 26) {
+        // Place third ad after the 25th company (between index 24 and index 25)
+        items.push({ type: 'native_ad', id: 'company-list-native-ad-3' });
       }
       items.push({ type: 'company', data: filteredCompanies[i] });
     }

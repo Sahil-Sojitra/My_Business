@@ -74,7 +74,7 @@ export const TransactionListScreen: React.FC = () => {
   });
 
   const listData: TransactionListItem[] = useMemo(() => {
-    // Only show an ad slot when there are at least 6 actual transaction records available
+    // Only show ad slots when there are at least 6 actual transaction records available
     if (filteredBills.length < 6) {
       return filteredBills.map(b => ({ type: 'transaction', data: b }));
     }
@@ -82,8 +82,14 @@ export const TransactionListScreen: React.FC = () => {
     const items: TransactionListItem[] = [];
     for (let i = 0; i < filteredBills.length; i++) {
       if (i === 5) {
-        // Place it after the fifth transaction (between index 4 and index 5)
+        // Place first ad after the 5th transaction (between index 4 and index 5)
         items.push({ type: 'native_ad', id: 'tx-list-native-ad-1' });
+      } else if (i === 15 && filteredBills.length >= 16) {
+        // Place second ad after the 15th transaction (between index 14 and index 15)
+        items.push({ type: 'native_ad', id: 'tx-list-native-ad-2' });
+      } else if (i === 25 && filteredBills.length >= 26) {
+        // Place third ad after the 25th transaction (between index 24 and index 25)
+        items.push({ type: 'native_ad', id: 'tx-list-native-ad-3' });
       }
       items.push({ type: 'transaction', data: filteredBills[i] });
     }
