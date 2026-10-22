@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
+import { AdBanner } from '../../components/common/AdBanner';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { UserIcon } from '../../components/common/Icon';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -130,6 +131,9 @@ export const HomeScreen: React.FC = () => {
         <HomeDalaliToolCard
           onPress={() => navigation.navigate('DalaliCalculator')}
         />
+
+        {/* AdMob Test Banner */}
+        <AdBanner />
       </ScrollView>
 
       <ConfirmModal
