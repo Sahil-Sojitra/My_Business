@@ -6,4 +6,11 @@ export {
   type ITransactionService,
 } from './transactionService';
 export { sessionPersistence, type StoredSession } from './storage';
+export {
+  initializeAdMobOnce,
+  interstitialService,
+  ACTIVE_BANNER_AD_UNIT_ID,
+  ACTIVE_NATIVE_AD_UNIT_ID,
+  ACTIVE_INTERSTITIAL_AD_UNIT_ID,
+} from './adMobService';
 

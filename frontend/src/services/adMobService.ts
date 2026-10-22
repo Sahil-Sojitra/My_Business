@@ -24,6 +24,18 @@ export const ACTIVE_BANNER_AD_UNIT_ID = ADMOB_TEST_BANNER_ID;
  */
 export const ACTIVE_NATIVE_AD_UNIT_ID = ADMOB_TEST_NATIVE_ID;
 
+/**
+ * Official Google AdMob Test Ad Unit ID for Android Interstitial Ads
+ * @see https://developers.google.com/admob/android/test-ads#sample_ad_units
+ */
+export const ADMOB_TEST_INTERSTITIAL_ID = 'ca-app-pub-3940256099942544/1033173712';
+
+/**
+ * Active Interstitial Ad Unit ID.
+ * Kept in this centralized service for straightforward transition to production IDs later.
+ */
+export const ACTIVE_INTERSTITIAL_AD_UNIT_ID = ADMOB_TEST_INTERSTITIAL_ID;
+
 let isSdkInitialized = false;
 let initPromise: Promise<void> | null = null;
 
@@ -47,6 +59,9 @@ export async function initializeAdMobOnce(): Promise<void> {
       if (__DEV__) {
         console.log('[AdMob] SDK initialized successfully:', adapterStatuses);
       }
+      // Warm up the first interstitial ad after SDK is ready
+      const { interstitialService } = await import('./interstitialService');
+      interstitialService.preload();
     } catch (error: unknown) {
       // Do not crash the app; log a warning for diagnostics
       console.warn('[AdMob] Failed to initialize Google Mobile Ads SDK:', error);
@@ -57,3 +72,5 @@ export async function initializeAdMobOnce(): Promise<void> {
 
   return initPromise;
 }
+
+export { interstitialService } from './interstitialService';

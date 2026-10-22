@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { alertService } from '../../../context/AlertContext';
 import { useNavigation } from '../../../navigation/NavigationContext';
-import { companyService, transactionService } from '../../../services';
+import {
+  companyService,
+  interstitialService,
+  transactionService,
+} from '../../../services';
 import { Company } from '../../../types/company';
 import { AttachmentFile } from '../../../types/transaction';
 import {
@@ -298,12 +302,18 @@ export function useTransactionForm() {
         await transactionService.update(transactionId, payload);
         alertService.showSuccess('Success', 'Bill updated successfully');
         navigation.navigate('TransactionDetails', { transactionId });
+        setTimeout(() => {
+          interstitialService.showIfEligible();
+        }, 350);
       } else {
         const created = await transactionService.create(payload);
         alertService.showSuccess('Success', 'Bill recorded successfully');
         navigation.navigate('TransactionDetails', {
           transactionId: created.id,
         });
+        setTimeout(() => {
+          interstitialService.showIfEligible();
+        }, 350);
       }
     } catch (err) {
       alertService.showError(

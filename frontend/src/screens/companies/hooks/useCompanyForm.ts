@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { alertService } from '../../../context/AlertContext';
 import { useNavigation } from '../../../navigation/NavigationContext';
-import { companyService } from '../../../services';
+import { companyService, interstitialService } from '../../../services';
 
 export function useCompanyForm() {
   const navigation = useNavigation();
@@ -93,10 +93,16 @@ export function useCompanyForm() {
         await companyService.update(companyId, payload);
         alertService.showSuccess('Success', 'Company profile updated successfully.');
         navigation.navigate('CompanyDetails', { companyId });
+        setTimeout(() => {
+          interstitialService.showIfEligible();
+        }, 350);
       } else {
         const created = await companyService.create(payload);
         alertService.showSuccess('Success', 'New company created successfully.');
         navigation.navigate('CompanyDetails', { companyId: created.id });
+        setTimeout(() => {
+          interstitialService.showIfEligible();
+        }, 350);
       }
     } catch (err) {
       alertService.showError(
