@@ -13,10 +13,15 @@ import { KeyboardAwareScrollView } from '../../components/common/KeyboardAwareSc
 import { TrashIcon, UserIcon } from '../../components/common/Icon';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
+import {
+  showPrivacyOptionsForm,
+  useAdConsent,
+} from '../../services/adMobService';
 
 export const ProfileScreen: React.FC = () => {
   const { user, updateProfile, deleteAccount, logout } = useAuth();
   const navigation = useNavigation();
+  const { privacyOptionsRequired } = useAdConsent();
 
   // Profile Form state
   const [name, setName] = useState<string>(user?.name || '');
@@ -45,6 +50,9 @@ export const ProfileScreen: React.FC = () => {
   const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
   const [loggingOut, setLoggingOut] = useState<boolean>(false);
 
+  // UMP Privacy options state
+  const [openingPrivacyOptions, setOpeningPrivacyOptions] = useState<boolean>(false);
+
   // Initials for avatar
   const initials = (name || user?.name || 'B')
     .split(' ')
@@ -53,6 +61,23 @@ export const ProfileScreen: React.FC = () => {
     .join('')
     .slice(0, 2)
     .toUpperCase();
+
+  const handleOpenPrivacyOptions = async () => {
+    setOpeningPrivacyOptions(true);
+    setErrorMessage(null);
+    try {
+      await showPrivacyOptionsForm();
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'Failed to display privacy options.';
+      if (__DEV__) {
+        console.warn('[Profile] showPrivacyOptionsForm error:', message);
+      }
+      setErrorMessage(message);
+    } finally {
+      setOpeningPrivacyOptions(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     setSuccessMessage(null);
@@ -297,6 +322,27 @@ export const ProfileScreen: React.FC = () => {
           style={styles.saveBtn}
         />
 
+        {/* Privacy Options (Shown ONLY when UMP reports privacy options entry point is required) */}
+        {privacyOptionsRequired && (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <UserIcon size={18} color="#2563EB" />
+              <Text style={styles.cardTitle}>Privacy & Preferences</Text>
+            </View>
+            <Text style={styles.cardSubtitle}>
+              Review or adjust your consent choices regarding advertising and data collection.
+            </Text>
+            <Button
+              title="Privacy & Ad Preferences"
+              onPress={handleOpenPrivacyOptions}
+              variant="outline"
+              size="md"
+              loading={openingPrivacyOptions}
+              style={styles.privacyBtn}
+            />
+          </View>
+        )}
+
         {/* Session Management */}
         <Button
           title="Log Out"
@@ -511,6 +557,11 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     marginBottom: 12,
+  },
+  privacyBtn: {
+    marginTop: 14,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#CBD5E1',
   },
   logoutBtn: {
     marginBottom: 20,

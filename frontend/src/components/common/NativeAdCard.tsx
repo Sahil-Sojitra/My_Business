@@ -14,7 +14,7 @@ import {
   NativeMediaView,
   useNativeAd,
 } from 'react-native-google-mobile-ads';
-import { ACTIVE_NATIVE_AD_UNIT_ID } from '../../services/adMobService';
+import { ACTIVE_NATIVE_AD_UNIT_ID, useAdConsent } from '../../services/adMobService';
 
 export interface NativeAdCardProps {
   /**
@@ -35,15 +35,18 @@ export const NativeAdCard: React.FC<NativeAdCardProps> = ({
   adUnitId = ACTIVE_NATIVE_AD_UNIT_ID,
   style,
 }) => {
+  const { canRequestAds: adsAllowed } = useAdConsent();
+
   const { status, nativeAd } = useNativeAd({
-    adUnitId,
+    adUnitId: adsAllowed ? adUnitId : null,
+    autoLoad: adsAllowed,
     requestOptions: {
       requestNonPersonalizedAdsOnly: true,
     },
   });
 
-  // Render nothing while loading, idle, no-fill, or on error to avoid empty boxes or retry loops
-  if (status !== 'loaded' || !nativeAd) {
+  // Render nothing while loading, idle, no-fill, on error, or if consent is not yet permitted
+  if (!adsAllowed || status !== 'loaded' || !nativeAd) {
     return null;
   }
 

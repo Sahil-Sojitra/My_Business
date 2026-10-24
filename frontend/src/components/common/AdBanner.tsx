@@ -4,7 +4,7 @@ import {
   BannerAd,
   BannerAdSize,
 } from 'react-native-google-mobile-ads';
-import { ACTIVE_BANNER_AD_UNIT_ID } from '../../services/adMobService';
+import { ACTIVE_BANNER_AD_UNIT_ID, useAdConsent } from '../../services/adMobService';
 
 export interface AdBannerProps {
   /**
@@ -21,11 +21,12 @@ export const AdBanner: React.FC<AdBannerProps> = ({
   adUnitId = ACTIVE_BANNER_AD_UNIT_ID,
   size = BannerAdSize.ANCHORED_ADAPTIVE_BANNER,
 }) => {
+  const { canRequestAds: adsAllowed } = useAdConsent();
   const [loadFailed, setLoadFailed] = useState<boolean>(false);
   const [isLoaded, setIsLoaded] = useState<boolean>(false);
 
-  // If ad failed to load, collapse gracefully without infinite retry loops
-  if (loadFailed) {
+  // If consent is not yet granted or ad failed to load, do not request or render the banner
+  if (!adsAllowed || loadFailed) {
     return null;
   }
 

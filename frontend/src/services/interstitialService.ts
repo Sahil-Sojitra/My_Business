@@ -1,5 +1,9 @@
 import { AdEventType, InterstitialAd } from 'react-native-google-mobile-ads';
-import { ACTIVE_INTERSTITIAL_AD_UNIT_ID } from './adMobService';
+import {
+  ACTIVE_INTERSTITIAL_AD_UNIT_ID,
+  canRequestAds,
+  subscribeToConsentState,
+} from './adMobService';
 
 /**
  * Minimum cooldown interval between interstitial ad displays.
@@ -15,6 +19,21 @@ class InterstitialService {
   private lastShownTimestamp = 0;
   private unsubscribers: Array<() => void> = [];
   private retryTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    // Listen for consent changes: if consent is revoked, cancel timeouts and tear down instances
+    subscribeToConsentState(state => {
+      if (!state.canRequestAds) {
+        if (this.retryTimeout) {
+          clearTimeout(this.retryTimeout);
+          this.retryTimeout = null;
+        }
+        this.isLoaded = false;
+        this.isLoading = false;
+        this.cleanupAdInstance();
+      }
+    });
+  }
 
   /**
    * Returns whether the minimum 5-minute cooldown is currently active.
@@ -39,8 +58,18 @@ class InterstitialService {
 
   /**
    * Preloads an interstitial ad if not already loaded or loading.
+   * Strictly verifies UMP canRequestAds before creating or loading an ad.
    */
   public preload(): void {
+    if (!canRequestAds()) {
+      if (__DEV__) {
+        console.log(
+          '[AdMob Interstitial] Preload aborted: consent not permitted (canRequestAds = false).'
+        );
+      }
+      return;
+    }
+
     if (this.isLoaded || this.isLoading || this.isShowing) {
       return;
     }
@@ -86,9 +115,11 @@ class InterstitialService {
         this.isShowing = false;
         this.isLoaded = false;
         this.cleanupAdInstance();
-        // Warm up the next ad after a short delay
+        // Warm up the next ad after a short delay if consent remains permitted
         setTimeout(() => {
-          this.preload();
+          if (canRequestAds()) {
+            this.preload();
+          }
         }, 1500);
       });
 
@@ -98,9 +129,11 @@ class InterstitialService {
         this.isLoading = false;
         this.isShowing = false;
         this.cleanupAdInstance();
-        // Retry with backoff (45 seconds) to avoid tight retry loops
+        // Retry with backoff (45 seconds) to avoid tight retry loops if consent remains permitted
         this.retryTimeout = setTimeout(() => {
-          this.preload();
+          if (canRequestAds()) {
+            this.preload();
+          }
         }, 45000);
       });
 
@@ -124,6 +157,14 @@ class InterstitialService {
    * Never throws and never blocks caller workflow.
    */
   public async showIfEligible(): Promise<boolean> {
+    // 0. Consent guard: never attempt display or preload if UMP forbids ads
+    if (!canRequestAds()) {
+      if (__DEV__) {
+        console.log('[AdMob Interstitial] showIfEligible aborted: canRequestAds is false.');
+      }
+      return false;
+    }
+
     // 1. Guard against concurrent shows
     if (this.isShowing) {
       return false;
@@ -145,8 +186,8 @@ class InterstitialService {
       if (__DEV__) {
         console.log('[AdMob Interstitial] Ad not ready yet. Skipping show.');
       }
-      // Ensure a preload is underway for future opportunities
-      if (!this.isLoading) {
+      // Ensure a preload is underway for future opportunities if permitted
+      if (!this.isLoading && canRequestAds()) {
         this.preload();
       }
       return false;
@@ -162,7 +203,9 @@ class InterstitialService {
       this.isShowing = false;
       this.isLoaded = false;
       this.cleanupAdInstance();
-      this.preload();
+      if (canRequestAds()) {
+        this.preload();
+      }
       return false;
     }
   }
