@@ -17,6 +17,7 @@ import {
   SearchIcon,
   XIcon,
 } from '../../../components/common/Icon';
+import { colors } from '../../../theme/colors';
 import { Company } from '../../../types/company';
 import { styles } from '../TransactionFormStyles';
 
@@ -96,19 +97,19 @@ export const CompanyPickerModal: React.FC<CompanyPickerModalProps> = ({
               onPress={onClose}
               style={styles.modalCloseBtn}
               activeOpacity={0.7}>
-              <XIcon size={18} color="#0F172A" />
+              <XIcon size={18} color={colors.textPrimary} />
             </TouchableOpacity>
           </View>
 
           {/* Search Box */}
           <View style={styles.modalSearchRow}>
-            <SearchIcon size={16} color="#64748B" />
+            <SearchIcon size={16} color={colors.textSecondary} />
             <TextInput
               style={styles.modalSearchInput}
               value={searchQuery}
               onChangeText={onSearchChange}
               placeholder="Search by firm name, owner or phone..."
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.textMuted}
               autoCapitalize="none"
               clearButtonMode="while-editing"
             />
@@ -116,7 +117,7 @@ export const CompanyPickerModal: React.FC<CompanyPickerModalProps> = ({
               <TouchableOpacity
                 onPress={() => onSearchChange('')}
                 activeOpacity={0.7}>
-                <XIcon size={14} color="#64748B" />
+                <XIcon size={14} color={colors.textSecondary} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -126,7 +127,7 @@ export const CompanyPickerModal: React.FC<CompanyPickerModalProps> = ({
             style={styles.modalAddCompBtn}
             onPress={onAddNewCompany}
             activeOpacity={0.7}>
-            <PlusIcon size={15} color="#2563EB" strokeWidth={2.6} />
+            <PlusIcon size={15} color={colors.primary} strokeWidth={2.6} />
             <Text style={styles.modalAddCompText}>Add New Buyer Firm</Text>
           </TouchableOpacity>
 
@@ -187,7 +188,7 @@ export const CompanyPickerModal: React.FC<CompanyPickerModalProps> = ({
                     </View>
                     {isSelected ? (
                       <View style={styles.selectedCheckWrap}>
-                        <CheckIcon size={16} color="#2563EB" />
+                        <CheckIcon size={16} color={colors.primary} />
                       </View>
                     ) : null}
                   </TouchableOpacity>

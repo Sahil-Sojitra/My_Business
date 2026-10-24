@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { Card } from '../../../components/common/Card';
 import { ChevronRight } from '../../../components/common/Icon';
+import { colors } from '../../../theme/colors';
 import { Transaction } from '../../../types/transaction';
 import { formatDate } from '../../../utils/formatters';
 import { styles } from '../TransactionDetailsStyles';
@@ -30,7 +31,7 @@ export const BillDetailsCard: React.FC<BillDetailsCardProps> = ({
           onPress={onCompanyPress}
           activeOpacity={0.7}>
           <Text style={styles.companyLink}>{bill.companyName}</Text>
-          <ChevronRight size={14} color="#2563EB" strokeWidth={2.4} />
+          <ChevronRight size={14} color={colors.primary} strokeWidth={2.4} />
         </TouchableOpacity>
       </View>
 
@@ -81,7 +82,7 @@ export const BillDetailsCard: React.FC<BillDetailsCardProps> = ({
                 Invoice PDF (Tap to Open) • {bill.billPdf.size || 'Attached'}
               </Text>
             </View>
-            <ChevronRight size={14} color="#2563EB" />
+            <ChevronRight size={14} color={colors.primary} />
           </TouchableOpacity>
         </View>
       ) : null}
@@ -125,7 +126,7 @@ export const BillDetailsCard: React.FC<BillDetailsCardProps> = ({
                 • {bill.chitthi.size || 'Attached'}
               </Text>
             </View>
-            <ChevronRight size={14} color="#2563EB" />
+            <ChevronRight size={14} color={colors.primary} />
           </TouchableOpacity>
         </View>
       ) : null}

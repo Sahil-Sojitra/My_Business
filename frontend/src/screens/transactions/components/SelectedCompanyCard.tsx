@@ -6,6 +6,7 @@ import {
   ChevronRight,
   PlusIcon,
 } from '../../../components/common/Icon';
+import { colors } from '../../../theme/colors';
 import { Company } from '../../../types/company';
 import { styles } from '../TransactionFormStyles';
 
@@ -43,7 +44,7 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
               <Text style={styles.searchFirmsHeaderText}>
                 Search ({companiesCount})
               </Text>
-              <ChevronDown size={11} color="#475569" strokeWidth={2.4} />
+              <ChevronDown size={11} color={colors.textSecondary} strokeWidth={2.4} />
             </TouchableOpacity>
           ) : null}
 
@@ -53,7 +54,7 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
             style={styles.addFirmPrimaryBtn}
             accessibilityRole="button"
             accessibilityLabel="Add new buyer firm">
-            <PlusIcon size={13} color="#FFFFFF" strokeWidth={1.5} />
+            <PlusIcon size={13} color={colors.card} strokeWidth={1.5} />
             <Text style={styles.addFirmPrimaryBtnText}>Add Firm</Text>
           </TouchableOpacity>
         </View>
@@ -80,7 +81,7 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
           </View>
           <View style={styles.changeCompanyBadge}>
             <Text style={styles.changeCompanyBadgeText}>Change</Text>
-            <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+            <ChevronRight size={13} color={colors.primary} strokeWidth={2.4} />
           </View>
         </TouchableOpacity>
       ) : companiesCount === 0 ? (
@@ -91,7 +92,7 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
           accessibilityRole="button"
           accessibilityLabel="Add your first buyer firm">
           <View style={styles.buildingIconBadge}>
-            <BuildingIcon size={20} color="#2563EB" />
+            <BuildingIcon size={20} color={colors.primary} />
           </View>
           <View style={styles.emptyFirmPromptContent}>
             <Text style={styles.emptyFirmPromptTitle}>
@@ -102,7 +103,7 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
             </Text>
           </View>
           <View style={styles.emptyFirmActionBadge}>
-            <PlusIcon size={12} color="#FFFFFF" strokeWidth={1.5} />
+            <PlusIcon size={12} color={colors.card} strokeWidth={1.5} />
             <Text style={styles.emptyFirmActionBadgeText}>Add</Text>
           </View>
         </TouchableOpacity>
@@ -115,13 +116,13 @@ export const SelectedCompanyCard: React.FC<SelectedCompanyCardProps> = ({
           accessibilityLabel="Select buyer firm">
           <View style={styles.selectBtnLeft}>
             <View style={styles.buildingIconBadge}>
-              <BuildingIcon size={18} color="#2563EB" />
+              <BuildingIcon size={18} color={colors.primary} />
             </View>
             <Text style={styles.companySelectPlaceholder} numberOfLines={1}>
               Select Buyer Firm (from {companiesCount} registered clients)...
             </Text>
           </View>
-          <ChevronDown size={16} color="#64748B" strokeWidth={2.2} />
+          <ChevronDown size={16} color={colors.textSecondary} strokeWidth={2.2} />
         </TouchableOpacity>
       )}
 

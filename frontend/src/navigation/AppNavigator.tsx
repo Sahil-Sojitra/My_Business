@@ -13,6 +13,7 @@ import { ProfileScreen } from '../screens/profile/ProfileScreen';
 import { TransactionDetailsScreen } from '../screens/transactions/TransactionDetailsScreen';
 import { TransactionFormScreen } from '../screens/transactions/TransactionFormScreen';
 import { TransactionListScreen } from '../screens/transactions/TransactionListScreen';
+import { colors } from '../theme/colors';
 import { useNavigation } from './NavigationContext';
 
 export const AppNavigator: React.FC = () => {
@@ -64,6 +65,6 @@ export const AppNavigator: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
 });

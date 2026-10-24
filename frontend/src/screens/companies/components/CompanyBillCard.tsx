@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 import { Badge } from '../../../components/common/Badge';
 import { Card } from '../../../components/common/Card';
 import { ChevronRight } from '../../../components/common/Icon';
+import { colors } from '../../../theme/colors';
 import { Transaction } from '../../../types/transaction';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { styles } from '../CompanyDetailsStyles';
@@ -98,7 +99,7 @@ export const CompanyBillCard: React.FC<CompanyBillCardProps> = React.memo(({
         <Text style={styles.cardDaysText}>{dalaliRate}% Dalali commission</Text>
         <View style={styles.viewLinkRow}>
           <Text style={styles.viewLink}>View details</Text>
-          <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+          <ChevronRight size={13} color={colors.primary} strokeWidth={2.4} />
         </View>
       </View>
     </Card>

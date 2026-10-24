@@ -1,9 +1,10 @@
 import { StyleSheet } from 'react-native';
+import { colors } from '../../theme/colors';
 
 export const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: 16,
@@ -15,7 +16,7 @@ export const styles = StyleSheet.create({
   },
   notFoundText: {
     fontSize: 16,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginBottom: 16,
   },
   backBtn: {
@@ -25,20 +26,23 @@ export const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     marginBottom: 14,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   nameHeader: {
     fontSize: 22,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   ownerText: {
     fontSize: 14.5,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 3,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.borderLight,
     marginVertical: 14,
   },
   infoRow: {
@@ -48,50 +52,54 @@ export const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   infoValue: {
     fontSize: 14,
-    color: '#0F172A',
+    color: colors.textPrimary,
     fontWeight: '500',
     maxWidth: '65%',
     textAlign: 'right',
   },
   infoValueBold: {
     fontSize: 14,
-    color: '#0F172A',
+    color: colors.textPrimary,
     fontWeight: '700',
   },
   notesContainer: {
     marginTop: 10,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
     padding: 12,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   notesLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
   notesText: {
     fontSize: 13.5,
-    color: '#334155',
+    color: colors.textPrimary,
     lineHeight: 19,
   },
   ledgerCard: {
     padding: 18,
     borderRadius: 16,
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderLeftWidth: 4,
-    borderLeftColor: '#2563EB',
+    borderLeftColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   ledgerTitle: {
     fontSize: 15.5,
     fontWeight: '700',
-    color: '#1E293B',
+    color: colors.textPrimary,
     marginBottom: 12,
   },
   metricsRow: {
@@ -103,19 +111,20 @@ export const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   metricVal: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   interestVal: {
-    color: '#15803D',
+    color: colors.champagneDark,
+    fontWeight: '800',
   },
   dueVal: {
-    color: '#0F172A',
+    color: colors.textPrimary,
     fontWeight: '800',
   },
   sectionHeader: {
@@ -128,47 +137,54 @@ export const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17.5,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   sortHint: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   addTxBtn: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.champagneLight,
+    borderWidth: 1,
+    borderColor: colors.champagneBorder,
   },
   addTxText: {
     fontSize: 13.5,
     fontWeight: '700',
-    color: '#2563EB',
+    color: colors.primary,
   },
   emptyCard: {
     padding: 18,
     alignItems: 'center',
     marginBottom: 16,
+    backgroundColor: colors.card,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   emptyText: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   txCard: {
     padding: 16,
     marginBottom: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   txCardOverdue: {
     borderLeftWidth: 4,
-    borderLeftColor: '#DC2626',
+    borderLeftColor: colors.error,
   },
   txCardNear: {
     borderLeftWidth: 4,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: colors.warning,
   },
   txHeaderRow: {
     flexDirection: 'row',
@@ -187,56 +203,64 @@ export const styles = StyleSheet.create({
   txNumber: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   txDate: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   dueBadge: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 5,
   },
   dueBadgeNear: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.warningBg,
+    borderColor: colors.warningBorder,
   },
   dueBadgeOverdue: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorBg,
+    borderColor: colors.errorBorder,
   },
   dueBadgeText: {
     fontSize: 11.5,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.textSecondary,
   },
   dueBadgeTextNear: {
-    color: '#B45309',
+    color: colors.warningText,
   },
   dueBadgeTextOverdue: {
-    color: '#B91C1C',
+    color: colors.errorText,
   },
   dueDateRow: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 6,
     marginBottom: 8,
     alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   dueDateLabel: {
     fontSize: 11.5,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   dueDateVal: {
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   cardFinancialsRow: {
     flexDirection: 'row',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.border,
     paddingVertical: 10,
     paddingHorizontal: 12,
     marginVertical: 8,
@@ -247,25 +271,26 @@ export const styles = StyleSheet.create({
   },
   cardFinancialDivider: {
     width: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.border,
     marginHorizontal: 4,
   },
   cardFinLabel: {
     fontSize: 11,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginBottom: 2,
     textTransform: 'uppercase',
   },
   cardFinVal: {
     fontSize: 14.5,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   cardInterestVal: {
-    color: '#15803D',
+    color: colors.champagneDark,
+    fontWeight: '800',
   },
   cardTotalVal: {
-    color: '#0F172A',
+    color: colors.textPrimary,
     fontWeight: '800',
   },
   cardFooter: {
@@ -276,7 +301,7 @@ export const styles = StyleSheet.create({
   },
   cardDaysText: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   viewLinkRow: {
     flexDirection: 'row',
@@ -286,7 +311,7 @@ export const styles = StyleSheet.create({
   viewLink: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#2563EB',
+    color: colors.primary,
   },
   deleteBtn: {
     marginTop: 20,

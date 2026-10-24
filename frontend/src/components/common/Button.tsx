@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   ViewStyle,
 } from 'react-native';
+import { colors } from '../../theme/colors';
 
 export type ButtonVariant =
   | 'primary'
   | 'secondary'
+  | 'champagne'
   | 'outline'
   | 'danger'
   | 'ghost'
@@ -46,7 +48,7 @@ export const Button: React.FC<ButtonProps> = ({
     <TouchableOpacity
       onPress={onPress}
       disabled={!isInteractive}
-      activeOpacity={0.8}
+      activeOpacity={0.82}
       style={[
         styles.base,
         styles[variant],
@@ -61,8 +63,8 @@ export const Button: React.FC<ButtonProps> = ({
           size="small"
           color={
             variant === 'outline' || variant === 'ghost'
-              ? '#2563EB'
-              : '#FFFFFF'
+              ? colors.primary
+              : colors.textInverse
           }
         />
       ) : (
@@ -105,21 +107,40 @@ const styles = StyleSheet.create({
     minHeight: 54,
   },
   primary: {
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary,
+    borderWidth: 1,
+    borderColor: colors.primaryDark,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 3,
   },
   secondary: {
-    backgroundColor: '#0F172A',
+    backgroundColor: colors.champagne,
+    borderWidth: 1,
+    borderColor: colors.champagneDark,
+    shadowColor: colors.champagneDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  champagne: {
+    backgroundColor: colors.champagne,
+    borderWidth: 1,
+    borderColor: colors.champagneDark,
   },
   outline: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderWidth: 1.5,
-    borderColor: '#CBD5E1',
+    borderColor: colors.border,
   },
   danger: {
-    backgroundColor: '#DC2626',
+    backgroundColor: colors.error,
   },
   success: {
-    backgroundColor: '#16A34A',
+    backgroundColor: colors.success,
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -141,24 +162,27 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   text_primary: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
   },
   text_secondary: {
-    color: '#FFFFFF',
+    color: colors.primary,
+  },
+  text_champagne: {
+    color: colors.primary,
   },
   text_outline: {
-    color: '#1E293B',
+    color: colors.textPrimary,
   },
   text_danger: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
   },
   text_success: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
   },
   text_ghost: {
-    color: '#2563EB',
+    color: colors.primary,
   },
   textDisabled: {
-    color: '#94A3B8',
+    color: colors.textMuted,
   },
 });

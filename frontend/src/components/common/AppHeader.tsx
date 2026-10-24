@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '../../navigation/NavigationContext';
 
+import { colors } from '../../theme/colors';
 import { ArrowLeft } from './Icon';
 
 interface AppHeaderProps {
@@ -69,7 +70,7 @@ export const AppHeader: React.FC<AppHeaderProps> = React.memo(({
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Go back"
               accessibilityRole="button">
-              <ArrowLeft size={19} color="#0F172A" strokeWidth={2.4} />
+              <ArrowLeft size={19} color={colors.textPrimary} strokeWidth={2.4} />
             </TouchableOpacity>
           )}
           <View style={styles.titleContainer}>
@@ -124,9 +125,9 @@ export const AppHeader: React.FC<AppHeaderProps> = React.memo(({
 
 const styles = StyleSheet.create({
   headerContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: colors.border,
     paddingHorizontal: 16,
     paddingBottom: 12,
   },
@@ -147,9 +148,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -159,49 +160,49 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
     letterSpacing: -0.3,
   },
   subtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   rightButton: {
     paddingVertical: 7,
     paddingHorizontal: 13,
     borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.background,
   },
   rightButtonPrimary: {
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary,
   },
   rightButtonDanger: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorBg,
   },
   rightButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#334155',
+    color: colors.textPrimary,
   },
   rightButtonTextPrimary: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
   },
   rightButtonTextDanger: {
-    color: '#DC2626',
+    color: colors.errorText,
   },
   rightIconButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.champagneLight,
     borderWidth: 1.5,
-    borderColor: '#BFDBFE',
+    borderColor: colors.champagne,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#2563EB',
+    shadowColor: colors.champagneDark,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 2,
   },

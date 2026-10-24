@@ -22,6 +22,7 @@ import {
   InfoIcon,
   XIcon,
 } from '../components/common/Icon';
+import { colors } from '../theme/colors';
 
 export type AlertType = 'success' | 'error' | 'info' | 'warning';
 
@@ -487,10 +488,10 @@ const styles = StyleSheet.create({
     right: 16,
     zIndex: 99999,
     elevation: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 14,
     borderWidth: 1.5,
-    shadowColor: '#0F172A',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.16,
     shadowRadius: 16,
@@ -510,16 +511,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconCircleSuccess: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: colors.successBg,
   },
   iconCircleError: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorBg,
   },
   iconCircleWarning: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.warningBg,
   },
   iconCircleInfo: {
-    backgroundColor: '#DBEAFE',
+    backgroundColor: colors.champagneLight,
   },
   toastTextWrapper: {
     flex: 1,
@@ -528,12 +529,12 @@ const styles = StyleSheet.create({
   toastTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
     letterSpacing: -0.2,
   },
   toastMessage: {
     fontSize: 12.5,
-    color: '#475569',
+    color: colors.textSecondary,
     marginTop: 2,
     lineHeight: 17,
   },
@@ -545,7 +546,7 @@ const styles = StyleSheet.create({
   // Custom Alert Modal styles
   dialogOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(41, 36, 38, 0.65)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -553,11 +554,13 @@ const styles = StyleSheet.create({
   dialogBox: {
     width: '100%',
     maxWidth: 340,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 20,
     padding: 24,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.2,
     shadowRadius: 20,
@@ -574,28 +577,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dialogIconSuccess: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: colors.successBg,
   },
   dialogIconError: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorBg,
   },
   dialogIconWarning: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.warningBg,
   },
   dialogIconInfo: {
-    backgroundColor: '#DBEAFE',
+    backgroundColor: colors.champagneLight,
   },
   dialogTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
     textAlign: 'center',
     letterSpacing: -0.3,
     marginBottom: 8,
   },
   dialogMessage: {
     fontSize: 14,
-    color: '#475569',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 20,
@@ -613,27 +616,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   dialogBtnPrimary: {
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary,
   },
   dialogBtnDestructive: {
-    backgroundColor: '#DC2626',
+    backgroundColor: colors.error,
   },
   dialogBtnCancel: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.background,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
   },
   dialogBtnText: {
     fontSize: 14.5,
     fontWeight: '600',
   },
   dialogBtnTextPrimary: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
   },
   dialogBtnTextDestructive: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
   },
   dialogBtnTextCancel: {
-    color: '#475569',
+    color: colors.textSecondary,
   },
 });

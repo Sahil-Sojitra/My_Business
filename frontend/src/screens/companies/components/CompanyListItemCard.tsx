@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import { Card } from '../../../components/common/Card';
 import { ChevronRight } from '../../../components/common/Icon';
+import { colors } from '../../../theme/colors';
 import { Company } from '../../../types/company';
 import { formatPhone } from '../../../utils/formatters';
 import { styles } from '../CompanyListStyles';
@@ -29,7 +30,7 @@ export const CompanyListItemCard: React.FC<CompanyListItemCardProps> = React.mem
           ) : null}
         </View>
         <View style={styles.chevronBox}>
-          <ChevronRight size={18} color="#2563EB" strokeWidth={2.4} />
+          <ChevronRight size={18} color={colors.primary} strokeWidth={2.4} />
         </View>
       </View>
 

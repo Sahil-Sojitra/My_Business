@@ -1,17 +1,18 @@
 import { StyleSheet } from 'react-native';
+import { colors } from '../../theme/colors';
 
 export const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   summaryBar: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: colors.border,
   },
   summaryCol: {
     flex: 1,
@@ -19,25 +20,26 @@ export const styles = StyleSheet.create({
   },
   summaryDivider: {
     width: 1,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: colors.border,
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginBottom: 3,
     fontWeight: '500',
   },
   summaryVal: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   interestVal: {
-    color: '#15803D',
+    color: colors.champagneDark,
+    fontWeight: '800',
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     paddingHorizontal: 16,
     paddingTop: 10,
     paddingBottom: 8,
@@ -46,45 +48,51 @@ export const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
     paddingVertical: 9,
-    borderRadius: 9,
-    backgroundColor: '#F1F5F9',
+    borderRadius: 10,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
     alignItems: 'center',
   },
   tabButtonActive: {
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   tabText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   tabTextActive: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
+    fontWeight: '700',
   },
   searchContainer: {
     paddingHorizontal: 16,
     paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
   },
   searchInput: {
     flex: 1,
     height: 46,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 14,
     fontSize: 15,
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   clearBtn: {
     paddingHorizontal: 8,
   },
   clearBtnText: {
     fontSize: 15,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   listContent: {
     padding: 16,
@@ -108,19 +116,19 @@ export const styles = StyleSheet.create({
   companyName: {
     fontSize: 16.5,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   billNumber: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   overdueDueText: {
-    color: '#DC2626',
+    color: colors.errorText,
     fontWeight: '700',
   },
   normalDueText: {
-    color: '#475569',
+    color: colors.textSecondary,
     fontWeight: '500',
   },
   amountContainer: {
@@ -129,12 +137,12 @@ export const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 17.5,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   interestSub: {
     fontSize: 12.5,
-    fontWeight: '600',
-    color: '#15803D',
+    fontWeight: '700',
+    color: colors.champagneDark,
     marginTop: 2,
   },
   txFooter: {
@@ -142,7 +150,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: colors.borderLight,
     paddingTop: 10,
   },
   badgeRow: {
@@ -151,14 +159,16 @@ export const styles = StyleSheet.create({
     gap: 6,
   },
   rateTag: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.champagneLight,
+    borderWidth: 1,
+    borderColor: colors.champagneBorder,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 5,
   },
   rateTagText: {
     fontSize: 12,
-    color: '#475569',
+    color: colors.textOnChampagne,
     fontWeight: '600',
   },
   actionRow: {
@@ -169,9 +179,9 @@ export const styles = StyleSheet.create({
   quickSettleBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#DCFCE7',
+    backgroundColor: colors.successBg,
     borderWidth: 1,
-    borderColor: '#86EFAC',
+    borderColor: colors.successBorder,
     paddingHorizontal: 8,
     paddingVertical: 3.5,
     borderRadius: 6,
@@ -180,7 +190,7 @@ export const styles = StyleSheet.create({
   quickSettleBtnText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#15803D',
+    color: colors.successText,
   },
   viewLinkRow: {
     flexDirection: 'row',
@@ -190,20 +200,22 @@ export const styles = StyleSheet.create({
   viewLink: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#2563EB',
+    color: colors.primary,
   },
   fabButton: {
     position: 'absolute',
     right: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary,
+    borderWidth: 1.5,
+    borderColor: colors.champagne,
     paddingVertical: 14,
     paddingHorizontal: 22,
     borderRadius: 30,
     gap: 8,
     elevation: 8,
-    shadowColor: '#1D4ED8',
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 10,
@@ -212,7 +224,7 @@ export const styles = StyleSheet.create({
   fabButtonText: {
     fontSize: 15.5,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.textInverse,
     letterSpacing: 0.3,
   },
 });

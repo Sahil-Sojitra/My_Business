@@ -10,6 +10,7 @@ import { useNavigation } from '../../navigation/NavigationContext';
 import { companyService, transactionService } from '../../services';
 import { Company } from '../../types/company';
 import { Transaction } from '../../types/transaction';
+import { colors } from '../../theme/colors';
 import { HomeActionCards } from './components/HomeActionCards';
 import { HomeDalaliToolCard } from './components/HomeDalaliToolCard';
 import { HomeHeroCard } from './components/HomeHeroCard';
@@ -83,7 +84,7 @@ export const HomeScreen: React.FC = () => {
         title="My Business"
         subtitle={user?.businessName || 'Brokerage Portfolio'}
         rightAction={{
-          icon: <UserIcon size={20} color="#2563EB" />,
+          icon: <UserIcon size={20} color={colors.primary} />,
           onPress: () => navigation.navigate('Profile'),
           accessibilityLabel: 'User Profile',
         }}

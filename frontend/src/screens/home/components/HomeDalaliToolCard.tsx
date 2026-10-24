@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 import { ChevronRight } from '../../../components/common/Icon';
+import { colors } from '../../../theme/colors';
 import { styles } from '../HomeStyles';
 
 interface HomeDalaliToolCardProps {
@@ -28,7 +29,7 @@ export const HomeDalaliToolCard: React.FC<HomeDalaliToolCardProps> = ({
       </View>
       <View style={styles.calcToolBadge}>
         <Text style={styles.calcToolBadgeText}>Calculate</Text>
-        <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+        <ChevronRight size={13} color={colors.primary} strokeWidth={2.4} />
       </View>
     </TouchableOpacity>
   );

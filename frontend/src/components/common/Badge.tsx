@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
+import { colors } from '../../theme/colors';
 import { TransactionStatus, TransactionType } from '../../types/transaction';
 
 interface BadgeProps {
@@ -14,55 +15,63 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 7,
+    borderWidth: 1,
     alignSelf: 'flex-start',
   },
   text: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '700',
-    letterSpacing: 0.3,
+    letterSpacing: 0.4,
     textTransform: 'uppercase',
   },
   defaultBg: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.backgroundSubtle,
+    borderColor: colors.border,
   },
   defaultText: {
-    color: '#475569',
+    color: colors.textSecondary,
   },
   paidBg: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: colors.successBg,
+    borderColor: colors.successBorder,
   },
   paidText: {
-    color: '#166534',
+    color: colors.successText,
   },
   pendingBg: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: colors.champagneLight,
+    borderColor: colors.champagneBorder,
   },
   pendingText: {
-    color: '#92400E',
+    color: colors.textOnChampagne,
   },
   overdueBg: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorBg,
+    borderColor: colors.errorBorder,
   },
   overdueText: {
-    color: '#B91C1C',
+    color: colors.errorText,
   },
   partialBg: {
-    backgroundColor: '#E0E7FF',
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primaryLightBorder,
   },
   partialText: {
-    color: '#3730A3',
+    color: colors.primary,
   },
   billBg: {
-    backgroundColor: '#F3E8FF',
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primaryLightBorder,
   },
   billText: {
-    color: '#6B21A8',
+    color: colors.primary,
   },
   paymentBg: {
-    backgroundColor: '#CCFBF1',
+    backgroundColor: colors.champagneLight,
+    borderColor: colors.champagneBorder,
   },
   paymentText: {
-    color: '#115E59',
+    color: colors.textOnChampagne,
   },
 });
 

@@ -3,6 +3,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { Badge } from '../../../components/common/Badge';
 import { Card } from '../../../components/common/Card';
 import { CheckIcon, ChevronRight } from '../../../components/common/Icon';
+import { colors } from '../../../theme/colors';
 import { Transaction } from '../../../types/transaction';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { styles } from '../TransactionListStyles';
@@ -18,7 +19,7 @@ export const TransactionListItemCard: React.FC<TransactionListItemCardProps> =
   const dalaliRate =
     item.dalaliRate ??
     item.monthlyInterestRate ??
-    (item.interestRate ? item.interestRate / 12 : 1.5);
+    (item.interestRate ? item.interestRate / 12 : 1.0);
   const dalaliAmount =
     item.dalaliAmount ?? (item.amount * dalaliRate) / 100;
 
@@ -70,14 +71,14 @@ export const TransactionListItemCard: React.FC<TransactionListItemCardProps> =
               activeOpacity={0.7}
               accessibilityRole="button"
               accessibilityLabel={`Settle bill ${item.billNumber || ''}`}>
-              <CheckIcon size={12} color="#15803D" strokeWidth={2.4} />
+              <CheckIcon size={12} color={colors.successText} strokeWidth={2.4} />
               <Text style={styles.quickSettleBtnText}>Settle</Text>
             </TouchableOpacity>
           ) : null}
 
           <View style={styles.viewLinkRow}>
             <Text style={styles.viewLink}>View</Text>
-            <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+            <ChevronRight size={13} color={colors.primary} strokeWidth={2.4} />
           </View>
         </View>
       </View>

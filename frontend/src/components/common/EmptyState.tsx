@@ -5,6 +5,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { colors } from '../../theme/colors';
 import { Button } from './Button';
 
 interface EmptyStateProps {
@@ -55,7 +56,9 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.champagneLight,
+    borderWidth: 1,
+    borderColor: colors.champagneBorder,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -66,13 +69,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 8,
   },
   description: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
     maxWidth: 280,

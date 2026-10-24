@@ -11,6 +11,7 @@ import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { Input } from '../../components/common/Input';
 import { KeyboardAwareScrollView } from '../../components/common/KeyboardAwareScrollView';
 import { TrashIcon, UserIcon } from '../../components/common/Icon';
+import { colors } from '../../theme/colors';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import {
@@ -224,7 +225,7 @@ export const ProfileScreen: React.FC = () => {
         {/* Account Information Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <UserIcon size={18} color="#2563EB" />
+            <UserIcon size={18} color={colors.primary} />
             <Text style={styles.cardTitle}>Account Details</Text>
           </View>
 
@@ -405,22 +406,22 @@ export const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.background,
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   avatarCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 18,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -430,18 +431,18 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
-    shadowColor: '#2563EB',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 4,
   },
   avatarText: {
-    color: '#FFFFFF',
+    color: colors.card,
     fontSize: 22,
     fontWeight: '800',
     letterSpacing: 0.5,
@@ -452,12 +453,12 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 19,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
     letterSpacing: -0.3,
   },
   profileBusiness: {
     fontSize: 14,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2,
     fontWeight: '500',
   },
@@ -468,56 +469,56 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   badge: {
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.champagneLight,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: colors.champagne,
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#1D4ED8',
+    fontWeight: '700',
+    color: colors.primary,
   },
   memberSince: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: colors.textMuted,
   },
   successBox: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: colors.successBackground,
     borderWidth: 1,
-    borderColor: '#86EFAC',
+    borderColor: colors.successBorder,
     borderRadius: 12,
     padding: 14,
     marginBottom: 16,
   },
   successText: {
-    color: '#166534',
+    color: colors.successText,
     fontSize: 14,
     fontWeight: '600',
   },
   errorBox: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: colors.dangerLight,
     borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderColor: colors.danger,
     borderRadius: 12,
     padding: 14,
     marginBottom: 16,
   },
   errorText: {
-    color: '#991B1B',
+    color: colors.danger,
     fontSize: 14,
     fontWeight: '600',
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 18,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    shadowColor: '#000',
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -537,43 +538,43 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   cardSubtitle: {
     fontSize: 13,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2,
   },
   toggleBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2563EB',
+    color: colors.primary,
   },
   passwordFieldsContainer: {
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: colors.border,
   },
   saveBtn: {
     marginBottom: 12,
   },
   privacyBtn: {
     marginTop: 14,
-    backgroundColor: '#FFFFFF',
-    borderColor: '#CBD5E1',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
   },
   logoutBtn: {
     marginBottom: 20,
-    backgroundColor: '#FFFFFF',
-    borderColor: '#CBD5E1',
+    backgroundColor: colors.card,
+    borderColor: colors.border,
   },
   dangerCard: {
-    backgroundColor: '#FFF5F5',
+    backgroundColor: colors.dangerLight,
     borderRadius: 16,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#FED7D7',
+    borderColor: colors.danger,
     marginTop: 6,
   },
   dangerHeader: {
@@ -585,15 +586,15 @@ const styles = StyleSheet.create({
   dangerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#DC2626',
+    color: colors.danger,
   },
   dangerDesc: {
     fontSize: 13,
-    color: '#7F1D1D',
+    color: colors.danger,
     lineHeight: 18,
     marginBottom: 14,
   },
   deleteBtn: {
-    backgroundColor: '#DC2626',
+    backgroundColor: colors.danger,
   },
 });

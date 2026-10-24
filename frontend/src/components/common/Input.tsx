@@ -8,6 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { colors } from '../../theme/colors';
 import { useKeyboardScroll } from './KeyboardAwareScrollView';
 
 interface InputProps {
@@ -58,7 +59,6 @@ export const Input: React.FC<InputProps> = ({
 
   const handleFocus = () => {
     setIsFocused(true);
-    // Automatically auto-scroll to this input so user can clearly see what they are typing
     keyboardScroll?.scrollToInput(containerRef);
     onFocus?.();
   };
@@ -88,7 +88,7 @@ export const Input: React.FC<InputProps> = ({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor="#94A3B8"
+          placeholderTextColor={colors.textMuted}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           keyboardType={keyboardType}
           multiline={multiline}
@@ -135,18 +135,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14.5,
     fontWeight: '600',
-    color: '#1E293B',
+    color: colors.textPrimary,
   },
   requiredMark: {
-    color: '#DC2626',
+    color: colors.error,
     fontWeight: '700',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     minHeight: 52,
@@ -157,16 +157,17 @@ const styles = StyleSheet.create({
     minHeight: 96,
   },
   inputFocused: {
-    borderColor: '#2563EB',
-    backgroundColor: '#F8FAFC',
+    borderColor: colors.primary,
+    backgroundColor: colors.champagneLight,
   },
   inputError: {
-    borderColor: '#EF4444',
+    borderColor: colors.error,
+    backgroundColor: colors.errorBg,
   },
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#0F172A',
+    color: colors.textPrimary,
     padding: 0,
   },
   multilineInput: {
@@ -179,17 +180,17 @@ const styles = StyleSheet.create({
   eyeText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#2563EB',
+    color: colors.primary,
   },
   errorText: {
     marginTop: 5,
     fontSize: 12.5,
-    color: '#DC2626',
+    color: colors.errorText,
     fontWeight: '500',
   },
   helperText: {
     marginTop: 5,
     fontSize: 12.5,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
 });
