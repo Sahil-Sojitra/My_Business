@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
+  Platform,
   RefreshControl,
   Text,
   TextInput,
@@ -9,10 +10,12 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '../../components/common/AppHeader';
+import { ConfirmModal } from '../../components/common/ConfirmModal';
 import { EmptyState } from '../../components/common/EmptyState';
 import { PlusIcon } from '../../components/common/Icon';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { NativeAdCard } from '../../components/common/NativeAdCard';
+import { alertService } from '../../context/AlertContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { transactionService } from '../../services';
 import { Transaction, TransactionStatus } from '../../types/transaction';
@@ -26,6 +29,76 @@ type TransactionListItem =
   | { type: 'transaction'; data: Transaction }
   | { type: 'native_ad'; id: string };
 
+/**
+ * Sorts bills logically by due date urgency rather than random creation timestamp:
+ * 1. OVERDUE tab: Earliest overdue date first (most urgent, oldest past-due).
+ * 2. PENDING tab: Closest upcoming deadline first.
+ * 3. ALL tab: Overdue bills at top, then upcoming active bills, then bills without due date, then settled.
+ * 4. PAID tab: Most recent date first.
+ */
+function sortBillsByDueDate(
+  bills: Transaction[],
+  tab: FilterTab,
+  todayIso: string
+): Transaction[] {
+  return [...bills].sort((a, b) => {
+    const isOverdueA =
+      a.status === 'OVERDUE' ||
+      (a.status !== 'PAID' && Boolean(a.dueDate && a.dueDate < todayIso));
+    const isOverdueB =
+      b.status === 'OVERDUE' ||
+      (b.status !== 'PAID' && Boolean(b.dueDate && b.dueDate < todayIso));
+    const isPaidA = a.status === 'PAID';
+    const isPaidB = b.status === 'PAID';
+
+    if (tab === 'OVERDUE') {
+      const dueA = a.dueDate || a.date;
+      const dueB = b.dueDate || b.date;
+      return dueA.localeCompare(dueB);
+    }
+
+    if (tab === 'PENDING') {
+      if (a.dueDate && b.dueDate) {
+        return a.dueDate.localeCompare(b.dueDate);
+      }
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return b.date.localeCompare(a.date);
+    }
+
+    if (tab === 'PAID') {
+      return b.date.localeCompare(a.date);
+    }
+
+    // ALL tab hierarchy:
+    // 1. Overdue bills at top
+    if (isOverdueA && !isOverdueB) return -1;
+    if (!isOverdueA && isOverdueB) return 1;
+    if (isOverdueA && isOverdueB) {
+      const dueA = a.dueDate || a.date;
+      const dueB = b.dueDate || b.date;
+      return dueA.localeCompare(dueB);
+    }
+
+    // 2. Active upcoming bills before settled
+    if (!isPaidA && isPaidB) return -1;
+    if (isPaidA && !isPaidB) return 1;
+
+    // Both are active pending
+    if (!isPaidA && !isPaidB) {
+      if (a.dueDate && b.dueDate) {
+        return a.dueDate.localeCompare(b.dueDate);
+      }
+      if (a.dueDate) return -1;
+      if (b.dueDate) return 1;
+      return b.date.localeCompare(a.date);
+    }
+
+    // Both are paid
+    return b.date.localeCompare(a.date);
+  });
+}
+
 export const TransactionListScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
@@ -36,6 +109,8 @@ export const TransactionListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [billToSettle, setBillToSettle] = useState<Transaction | null>(null);
+  const [settling, setSettling] = useState<boolean>(false);
 
   const loadTransactions = useCallback(async () => {
     try {
@@ -50,28 +125,67 @@ export const TransactionListScreen: React.FC = () => {
   }, [filterCompanyId]);
 
   useEffect(() => {
-    loadTransactions();
-  }, [loadTransactions]);
+    if (navigation.currentScreen === 'TransactionList') {
+      loadTransactions();
+    }
+  }, [loadTransactions, navigation.currentScreen]);
 
   const onRefresh = () => {
     setRefreshing(true);
     loadTransactions();
   };
 
-  const filteredBills = transactions.filter(item => {
-    if (filterTab !== 'ALL' && item.status !== filterTab) {
-      return false;
+  const handleConfirmSettle = async () => {
+    if (!billToSettle) return;
+    setSettling(true);
+    try {
+      await transactionService.settleBill(billToSettle.id);
+      alertService.showSuccess(
+        'Bill Settled Successfully!',
+        `Bill for ${billToSettle.companyName} is marked complete and moved to the Settled tab.`
+      );
+      setBillToSettle(null);
+      loadTransactions();
+    } catch (err: unknown) {
+      alertService.showError(
+        'Failed to Settle Bill',
+        err instanceof Error ? err.message : 'Please try again later.'
+      );
+    } finally {
+      setSettling(false);
     }
-    if (!searchQuery.trim()) {
-      return true;
-    }
-    const q = searchQuery.toLowerCase();
-    return (
-      item.companyName.toLowerCase().includes(q) ||
-      (item.billNumber && item.billNumber.toLowerCase().includes(q)) ||
-      (item.description && item.description.toLowerCase().includes(q))
-    );
-  });
+  };
+
+  const todayIso = useMemo(() => new Date().toISOString().split('T')[0], []);
+
+  // Dynamically resolve bill status so overdue bills are immediately recognized
+  const resolvedTransactions = useMemo(() => {
+    return transactions.map(item => {
+      if (item.status !== 'PAID' && item.dueDate && item.dueDate < todayIso) {
+        return { ...item, status: 'OVERDUE' as const };
+      }
+      return item;
+    });
+  }, [transactions, todayIso]);
+
+  const filteredBills = useMemo(() => {
+    const list = resolvedTransactions.filter(item => {
+      if (filterTab !== 'ALL' && item.status !== filterTab) {
+        return false;
+      }
+      if (!searchQuery.trim()) {
+        return true;
+      }
+      const q = searchQuery.toLowerCase();
+      return (
+        item.companyName.toLowerCase().includes(q) ||
+        (item.billNumber && item.billNumber.toLowerCase().includes(q)) ||
+        (item.description && item.description.toLowerCase().includes(q))
+      );
+    });
+
+    return sortBillsByDueDate(list, filterTab, todayIso);
+  }, [resolvedTransactions, filterTab, searchQuery, todayIso]);
 
   const listData: TransactionListItem[] = useMemo(() => {
     // Only show ad slots when there are at least 6 actual transaction records available
@@ -98,9 +212,50 @@ export const TransactionListScreen: React.FC = () => {
 
   const totalPrincipal = transactions.reduce((acc, t) => acc + t.amount, 0);
   const totalDalali = transactions.reduce((acc, t) => {
-    const rate = t.dalaliRate ?? t.monthlyInterestRate ?? 1.5;
+    const rate = t.dalaliRate ?? t.monthlyInterestRate ?? 1.0;
     return acc + (t.dalaliAmount ?? (t.amount * rate) / 100);
   }, 0);
+
+  const fabStyle = useMemo(
+    () => [
+      styles.fabButton,
+      { bottom: Math.max(insets.bottom, 16) + 16 },
+    ],
+    [insets.bottom],
+  );
+
+  const handleItemPress = useCallback(
+    (id: string) => {
+      navigation.navigate('TransactionDetails', {
+        transactionId: id,
+      });
+    },
+    [navigation],
+  );
+
+  const handleItemSettle = useCallback((item: Transaction) => {
+    setBillToSettle(item);
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: TransactionListItem }) => {
+      if (item.type === 'native_ad') {
+        return <NativeAdCard />;
+      }
+      return (
+        <TransactionListItemCard
+          item={item.data}
+          onPress={() => handleItemPress(item.data.id)}
+          onSettle={
+            item.data.status !== 'PAID'
+              ? () => handleItemSettle(item.data)
+              : undefined
+          }
+        />
+      );
+    },
+    [handleItemPress, handleItemSettle],
+  );
 
   return (
     <View style={styles.screen}>
@@ -168,24 +323,44 @@ export const TransactionListScreen: React.FC = () => {
             item.type === 'transaction' ? item.data.id : item.id
           }
           contentContainerStyle={styles.listContent}
+          removeClippedSubviews={Platform.OS === 'android'}
+          initialNumToRender={8}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           ListEmptyComponent={
             <EmptyState
               title={
-                searchQuery ? 'No matching bills' : 'No bills recorded yet'
+                searchQuery
+                  ? 'No matching bills'
+                  : filterTab === 'PAID'
+                  ? 'No settled bills yet'
+                  : filterTab === 'OVERDUE'
+                  ? 'No overdue bills'
+                  : 'No bills recorded yet'
               }
               description={
                 searchQuery
                   ? `No entry found for "${searchQuery}".`
+                  : filterTab === 'PAID'
+                  ? 'Bills you mark as settled will appear here in the Settled tab.'
                   : 'Record client sales bills to track amounts and accrued interest.'
               }
-              icon="🧾"
-              actionTitle={searchQuery ? 'Clear Search' : '+ Record New Bill'}
+              icon={filterTab === 'PAID' ? '✅' : '🧾'}
+              actionTitle={
+                searchQuery
+                  ? 'Clear Search'
+                  : filterTab === 'PAID'
+                  ? 'View All Bills'
+                  : '+ Record New Bill'
+              }
               onAction={
                 searchQuery
                   ? () => setSearchQuery('')
+                  : filterTab === 'PAID'
+                  ? () => setFilterTab('ALL')
                   : () =>
                       navigation.navigate('TransactionForm', {
                         defaultCompanyId: filterCompanyId,
@@ -193,30 +368,26 @@ export const TransactionListScreen: React.FC = () => {
               }
             />
           }
-          renderItem={({ item }) => {
-            if (item.type === 'native_ad') {
-              return <NativeAdCard />;
-            }
-            return (
-              <TransactionListItemCard
-                item={item.data}
-                onPress={() =>
-                  navigation.navigate('TransactionDetails', {
-                    transactionId: item.data.id,
-                  })
-                }
-              />
-            );
-          }}
+          renderItem={renderItem}
         />
       )}
 
+      {/* Settle Bill Confirmation Modal */}
+      <ConfirmModal
+        visible={Boolean(billToSettle)}
+        title="Settle Bill?"
+        message={`Are you sure you want to settle this bill for ${billToSettle?.companyName}? The bill status will be marked complete and moved to the Settled tab.`}
+        confirmText="Mark as Settled"
+        confirmVariant="success"
+        destructive={false}
+        loading={settling}
+        onConfirm={handleConfirmSettle}
+        onCancel={() => setBillToSettle(null)}
+      />
+
       {/* Floating Action Button */}
       <TouchableOpacity
-        style={[
-          styles.fabButton,
-          { bottom: Math.max(insets.bottom, 16) + 16 },
-        ]}
+        style={fabStyle}
         activeOpacity={0.85}
         onPress={() =>
           navigation.navigate('TransactionForm', {

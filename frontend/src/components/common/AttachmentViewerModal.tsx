@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -36,6 +36,14 @@ export const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
 }) => {
   const insets = useSafeAreaInsets();
   const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
+
+  const previewImageStyle = useMemo(
+    () => ({
+      width: windowWidth,
+      height: windowHeight * 0.76,
+    }),
+    [windowWidth, windowHeight],
+  );
 
   const [resolvedUrl, setResolvedUrl] = useState<string>('');
   const [loadingUrl, setLoadingUrl] = useState<boolean>(false);
@@ -182,10 +190,7 @@ export const AttachmentViewerModal: React.FC<AttachmentViewerModalProps> = ({
               showsVerticalScrollIndicator={false}>
               <Image
                 source={{ uri: resolvedUrl }}
-                style={{
-                  width: windowWidth,
-                  height: windowHeight * 0.76,
-                }}
+                style={previewImageStyle}
                 resizeMode="contain"
                 onLoadStart={() => setImageLoading(true)}
                 onLoadEnd={() => setImageLoading(false)}

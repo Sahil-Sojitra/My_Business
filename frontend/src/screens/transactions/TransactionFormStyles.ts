@@ -437,6 +437,11 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFBEB',
     borderColor: '#FDE68A',
   },
+  attachedTouchRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   pdfIconBadge: {
     backgroundColor: '#FEE2E2',
     paddingHorizontal: 7,

@@ -115,6 +115,14 @@ export const styles = StyleSheet.create({
     color: '#64748B',
     marginTop: 2,
   },
+  overdueDueText: {
+    color: '#DC2626',
+    fontWeight: '700',
+  },
+  normalDueText: {
+    color: '#475569',
+    fontWeight: '500',
+  },
   amountContainer: {
     alignItems: 'flex-end',
   },
@@ -152,6 +160,27 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: '#475569',
     fontWeight: '600',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  quickSettleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
+    borderRadius: 6,
+    gap: 4,
+  },
+  quickSettleBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#15803D',
   },
   viewLinkRow: {
     flexDirection: 'row',

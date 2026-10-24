@@ -27,7 +27,7 @@ interface AppHeaderProps {
   rightComponent?: React.ReactNode;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({
+export const AppHeader: React.FC<AppHeaderProps> = React.memo(({
   title,
   subtitle,
   showBack = false,
@@ -38,13 +38,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
 
-  const handleBack = () => {
+  const handleBack = React.useCallback(() => {
     if (onBack) {
       onBack();
     } else {
       navigation.goBack();
     }
-  };
+  }, [onBack, navigation]);
 
   const statusBarHeight =
     Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) : 0;
@@ -52,8 +52,13 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   // Add 14dp of comfortable breathing room below status bar
   const headerPaddingTop = topInset + 14;
 
+  const containerStyle = React.useMemo(
+    () => [styles.headerContainer, { paddingTop: headerPaddingTop }],
+    [headerPaddingTop],
+  );
+
   return (
-    <View style={[styles.headerContainer, { paddingTop: headerPaddingTop }]}>
+    <View style={containerStyle}>
       <View style={styles.contentRow}>
         <View style={styles.leftSection}>
           {showBack && (
@@ -115,7 +120,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   headerContainer: {

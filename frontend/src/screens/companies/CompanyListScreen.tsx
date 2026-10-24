@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FlatList,
+  Platform,
   RefreshControl,
   Text,
   TextInput,
@@ -89,6 +90,38 @@ export const CompanyListScreen: React.FC = () => {
     return items;
   }, [filteredCompanies]);
 
+  const fabStyle = useMemo(
+    () => [
+      styles.fabButton,
+      { bottom: Math.max(insets.bottom, 16) + 16 },
+    ],
+    [insets.bottom],
+  );
+
+  const handleItemPress = useCallback(
+    (id: string) => {
+      navigation.navigate('CompanyDetails', {
+        companyId: id,
+      });
+    },
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: CompanyListItem }) => {
+      if (item.type === 'native_ad') {
+        return <NativeAdCard />;
+      }
+      return (
+        <CompanyListItemCard
+          item={item.data}
+          onPress={() => handleItemPress(item.data.id)}
+        />
+      );
+    },
+    [handleItemPress],
+  );
+
   return (
     <View style={styles.screen}>
       <AppHeader
@@ -124,6 +157,10 @@ export const CompanyListScreen: React.FC = () => {
             item.type === 'company' ? item.data.id : item.id
           }
           contentContainerStyle={styles.listContent}
+          removeClippedSubviews={Platform.OS === 'android'}
+          initialNumToRender={8}
+          maxToRenderPerBatch={10}
+          windowSize={5}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -148,30 +185,13 @@ export const CompanyListScreen: React.FC = () => {
               }
             />
           }
-          renderItem={({ item }) => {
-            if (item.type === 'native_ad') {
-              return <NativeAdCard />;
-            }
-            return (
-              <CompanyListItemCard
-                item={item.data}
-                onPress={() =>
-                  navigation.navigate('CompanyDetails', {
-                    companyId: item.data.id,
-                  })
-                }
-              />
-            );
-          }}
+          renderItem={renderItem}
         />
       )}
 
       {/* Floating Action Button */}
       <TouchableOpacity
-        style={[
-          styles.fabButton,
-          { bottom: Math.max(insets.bottom, 16) + 16 },
-        ]}
+        style={fabStyle}
         activeOpacity={0.85}
         onPress={() => navigation.navigate('CompanyForm')}
         accessibilityRole="button"

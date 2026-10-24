@@ -1,8 +1,8 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { Badge } from '../../../components/common/Badge';
 import { Card } from '../../../components/common/Card';
-import { ChevronRight } from '../../../components/common/Icon';
+import { CheckIcon, ChevronRight } from '../../../components/common/Icon';
 import { Transaction } from '../../../types/transaction';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { styles } from '../TransactionListStyles';
@@ -10,12 +10,11 @@ import { styles } from '../TransactionListStyles';
 interface TransactionListItemCardProps {
   item: Transaction;
   onPress: () => void;
+  onSettle?: () => void;
 }
 
-export const TransactionListItemCard: React.FC<TransactionListItemCardProps> = ({
-  item,
-  onPress,
-}) => {
+export const TransactionListItemCard: React.FC<TransactionListItemCardProps> =
+  React.memo(({ item, onPress, onSettle }) => {
   const dalaliRate =
     item.dalaliRate ??
     item.monthlyInterestRate ??
@@ -30,9 +29,18 @@ export const TransactionListItemCard: React.FC<TransactionListItemCardProps> = (
           <Text style={styles.companyName} numberOfLines={1}>
             {item.companyName}
           </Text>
-          <Text style={styles.billNumber}>
-            {item.billNumber ? `Inv: ${item.billNumber} · ` : ''}
+          <Text style={styles.billNumber} numberOfLines={1}>
             {formatDate(item.date)}
+            {item.dueDate ? (
+              <Text
+                style={
+                  item.status === 'OVERDUE'
+                    ? styles.overdueDueText
+                    : styles.normalDueText
+                }>
+                {` · ${item.status === 'OVERDUE' ? 'Overdue' : 'Due'}: ${formatDate(item.dueDate)}`}
+              </Text>
+            ) : null}
           </Text>
         </View>
 
@@ -53,11 +61,26 @@ export const TransactionListItemCard: React.FC<TransactionListItemCardProps> = (
             <Text style={styles.rateTagText}>{dalaliRate}% Dalali</Text>
           </View>
         </View>
-        <View style={styles.viewLinkRow}>
-          <Text style={styles.viewLink}>View details</Text>
-          <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+
+        <View style={styles.actionRow}>
+          {item.status !== 'PAID' && onSettle ? (
+            <TouchableOpacity
+              style={styles.quickSettleBtn}
+              onPress={onSettle}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={`Settle bill ${item.billNumber || ''}`}>
+              <CheckIcon size={12} color="#15803D" strokeWidth={2.4} />
+              <Text style={styles.quickSettleBtnText}>Settle</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          <View style={styles.viewLinkRow}>
+            <Text style={styles.viewLink}>View</Text>
+            <ChevronRight size={13} color="#2563EB" strokeWidth={2.4} />
+          </View>
         </View>
       </View>
     </Card>
   );
-};
+});

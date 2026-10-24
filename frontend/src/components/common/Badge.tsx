@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { StyleSheet, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { TransactionStatus, TransactionType } from '../../types/transaction';
 
 interface BadgeProps {
@@ -8,61 +8,6 @@ interface BadgeProps {
   type?: TransactionType;
   style?: ViewStyle;
 }
-
-export const Badge: React.FC<BadgeProps> = ({
-  label,
-  status,
-  type,
-  style,
-}) => {
-  let text = label;
-  let bgStyle = styles.defaultBg;
-  let textStyle = styles.defaultText;
-
-  if (status) {
-    switch (status) {
-      case 'PAID':
-        text = text || 'Paid';
-        bgStyle = styles.paidBg;
-        textStyle = styles.paidText;
-        break;
-      case 'PENDING':
-        text = text || 'Pending';
-        bgStyle = styles.pendingBg;
-        textStyle = styles.pendingText;
-        break;
-      case 'OVERDUE':
-        text = text || 'Overdue';
-        bgStyle = styles.overdueBg;
-        textStyle = styles.overdueText;
-        break;
-      case 'PARTIAL':
-        text = text || 'Partial';
-        bgStyle = styles.partialBg;
-        textStyle = styles.partialText;
-        break;
-    }
-  } else if (type) {
-    switch (type) {
-      case 'BILL':
-        text = text || 'Bill';
-        bgStyle = styles.billBg;
-        textStyle = styles.billText;
-        break;
-      case 'PAYMENT':
-        text = text || 'Payment';
-        bgStyle = styles.paymentBg;
-        textStyle = styles.paymentText;
-        break;
-    }
-  }
-
-  return (
-    <View style={[styles.badge, bgStyle, style]}>
-      <Text style={[styles.text, textStyle]}>{text}</Text>
-    </View>
-  );
-};
 
 const styles = StyleSheet.create({
   badge: {
@@ -119,4 +64,45 @@ const styles = StyleSheet.create({
   paymentText: {
     color: '#115E59',
   },
+});
+
+const STATUS_CONFIG: Record<
+  TransactionStatus,
+  { text: string; bg: ViewStyle; textStyle: TextStyle }
+> = {
+  PAID: { text: 'Settled', bg: styles.paidBg, textStyle: styles.paidText },
+  PENDING: { text: 'Pending', bg: styles.pendingBg, textStyle: styles.pendingText },
+  OVERDUE: { text: 'Overdue', bg: styles.overdueBg, textStyle: styles.overdueText },
+  PARTIAL: { text: 'Partial', bg: styles.partialBg, textStyle: styles.partialText },
+};
+
+const TYPE_CONFIG: Record<
+  TransactionType,
+  { text: string; bg: ViewStyle; textStyle: TextStyle }
+> = {
+  BILL: { text: 'Bill', bg: styles.billBg, textStyle: styles.billText },
+  PAYMENT: { text: 'Payment', bg: styles.paymentBg, textStyle: styles.paymentText },
+};
+
+export const Badge: React.FC<BadgeProps> = React.memo(({
+  label,
+  status,
+  type,
+  style,
+}) => {
+  const config = status
+    ? STATUS_CONFIG[status]
+    : type
+    ? TYPE_CONFIG[type]
+    : undefined;
+
+  const text = label || config?.text;
+  const bgStyle = config?.bg || styles.defaultBg;
+  const textStyle = config?.textStyle || styles.defaultText;
+
+  return (
+    <View style={[styles.badge, bgStyle, style]}>
+      <Text style={[styles.text, textStyle]}>{text}</Text>
+    </View>
+  );
 });

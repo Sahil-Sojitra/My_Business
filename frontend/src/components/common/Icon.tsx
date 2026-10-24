@@ -11,7 +11,7 @@ interface IconProps {
  * Production-grade vector ArrowLeft icon (stem + arrowhead)
  * Pixel-perfect geometric rendering without relying on font glyphs
  */
-export const ArrowLeft: React.FC<IconProps> = ({
+export const ArrowLeft: React.FC<IconProps> = React.memo(({
   size = 20,
   color = '#0F172A',
   strokeWidth = 2.4,
@@ -50,12 +50,12 @@ export const ArrowLeft: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Production-grade vector ArrowRight icon (stem + arrowhead)
  */
-export const ArrowRight: React.FC<IconProps> = ({
+export const ArrowRight: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#2563EB',
   strokeWidth = 2.2,
@@ -94,12 +94,12 @@ export const ArrowRight: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern sleek ChevronLeft icon (iOS / Material style)
  */
-export const ChevronLeft: React.FC<IconProps> = ({
+export const ChevronLeft: React.FC<IconProps> = React.memo(({
   size = 20,
   color = '#0F172A',
   strokeWidth = 2.6,
@@ -122,12 +122,12 @@ export const ChevronLeft: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern sleek ChevronRight icon
  */
-export const ChevronRight: React.FC<IconProps> = ({
+export const ChevronRight: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#94A3B8',
   strokeWidth = 2.4,
@@ -150,12 +150,12 @@ export const ChevronRight: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern geometric Search icon
  */
-export const SearchIcon: React.FC<IconProps> = ({
+export const SearchIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#64748B',
   strokeWidth = 2,
@@ -191,12 +191,12 @@ export const SearchIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern Checkmark icon
  */
-export const CheckIcon: React.FC<IconProps> = ({
+export const CheckIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#2563EB',
   strokeWidth = 2.4,
@@ -223,12 +223,12 @@ export const CheckIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern Close / Cross icon
  */
-export const XIcon: React.FC<IconProps> = ({
+export const XIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#64748B',
   strokeWidth = 2,
@@ -262,12 +262,12 @@ export const XIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern vector PlusIcon (crossbars at 0 and 90 deg)
  */
-export const PlusIcon: React.FC<IconProps> = ({
+export const PlusIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#FFFFFF',
   strokeWidth = 2.4,
@@ -300,12 +300,12 @@ export const PlusIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern vector User / Profile icon
  */
-export const UserIcon: React.FC<IconProps> = ({
+export const UserIcon: React.FC<IconProps> = React.memo(({
   size = 20,
   color = '#2563EB',
   strokeWidth = 2,
@@ -344,12 +344,12 @@ export const UserIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern vector Trash / Delete icon
  */
-export const TrashIcon: React.FC<IconProps> = ({
+export const TrashIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#DC2626',
   strokeWidth = 1.8,
@@ -400,12 +400,12 @@ export const TrashIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern vector Calendar icon
  */
-export const CalendarIcon: React.FC<IconProps> = ({
+export const CalendarIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#2563EB',
   strokeWidth = 2,
@@ -464,12 +464,12 @@ export const CalendarIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern sleek ChevronDown icon
  */
-export const ChevronDown: React.FC<IconProps> = ({
+export const ChevronDown: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#64748B',
   strokeWidth = 2.4,
@@ -492,12 +492,12 @@ export const ChevronDown: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern vector Building / Firm icon
  */
-export const BuildingIcon: React.FC<IconProps> = ({
+export const BuildingIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#2563EB',
   strokeWidth = 1.8,
@@ -519,7 +519,7 @@ export const BuildingIcon: React.FC<IconProps> = ({
           paddingVertical: 2,
         }}>
         {/* Upper Windows row */}
-        <View style={{ flexDirection: 'row', gap: 2.5, marginTop: 1 }}>
+        <View style={styles.buildingWindowRowTop}>
           <View
             style={{
               width: 2.5,
@@ -538,7 +538,7 @@ export const BuildingIcon: React.FC<IconProps> = ({
           />
         </View>
         {/* Mid Windows row */}
-        <View style={{ flexDirection: 'row', gap: 2.5 }}>
+        <View style={styles.buildingWindowRow}>
           <View
             style={{
               width: 2.5,
@@ -569,12 +569,12 @@ export const BuildingIcon: React.FC<IconProps> = ({
       </View>
     </View>
   );
-};
+});
 
 /**
  * Modern vector AlertCircle icon (circle + exclamation mark)
  */
-export const AlertCircleIcon: React.FC<IconProps> = ({
+export const AlertCircleIcon: React.FC<IconProps> = React.memo(({
   size = 20,
   color = '#EF4444',
   strokeWidth = 2,
@@ -613,12 +613,12 @@ export const AlertCircleIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern vector InfoIcon (circle + 'i')
  */
-export const InfoIcon: React.FC<IconProps> = ({
+export const InfoIcon: React.FC<IconProps> = React.memo(({
   size = 20,
   color = '#2563EB',
   strokeWidth = 2,
@@ -657,12 +657,12 @@ export const InfoIcon: React.FC<IconProps> = ({
       />
     </View>
   );
-};
+});
 
 /**
  * Modern vector EyeIcon (almond eye + pupil)
  */
-export const EyeIcon: React.FC<IconProps> = ({
+export const EyeIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#2563EB',
   strokeWidth = 2,
@@ -693,12 +693,12 @@ export const EyeIcon: React.FC<IconProps> = ({
       </View>
     </View>
   );
-};
+});
 
 /**
  * Modern vector FileText / Document icon
  */
-export const FileTextIcon: React.FC<IconProps> = ({
+export const FileTextIcon: React.FC<IconProps> = React.memo(({
   size = 18,
   color = '#2563EB',
   strokeWidth = 1.8,
@@ -745,7 +745,7 @@ export const FileTextIcon: React.FC<IconProps> = ({
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -806,5 +806,14 @@ const styles = StyleSheet.create({
   },
   plusLineV: {
     position: 'absolute',
+  },
+  buildingWindowRow: {
+    flexDirection: 'row',
+    gap: 2.5,
+  },
+  buildingWindowRowTop: {
+    flexDirection: 'row',
+    gap: 2.5,
+    marginTop: 1,
   },
 });

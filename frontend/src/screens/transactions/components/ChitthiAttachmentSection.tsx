@@ -12,7 +12,7 @@ interface ChitthiAttachmentSectionProps {
   onRemove: () => void;
 }
 
-export const ChitthiAttachmentSection: React.FC<ChitthiAttachmentSectionProps> = ({
+export const ChitthiAttachmentSection: React.FC<ChitthiAttachmentSectionProps> = React.memo(({
   chitthi,
   onPreviewPress,
   onCameraPress,
@@ -44,7 +44,7 @@ export const ChitthiAttachmentSection: React.FC<ChitthiAttachmentSectionProps> =
             chitthi.type === 'photo' && styles.attachedCardPhoto,
           ]}>
           <TouchableOpacity
-            style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
+            style={styles.attachedTouchRow}
             onPress={onPreviewPress}
             activeOpacity={0.75}>
             <View
@@ -112,4 +112,4 @@ export const ChitthiAttachmentSection: React.FC<ChitthiAttachmentSectionProps> =
       )}
     </View>
   );
-};
+});

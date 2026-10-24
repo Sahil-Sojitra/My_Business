@@ -19,7 +19,7 @@ interface CompanyBillCardProps {
   onPress: () => void;
 }
 
-export const CompanyBillCard: React.FC<CompanyBillCardProps> = ({
+export const CompanyBillCard: React.FC<CompanyBillCardProps> = React.memo(({
   item,
   dueInfo,
   onPress,
@@ -27,7 +27,7 @@ export const CompanyBillCard: React.FC<CompanyBillCardProps> = ({
   const dalaliRate =
     item.dalaliRate ??
     item.monthlyInterestRate ??
-    (item.interestRate ? item.interestRate / 12 : 1.5);
+    (item.interestRate ? item.interestRate / 12 : 1.0);
   const dalaliAmount =
     item.dalaliAmount ?? (item.amount * dalaliRate) / 100;
 
@@ -103,4 +103,4 @@ export const CompanyBillCard: React.FC<CompanyBillCardProps> = ({
       </View>
     </Card>
   );
-};
+});

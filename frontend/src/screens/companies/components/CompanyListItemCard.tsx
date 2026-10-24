@@ -11,7 +11,7 @@ interface CompanyListItemCardProps {
   onPress: () => void;
 }
 
-export const CompanyListItemCard: React.FC<CompanyListItemCardProps> = ({
+export const CompanyListItemCard: React.FC<CompanyListItemCardProps> = React.memo(({
   item,
   onPress,
 }) => {
@@ -47,4 +47,4 @@ export const CompanyListItemCard: React.FC<CompanyListItemCardProps> = ({
       </View>
     </Card>
   );
-};
+});
