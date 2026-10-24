@@ -7,7 +7,7 @@ import {
   transactionService,
 } from '../../../services';
 import { Company } from '../../../types/company';
-import { AttachmentFile } from '../../../types/transaction';
+import { AttachmentFile, TransactionStatus } from '../../../types/transaction';
 import {
   pickBillPdf,
   pickChitthiFromGallery,
@@ -80,7 +80,7 @@ export function useTransactionForm() {
   const [dalaliRate, setDalaliRate] = useState<string>(
     navigation.params?.initialDalaliRate !== undefined
       ? String(navigation.params.initialDalaliRate)
-      : '1.5'
+      : '1.0'
   );
   const [dalaliAmount, setDalaliAmount] = useState<string>(() => {
     if (navigation.params?.initialDalaliAmount !== undefined) {
@@ -120,6 +120,7 @@ export function useTransactionForm() {
   const [dueDate, setDueDate] = useState<string>('');
   const [creditDays, setCreditDays] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [billStatus, setBillStatus] = useState<TransactionStatus>('PENDING');
 
   const [loadingInitial, setLoadingInitial] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -219,6 +220,7 @@ export function useTransactionForm() {
               setCreditDays(getDaysDifference(tx.date, tx.dueDate));
             }
             setDescription(tx.description || '');
+            setBillStatus(tx.status || 'PENDING');
           }
         } else if (defaultCompanyId) {
           setSelectedCompanyId(defaultCompanyId);
@@ -294,7 +296,7 @@ export function useTransactionForm() {
         date: date.trim(),
         interestStartDate: date.trim(),
         dueDate: dueDate.trim() || undefined,
-        status: 'PENDING' as const,
+        status: isEditing ? billStatus : ('PENDING' as const),
         description: description.trim() || undefined,
       };
 
@@ -460,6 +462,8 @@ export function useTransactionForm() {
     handleDueDateChange,
     description,
     setDescription,
+    billStatus,
+    setBillStatus,
     loadingInitial,
     saving,
     errors,

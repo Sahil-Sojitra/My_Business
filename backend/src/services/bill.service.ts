@@ -44,6 +44,34 @@ export const billService = {
     userId: string,
     filters: { companyId?: string; status?: string; search?: string }
   ) {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      // Auto-transition bills past due date from PENDING to OVERDUE
+      await prisma.bill.updateMany({
+        where: {
+          userId,
+          status: 'PENDING',
+          dueDate: { lt: today, not: null },
+        },
+        data: {
+          status: 'OVERDUE',
+        },
+      });
+      // In case an overdue bill's due date was extended, transition back to PENDING
+      await prisma.bill.updateMany({
+        where: {
+          userId,
+          status: 'OVERDUE',
+          dueDate: { gte: today, not: null },
+        },
+        data: {
+          status: 'PENDING',
+        },
+      });
+    } catch (err: unknown) {
+      console.warn('[AutoOverdue Check Warning]', err instanceof Error ? err.message : err);
+    }
+
     const whereClause: Prisma.BillWhereInput = { userId };
 
     if (filters.companyId && filters.companyId.trim()) {
@@ -69,13 +97,39 @@ export const billService = {
 
     const bills = await prisma.bill.findMany({
       where: whereClause,
-      orderBy: [{ dueDate: 'asc' }, { date: 'desc' }],
+      orderBy: [{ dueDate: { sort: 'asc', nulls: 'last' } }, { date: 'desc' }],
     });
 
     return bills.map(formatBillResponse);
   },
 
   async getBillsSummary(userId: string) {
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      await prisma.bill.updateMany({
+        where: {
+          userId,
+          status: 'PENDING',
+          dueDate: { lt: today, not: null },
+        },
+        data: {
+          status: 'OVERDUE',
+        },
+      });
+      await prisma.bill.updateMany({
+        where: {
+          userId,
+          status: 'OVERDUE',
+          dueDate: { gte: today, not: null },
+        },
+        data: {
+          status: 'PENDING',
+        },
+      });
+    } catch (err: unknown) {
+      console.warn('[AutoOverdue Summary Check Warning]', err instanceof Error ? err.message : err);
+    }
+
     const bills = await prisma.bill.findMany({
       where: { userId },
       select: {

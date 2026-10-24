@@ -12,6 +12,8 @@ export interface ITransactionService {
   update(id: string, data: UpdateBillInput): Promise<Transaction>;
   delete(id: string): Promise<boolean>;
   deleteByCompanyId(companyId: string): Promise<number>;
+  settleBill(id: string): Promise<Transaction>;
+  reopenBill(id: string): Promise<Transaction>;
 }
 
 /**
@@ -44,7 +46,7 @@ class RealTransactionService implements ITransactionService {
       billNumber: data.billNumber?.trim() || undefined,
       amount: Number(data.amount),
       dalaliRate:
-        data.dalaliRate !== undefined ? Number(data.dalaliRate) : 1.5,
+        data.dalaliRate !== undefined ? Number(data.dalaliRate) : 1.0,
       date: data.date,
       status: data.status || 'PENDING',
     };
@@ -132,6 +134,14 @@ class RealTransactionService implements ITransactionService {
       }
     );
     return res.count ?? 0;
+  }
+
+  async settleBill(id: string): Promise<Transaction> {
+    return this.update(id, { status: 'PAID' });
+  }
+
+  async reopenBill(id: string): Promise<Transaction> {
+    return this.update(id, { status: 'PENDING' });
   }
 }
 

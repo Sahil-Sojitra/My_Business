@@ -27,7 +27,7 @@ export const createBillSchema = z.object({
   companyName: z.string().optional(),
   billNumber: z.string().trim().optional().or(z.literal('')),
   amount: z.number().positive('Bill amount must be greater than zero'),
-  dalaliRate: z.number().min(0, 'Dalali rate cannot be negative').default(1.5),
+  dalaliRate: z.number().min(0, 'Dalali rate cannot be negative').default(1.0),
   dalaliAmount: z.number().optional(),
   date: z
     .string()

@@ -44,8 +44,10 @@ export const HomeScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (navigation.currentScreen === 'Home') {
+      loadData();
+    }
+  }, [loadData, navigation.currentScreen]);
 
   const onRefresh = () => {
     setRefreshing(true);

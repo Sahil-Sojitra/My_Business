@@ -7,7 +7,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import { Button } from './Button';
+import { Button, ButtonVariant } from './Button';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -19,6 +19,7 @@ interface ConfirmModalProps {
   onCancel: () => void;
   loading?: boolean;
   destructive?: boolean;
+  confirmVariant?: ButtonVariant;
 }
 
 export const ConfirmModal: React.FC<ConfirmModalProps> = ({
@@ -31,7 +32,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onCancel,
   loading = false,
   destructive = true,
+  confirmVariant,
 }) => {
+  const resolvedConfirmVariant: ButtonVariant = confirmVariant
+    ? confirmVariant
+    : destructive
+    ? 'danger'
+    : 'primary';
   return (
     <Modal
       visible={visible}
@@ -59,7 +66,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               <Button
                 title={confirmText}
                 onPress={onConfirm}
-                variant={destructive ? 'danger' : 'primary'}
+                variant={resolvedConfirmVariant}
                 size="md"
                 loading={loading}
                 style={styles.confirmBtn}

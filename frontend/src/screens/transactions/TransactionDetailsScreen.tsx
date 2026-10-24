@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { AppHeader } from '../../components/common/AppHeader';
 import { AttachmentViewerModal } from '../../components/common/AttachmentViewerModal';
 import { Button } from '../../components/common/Button';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
+import { CheckIcon } from '../../components/common/Icon';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { alertService } from '../../context/AlertContext';
 import { useNavigation } from '../../navigation/NavigationContext';
@@ -14,6 +15,7 @@ import { BillDetailsCard } from './components/BillDetailsCard';
 import { BrokerageSummaryCard } from './components/BrokerageSummaryCard';
 import { HeroDalaliCard } from './components/HeroDalaliCard';
 import { styles } from './TransactionDetailsStyles';
+import { formatDate } from '../../utils/formatters';
 
 export const TransactionDetailsScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -23,10 +25,56 @@ export const TransactionDetailsScreen: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [deleting, setDeleting] = useState<boolean>(false);
+  const [showSettleModal, setShowSettleModal] = useState<boolean>(false);
+  const [settling, setSettling] = useState<boolean>(false);
+  const [showReopenModal, setShowReopenModal] = useState<boolean>(false);
+  const [reopening, setReopening] = useState<boolean>(false);
 
   // Photo viewer state (in-app viewer for photos only)
   const [activePhoto, setActivePhoto] = useState<AttachmentFile | null>(null);
   const [showPhotoViewer, setShowPhotoViewer] = useState<boolean>(false);
+
+  const handleSettle = async () => {
+    if (!transactionId) return;
+    setSettling(true);
+    try {
+      const updated = await transactionService.settleBill(transactionId);
+      setBill(updated);
+      setShowSettleModal(false);
+      alertService.showSuccess(
+        'Bill Settled Successfully!',
+        'This bill status is updated to Settled and moved to the Settled tab.'
+      );
+    } catch (err: unknown) {
+      alertService.showError(
+        'Failed to Settle Bill',
+        err instanceof Error ? err.message : 'Please try again later.'
+      );
+    } finally {
+      setSettling(false);
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!transactionId) return;
+    setReopening(true);
+    try {
+      const updated = await transactionService.reopenBill(transactionId);
+      setBill(updated);
+      setShowReopenModal(false);
+      alertService.showSuccess(
+        'Bill Reopened',
+        'This bill has been returned to active pending status.'
+      );
+    } catch (err: unknown) {
+      alertService.showError(
+        'Failed to Reopen Bill',
+        err instanceof Error ? err.message : 'Please try again later.'
+      );
+    } finally {
+      setReopening(false);
+    }
+  };
 
   const handleOpenPdf = async (file: AttachmentFile) => {
     try {
@@ -47,6 +95,12 @@ export const TransactionDetailsScreen: React.FC = () => {
     }
     try {
       const data = await transactionService.getById(transactionId);
+      if (data) {
+        const todayIso = new Date().toISOString().split('T')[0];
+        if (data.status !== 'PAID' && data.dueDate && data.dueDate < todayIso) {
+          data.status = 'OVERDUE';
+        }
+      }
       setBill(data);
     } catch {
       // handled
@@ -166,8 +220,60 @@ export const TransactionDetailsScreen: React.FC = () => {
           }}
         />
 
+        {/* Settled Confirmation Banner if already settled */}
+        {bill.status === 'PAID' ? (
+          <View style={styles.settledBanner}>
+            <View style={styles.settledIconCircle}>
+              <CheckIcon size={20} color="#15803D" strokeWidth={2.6} />
+            </View>
+            <View style={styles.settledBannerTextCol}>
+              <Text style={styles.settledBannerTitle}>Bill Settled</Text>
+              <Text style={styles.settledBannerSubtitle}>
+                Payment and Dalali brokerage marked complete.
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Overdue Warning Banner */}
+        {bill.status === 'OVERDUE' ? (
+          <View style={styles.overdueBanner}>
+            <View style={styles.overdueIconCircle}>
+              <Text style={styles.overdueIconText}>⚠️</Text>
+            </View>
+            <View style={styles.overdueBannerTextCol}>
+              <Text style={styles.overdueBannerTitle}>Payment Overdue</Text>
+              <Text style={styles.overdueBannerSubtitle}>
+                {bill.dueDate
+                  ? `Payment deadline was ${formatDate(bill.dueDate)}. Please follow up with buyer firm.`
+                  : 'Credit deadline has passed.'}
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         {/* Action Buttons */}
         <View style={styles.buttonGroup}>
+          {bill.status !== 'PAID' ? (
+            <TouchableOpacity
+              style={styles.settleBtn}
+              onPress={() => setShowSettleModal(true)}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Settle bill">
+              <CheckIcon size={18} color="#FFFFFF" strokeWidth={2.6} />
+              <Text style={styles.settleBtnText}>Settle Bill</Text>
+            </TouchableOpacity>
+          ) : (
+            <Button
+              title="Reopen as Active Bill"
+              onPress={() => setShowReopenModal(true)}
+              variant="outline"
+              size="md"
+              style={styles.reopenBtn}
+            />
+          )}
+
           <Button
             title="Delete Bill"
             onPress={() => setShowDeleteModal(true)}
@@ -176,6 +282,28 @@ export const TransactionDetailsScreen: React.FC = () => {
           />
         </View>
       </ScrollView>
+
+      <ConfirmModal
+        visible={showSettleModal}
+        title="Settle Bill?"
+        message={`Are you sure you want to mark this bill as settled? The bill status will be updated to Settled and moved to the Settled tab.`}
+        confirmText="Mark as Settled"
+        confirmVariant="success"
+        destructive={false}
+        loading={settling}
+        onConfirm={handleSettle}
+        onCancel={() => setShowSettleModal(false)}
+      />
+
+      <ConfirmModal
+        visible={showReopenModal}
+        title="Reopen Bill?"
+        message="Are you sure you want to reopen this bill and return it to active pending status?"
+        confirmText="Reopen as Active"
+        loading={reopening}
+        onConfirm={handleReopen}
+        onCancel={() => setShowReopenModal(false)}
+      />
 
       <ConfirmModal
         visible={showDeleteModal}

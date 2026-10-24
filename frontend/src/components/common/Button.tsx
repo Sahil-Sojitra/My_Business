@@ -8,7 +8,13 @@ import {
   ViewStyle,
 } from 'react-native';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'danger'
+  | 'ghost'
+  | 'success';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -112,6 +118,9 @@ const styles = StyleSheet.create({
   danger: {
     backgroundColor: '#DC2626',
   },
+  success: {
+    backgroundColor: '#16A34A',
+  },
   ghost: {
     backgroundColor: 'transparent',
   },
@@ -141,6 +150,9 @@ const styles = StyleSheet.create({
     color: '#1E293B',
   },
   text_danger: {
+    color: '#FFFFFF',
+  },
+  text_success: {
     color: '#FFFFFF',
   },
   text_ghost: {
