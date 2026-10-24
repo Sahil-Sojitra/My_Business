@@ -11,6 +11,7 @@ import { Button } from '../../components/common/Button';
 import { ArrowLeft } from '../../components/common/Icon';
 import { Input } from '../../components/common/Input';
 import { KeyboardAwareScrollView } from '../../components/common/KeyboardAwareScrollView';
+import { colors } from '../../theme/colors';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
 import { styles } from './AuthStyles';
@@ -23,7 +24,6 @@ export const RegisterScreen: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [businessName, setBusinessName] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -31,7 +31,6 @@ export const RegisterScreen: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<{
     name?: string;
     phone?: string;
-    email?: string;
     password?: string;
     confirmPassword?: string;
   }>({});
@@ -50,11 +49,6 @@ export const RegisterScreen: React.FC = () => {
       errors.phone = 'Please enter a valid 10-digit mobile number';
     } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
       errors.phone = 'Please enter a valid 10-digit Indian mobile number';
-    }
-
-    const emailTrimmed = email.trim();
-    if (emailTrimmed && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
-      errors.email = 'Please enter a valid email address';
     }
 
     if (!password) {
@@ -82,7 +76,6 @@ export const RegisterScreen: React.FC = () => {
       await register({
         name: name.trim(),
         phone: phone.trim().replace(/\D/g, ''),
-        email: email.trim() || undefined,
         businessName: businessName.trim() || undefined,
         password,
       });
@@ -113,7 +106,7 @@ export const RegisterScreen: React.FC = () => {
             onPress={() => navigation.navigate('Login')}
             style={styles.backBtn}
             activeOpacity={0.7}>
-            <ArrowLeft size={16} color="#2563EB" strokeWidth={2.4} />
+            <ArrowLeft size={16} color={colors.primary} strokeWidth={2.4} />
             <Text style={styles.backText}>Back to Login</Text>
           </TouchableOpacity>
           <Text style={styles.title}>Create Account</Text>
@@ -166,22 +159,6 @@ export const RegisterScreen: React.FC = () => {
             onChangeText={setBusinessName}
             placeholder="e.g. Sojitra Trade & Brokerage"
             helperText="Optional name of your brokerage agency"
-          />
-
-          <Input
-            label="Email Address (Optional)"
-            value={email}
-            onChangeText={val => {
-              setEmail(val);
-              if (validationErrors.email) {
-                setValidationErrors(prev => ({ ...prev, email: undefined }));
-              }
-            }}
-            placeholder="name@business.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={validationErrors.email}
-            helperText="Optional email for statement exports"
           />
 
           <Input

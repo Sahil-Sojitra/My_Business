@@ -30,7 +30,6 @@ export const ProfileScreen: React.FC = () => {
     user?.businessName || ''
   );
   const [phone, setPhone] = useState<string>(user?.phone || '');
-  const [email, setEmail] = useState<string>(user?.email || '');
 
   // Password state
   const [showPasswordSection, setShowPasswordSection] = useState<boolean>(false);
@@ -96,14 +95,6 @@ export const ProfileScreen: React.FC = () => {
       return;
     }
 
-    if (email && email.trim().length > 0) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email.trim())) {
-        setErrorMessage('Please provide a valid email address.');
-        return;
-      }
-    }
-
     if (showPasswordSection && (newPassword || currentPassword || confirmPassword)) {
       if (!currentPassword) {
         setErrorMessage('Current password is required to change password.');
@@ -125,7 +116,6 @@ export const ProfileScreen: React.FC = () => {
         name: cleanName,
         businessName: businessName.trim() || undefined,
         phone: cleanPhone,
-        email: email.trim() || undefined,
         currentPassword:
           showPasswordSection && newPassword ? currentPassword : undefined,
         newPassword:
@@ -253,15 +243,6 @@ export const ProfileScreen: React.FC = () => {
             keyboardType="phone-pad"
             maxLength={10}
             helperText="Primary unique ID for authentication"
-          />
-
-          <Input
-            label="Email Address (Optional)"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="broker@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
           />
         </View>
 
