@@ -287,7 +287,7 @@ export const TransactionListScreen: React.FC = () => {
               {tab === 'ALL'
                 ? 'All'
                 : tab === 'PENDING'
-                ? 'Active'
+                ? 'Pending'
                 : tab === 'OVERDUE'
                 ? 'Overdue'
                 : 'Settled'}
@@ -339,6 +339,8 @@ export const TransactionListScreen: React.FC = () => {
                   ? 'No settled bills yet'
                   : filterTab === 'OVERDUE'
                   ? 'No overdue bills'
+                  : filterTab === 'PENDING'
+                  ? 'No pending bills'
                   : 'No bills recorded yet'
               }
               description={
@@ -346,6 +348,8 @@ export const TransactionListScreen: React.FC = () => {
                   ? `No entry found for "${searchQuery}".`
                   : filterTab === 'PAID'
                   ? 'Bills you mark as settled will appear here in the Settled tab.'
+                  : filterTab === 'PENDING'
+                  ? 'Bills that are pending payment will appear here.'
                   : 'Record client sales bills to track amounts and accrued interest.'
               }
               icon={filterTab === 'PAID' ? '✅' : '🧾'}
