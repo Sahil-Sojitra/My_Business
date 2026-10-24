@@ -3,10 +3,66 @@ import {
   PutObjectCommand,
   HeadObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
   PutBucketCorsCommand,
   GetBucketCorsCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { Prisma } from '@prisma/client';
+import prisma from '../lib/prisma.js';
+
+/**
+ * Validates that an object key belongs strictly to the authenticated user's namespace.
+ * Prevents directory traversal and cross-tenant file deletion.
+ */
+export function isValidObjectKeyForUser(
+  fileKey: unknown,
+  userId: string
+): fileKey is string {
+  if (typeof fileKey !== 'string') {
+    return false;
+  }
+  const trimmed = fileKey.trim();
+  const expectedPrefix = `brokers/${userId}/`;
+  if (!trimmed.startsWith(expectedPrefix)) {
+    return false;
+  }
+  if (trimmed.includes('..') || trimmed.includes('\\')) {
+    return false;
+  }
+  const parts = trimmed.split('/');
+  return parts.length >= 4;
+}
+
+/**
+ * Extracts Backblaze B2 object keys from a bill's billPdf and chitthi attachment metadata.
+ */
+export function extractAttachmentKeys(bill: {
+  billPdf?: any;
+  chitthi?: any;
+}): string[] {
+  const keys: string[] = [];
+
+  if (
+    bill?.billPdf &&
+    typeof bill.billPdf === 'object' &&
+    typeof (bill.billPdf as any).key === 'string' &&
+    (bill.billPdf as any).key.trim().length > 0
+  ) {
+    keys.push((bill.billPdf as any).key.trim());
+  }
+
+  if (
+    bill?.chitthi &&
+    typeof bill.chitthi === 'object' &&
+    typeof (bill.chitthi as any).key === 'string' &&
+    (bill.chitthi as any).key.trim().length > 0
+  ) {
+    keys.push((bill.chitthi as any).key.trim());
+  }
+
+  return keys;
+}
 
 export interface PresignedUploadRequest {
   fileName: string;
@@ -249,6 +305,219 @@ class BackblazeB2StorageService {
     const response = await s3.send(command);
     return response.CORSRules || [];
   }
+
+  /**
+   * Checks whether a fileKey is still referenced by any other active bill in PostgreSQL.
+   * Prevents deleting shared objects if multiple bills point to the same attachment key.
+   */
+  async isKeyReferencedByOtherBills(
+    fileKey: string,
+    excludeBillId?: string
+  ): Promise<boolean> {
+    try {
+      const where: Prisma.BillWhereInput = {
+        OR: [
+          { billPdf: { path: ['key'], equals: fileKey } },
+          { chitthi: { path: ['key'], equals: fileKey } },
+        ],
+      };
+
+      if (excludeBillId) {
+        where.id = { not: excludeBillId };
+      }
+
+      const count = await prisma.bill.count({ where });
+      return count > 0;
+    } catch (err: unknown) {
+      console.warn(
+        `[B2 Storage Warning] Failed to check shared references for key "${fileKey}":`,
+        err instanceof Error ? err.message : err
+      );
+      // Fail closed: if reference status cannot be determined, treat as referenced to avoid data loss
+      return true;
+    }
+  }
+
+  /**
+   * Deletes a single object from Backblaze B2.
+   * Enforces user namespace isolation, shared reference checks, and idempotent 404/missing handling.
+   */
+  async deleteObject(
+    fileKey: string,
+    userId: string,
+    excludeBillId?: string
+  ): Promise<{ success: boolean; key: string; skipped?: boolean; error?: string }> {
+    if (!isValidObjectKeyForUser(fileKey, userId)) {
+      const errorMsg = 'Unauthorized or invalid storage key format.';
+      return { success: false, key: typeof fileKey === 'string' ? fileKey : '', error: errorMsg };
+    }
+
+    // Check if the object is still referenced by another bill
+    const isShared = await this.isKeyReferencedByOtherBills(fileKey, excludeBillId);
+    if (isShared) {
+      console.log(
+        `[B2 Storage] Object "${fileKey}" is referenced by another bill. Skipping cloud deletion.`
+      );
+      return { success: true, key: fileKey, skipped: true };
+    }
+
+    if (!this.isConfigured()) {
+      return { success: true, key: fileKey };
+    }
+
+    const s3 = this.getClient();
+    const bucket = process.env.B2_BUCKET_NAME || 'my-business-bucket';
+
+    try {
+      const command = new DeleteObjectCommand({
+        Bucket: bucket,
+        Key: fileKey,
+      });
+
+      await s3.send(command);
+      return { success: true, key: fileKey };
+    } catch (err: unknown) {
+      const errorName = (err as any)?.name;
+      const statusCode = (err as any)?.$metadata?.httpStatusCode;
+
+      // S3 provider semantics: If object is already missing (NoSuchKey, 404), treat as success
+      if (
+        errorName === 'NoSuchKey' ||
+        errorName === 'NotFound' ||
+        statusCode === 404
+      ) {
+        return { success: true, key: fileKey };
+      }
+
+      const safeMessage =
+        err instanceof Error ? err.message : 'Unknown cloud storage error';
+      console.error(
+        `[B2 Storage Error] Failed to delete object "${fileKey}": ${safeMessage}`
+      );
+      return { success: false, key: fileKey, error: safeMessage };
+    }
+  }
+
+  /**
+   * Deletes multiple Backblaze B2 objects for a user.
+   * Returns individual results and automatically records failures in the durable retry queue.
+   */
+  async deleteObjects(
+    fileKeys: string[],
+    userId: string,
+    excludeBillId?: string
+  ): Promise<{
+    total: number;
+    deleted: string[];
+    failed: Array<{ key: string; error: string }>;
+    skipped: string[];
+  }> {
+    const uniqueKeys = Array.from(new Set(fileKeys.filter(Boolean)));
+    const deleted: string[] = [];
+    const failed: Array<{ key: string; error: string }> = [];
+    const skipped: string[] = [];
+
+    for (const key of uniqueKeys) {
+      const res = await this.deleteObject(key, userId, excludeBillId);
+      if (res.success) {
+        if (res.skipped) {
+          skipped.push(key);
+        } else {
+          deleted.push(key);
+        }
+      } else {
+        const errorMsg = res.error || 'Cloud deletion failed';
+        failed.push({ key, error: errorMsg });
+
+        // Record in durable cleanup queue for background retry
+        await this.recordFailedCleanup(userId, key, errorMsg);
+      }
+    }
+
+    return {
+      total: uniqueKeys.length,
+      deleted,
+      failed,
+      skipped,
+    };
+  }
+
+  /**
+   * Persists a failed deletion task into the database outbox for background retry.
+   */
+  async recordFailedCleanup(
+    userId: string,
+    fileKey: string,
+    errorMessage: string
+  ): Promise<void> {
+    try {
+      await prisma.storageCleanupTask.create({
+        data: {
+          userId,
+          fileKey,
+          status: 'PENDING',
+          attempts: 1,
+          lastError: errorMessage,
+        },
+      });
+    } catch (err: unknown) {
+      console.error(
+        `[B2 Storage] Failed to record durable cleanup task for "${fileKey}":`,
+        err instanceof Error ? err.message : err
+      );
+    }
+  }
+
+  /**
+   * Retries pending or failed cleanup tasks from the durable outbox.
+   */
+  async retryPendingCleanups(
+    limit: number = 50
+  ): Promise<{ processed: number; succeeded: number; failed: number }> {
+    try {
+      const pendingTasks = await prisma.storageCleanupTask.findMany({
+        where: {
+          status: { in: ['PENDING', 'FAILED'] },
+          attempts: { lt: 5 },
+        },
+        take: limit,
+        orderBy: { createdAt: 'asc' },
+      });
+
+      let succeeded = 0;
+      let failed = 0;
+
+      for (const task of pendingTasks) {
+        const res = await this.deleteObject(task.fileKey, task.userId);
+        if (res.success) {
+          await prisma.storageCleanupTask.update({
+            where: { id: task.id },
+            data: { status: 'COMPLETED' },
+          });
+          succeeded++;
+        } else {
+          await prisma.storageCleanupTask.update({
+            where: { id: task.id },
+            data: {
+              status: 'FAILED',
+              attempts: { increment: 1 },
+              lastError: res.error || 'Retry deletion failed',
+            },
+          });
+          failed++;
+        }
+      }
+
+      return { processed: pendingTasks.length, succeeded, failed };
+    } catch (err: unknown) {
+      console.error(
+        '[B2 Storage] Error processing pending cleanup tasks:',
+        err instanceof Error ? err.message : err
+      );
+      return { processed: 0, succeeded: 0, failed: 0 };
+    }
+  }
 }
 
 export const storageService = new BackblazeB2StorageService();
+

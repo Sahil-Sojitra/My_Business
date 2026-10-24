@@ -1,6 +1,7 @@
 import { Prisma, BillStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { CreateBillInput, UpdateBillInput } from '../schemas/bill.schema.js';
+import { storageService, extractAttachmentKeys } from './storage.service.js';
 
 export class BillError extends Error {
   statusCode: number;
@@ -266,18 +267,69 @@ export const billService = {
       throw new BillError('Bill not found or access unauthorized.', 404);
     }
 
+    // 1. Extract cloud object keys before database deletion
+    const attachmentKeys = extractAttachmentKeys(existing);
+
+    // 2. Commit database record deletion first (ensures live bills never lose files on DB failure)
     await prisma.bill.delete({
       where: { id: billId },
     });
 
-    return { success: true, message: 'Bill deleted successfully' };
+    // 3. Clean up associated Backblaze B2 cloud objects
+    let cleanup = { total: 0, deleted: [] as string[], failed: [] as any[], skipped: [] as string[] };
+    if (attachmentKeys.length > 0) {
+      cleanup = await storageService.deleteObjects(attachmentKeys, userId, billId);
+    }
+
+    const hasFailures = cleanup.failed.length > 0;
+
+    return {
+      success: true,
+      message: hasFailures
+        ? 'Bill deleted successfully, but some cloud attachments could not be removed immediately and have been scheduled for retry.'
+        : 'Bill deleted successfully',
+      cleanup: {
+        total: cleanup.total,
+        deleted: cleanup.deleted.length,
+        failed: cleanup.failed.length,
+        skipped: cleanup.skipped.length,
+      },
+    };
   },
 
   async deleteBillsByCompany(companyId: string, userId: string) {
+    // 1. Identify all attachments belonging to this company's bills
+    const existingBills = await prisma.bill.findMany({
+      where: { companyId, userId },
+      select: { id: true, billPdf: true, chitthi: true },
+    });
+
+    const attachmentKeys: string[] = [];
+    for (const b of existingBills) {
+      attachmentKeys.push(...extractAttachmentKeys(b));
+    }
+
+    // 2. Commit database deletion
     const result = await prisma.bill.deleteMany({
       where: { companyId, userId },
     });
 
-    return { success: true, count: result.count };
+    // 3. Clean up cloud objects
+    let cleanup = { total: 0, deleted: [] as string[], failed: [] as any[], skipped: [] as string[] };
+    if (attachmentKeys.length > 0) {
+      cleanup = await storageService.deleteObjects(attachmentKeys, userId);
+    }
+
+    return {
+      success: true,
+      count: result.count,
+      cleanup: {
+        total: cleanup.total,
+        deleted: cleanup.deleted.length,
+        failed: cleanup.failed.length,
+        skipped: cleanup.skipped.length,
+      },
+    };
   },
 };
+

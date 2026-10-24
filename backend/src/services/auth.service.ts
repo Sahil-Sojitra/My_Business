@@ -7,6 +7,7 @@ import {
   LoginInput,
   UpdateProfileInput,
 } from '../schemas/auth.schema.js';
+import { storageService, extractAttachmentKeys } from './storage.service.js';
 
 const JWT_SECRET =
   process.env.JWT_SECRET ||
@@ -285,7 +286,16 @@ export const authService = {
   async deleteAccount(
     userId: string,
     password?: string
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{
+    success: boolean;
+    message: string;
+    cleanup?: {
+      total: number;
+      deleted: number;
+      failed: number;
+      skipped: number;
+    };
+  }> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
@@ -301,16 +311,57 @@ export const authService = {
       }
     }
 
-    // Cascade delete user and all associated companies, bills, and data in an atomic transaction
+    // 1. Identify all bill attachments for this user in paginated batches (bounded memory)
+    const batchSize = 100;
+    let skip = 0;
+    const attachmentKeys: string[] = [];
+
+    while (true) {
+      const billsBatch = await prisma.bill.findMany({
+        where: { userId },
+        select: { billPdf: true, chitthi: true },
+        skip,
+        take: batchSize,
+      });
+
+      if (billsBatch.length === 0) {
+        break;
+      }
+
+      for (const bill of billsBatch) {
+        attachmentKeys.push(...extractAttachmentKeys(bill));
+      }
+
+      skip += batchSize;
+    }
+
+    // 2. Cascade delete user and all associated companies, bills, and data in an atomic transaction
     await prisma.$transaction([
       prisma.bill.deleteMany({ where: { userId } }),
       prisma.company.deleteMany({ where: { userId } }),
       prisma.user.delete({ where: { id: userId } }),
     ]);
 
+    // 3. Clean up associated Backblaze B2 cloud objects
+    let cleanup = { total: 0, deleted: [] as string[], failed: [] as any[], skipped: [] as string[] };
+    if (attachmentKeys.length > 0) {
+      cleanup = await storageService.deleteObjects(attachmentKeys, userId);
+    }
+
+    const hasFailures = cleanup.failed.length > 0;
+
     return {
       success: true,
-      message: 'Account and all associated business data permanently deleted.',
+      message: hasFailures
+        ? 'Account deleted successfully, but some cloud attachments could not be removed immediately and have been scheduled for retry.'
+        : 'Account and all associated business data permanently deleted.',
+      cleanup: {
+        total: cleanup.total,
+        deleted: cleanup.deleted.length,
+        failed: cleanup.failed.length,
+        skipped: cleanup.skipped.length,
+      },
     };
   },
 };
+

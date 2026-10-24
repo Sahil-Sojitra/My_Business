@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { CreateCompanyInput, UpdateCompanyInput } from '../schemas/company.schema.js';
+import { storageService, extractAttachmentKeys } from './storage.service.js';
 
 export class CompanyError extends Error {
   statusCode: number;
@@ -143,10 +144,42 @@ export const companyService = {
       throw new CompanyError('Company not found or access unauthorized.', 404);
     }
 
+    // 1. Identify all attachments belonging to bills of this company
+    const companyBills = await prisma.bill.findMany({
+      where: { companyId, userId },
+      select: { billPdf: true, chitthi: true },
+    });
+
+    const attachmentKeys: string[] = [];
+    for (const b of companyBills) {
+      attachmentKeys.push(...extractAttachmentKeys(b));
+    }
+
+    // 2. Commit database company deletion (cascades to bills in database)
     await prisma.company.delete({
       where: { id: companyId },
     });
 
-    return { success: true, message: 'Company deleted successfully' };
+    // 3. Clean up associated Backblaze B2 cloud objects
+    let cleanup = { total: 0, deleted: [] as string[], failed: [] as any[], skipped: [] as string[] };
+    if (attachmentKeys.length > 0) {
+      cleanup = await storageService.deleteObjects(attachmentKeys, userId);
+    }
+
+    const hasFailures = cleanup.failed.length > 0;
+
+    return {
+      success: true,
+      message: hasFailures
+        ? 'Company deleted successfully, but some cloud attachments could not be removed immediately and have been scheduled for retry.'
+        : 'Company deleted successfully',
+      cleanup: {
+        total: cleanup.total,
+        deleted: cleanup.deleted.length,
+        failed: cleanup.failed.length,
+        skipped: cleanup.skipped.length,
+      },
+    };
   },
 };
+

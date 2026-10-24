@@ -98,3 +98,20 @@ model Bill {
   @@index([status])
   @@map("bills")
 }
+
+/// Durable background cleanup task for orphaned Backblaze B2 files
+model StorageCleanupTask {
+  id        String   @id @default(uuid())
+  userId    String
+  fileKey   String
+  attempts  Int      @default(0)
+  lastError String?
+  status    String   @default("PENDING") // PENDING, PROCESSING, FAILED, COMPLETED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@map("storage_cleanup_tasks")
+}
+
