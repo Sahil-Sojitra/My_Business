@@ -11,7 +11,6 @@ export function useCompanyForm() {
   const [name, setName] = useState<string>('');
   const [ownerName, setOwnerName] = useState<string>('');
   const [contactNumber, setContactNumber] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
   const [gstin, setGstin] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
@@ -21,7 +20,6 @@ export function useCompanyForm() {
   const [errors, setErrors] = useState<{
     name?: string;
     contactNumber?: string;
-    email?: string;
     gstin?: string;
   }>({});
 
@@ -34,7 +32,6 @@ export function useCompanyForm() {
             setName(company.name);
             setOwnerName(company.ownerName || '');
             setContactNumber(company.contactNumber);
-            setEmail(company.email || '');
             setGstin(company.gstin || '');
             setAddress(company.address || '');
             setNotes(company.notes || '');
@@ -60,10 +57,6 @@ export function useCompanyForm() {
       newErrors.contactNumber = 'Please enter a valid 10-digit contact number';
     }
 
-    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
     if (gstin.trim() && gstin.trim().length !== 15) {
       newErrors.gstin = 'GSTIN should be 15 characters (e.g. 24AAACA1234A1Z5)';
     }
@@ -83,7 +76,6 @@ export function useCompanyForm() {
         name: name.trim(),
         ownerName: ownerName.trim() || undefined,
         contactNumber: contactNumber.trim(),
-        email: email.trim() || undefined,
         gstin: gstin.trim().toUpperCase() || undefined,
         address: address.trim() || undefined,
         notes: notes.trim() || undefined,
@@ -122,8 +114,6 @@ export function useCompanyForm() {
     setOwnerName,
     contactNumber,
     setContactNumber,
-    email,
-    setEmail,
     gstin,
     setGstin,
     address,

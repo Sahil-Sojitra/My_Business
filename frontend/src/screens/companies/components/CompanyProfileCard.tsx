@@ -9,7 +9,7 @@ interface CompanyProfileCardProps {
   company: Company;
 }
 
-export const CompanyProfileCard: React.FC<CompanyProfileCardProps> = ({
+export const CompanyProfileCard: React.FC<CompanyProfileCardProps> = React.memo(({
   company,
 }) => {
   return (
@@ -27,13 +27,6 @@ export const CompanyProfileCard: React.FC<CompanyProfileCardProps> = ({
           {formatPhone(company.contactNumber)}
         </Text>
       </View>
-
-      {company.email ? (
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Email</Text>
-          <Text style={styles.infoValue}>{company.email}</Text>
-        </View>
-      ) : null}
 
       {company.gstin ? (
         <View style={styles.infoRow}>
@@ -57,4 +50,4 @@ export const CompanyProfileCard: React.FC<CompanyProfileCardProps> = ({
       ) : null}
     </Card>
   );
-};
+});

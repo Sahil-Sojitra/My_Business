@@ -3,7 +3,6 @@ export interface Company {
   name: string;
   ownerName?: string;
   contactNumber: string;
-  email?: string;
   gstin?: string;
   address?: string;
   notes?: string;

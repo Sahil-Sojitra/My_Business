@@ -68,21 +68,6 @@ export const CompanyFormScreen: React.FC = () => {
             helperText="Key person for trading negotiations"
           />
 
-          <Input
-            label="Email Address"
-            value={form.email}
-            onChangeText={val => {
-              form.setEmail(val.trim().slice(0, 80));
-              if (form.errors.email) {
-                form.setErrors(prev => ({ ...prev, email: undefined }));
-              }
-            }}
-            placeholder="account@company.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            maxLength={80}
-            error={form.errors.email}
-          />
 
           <Input
             label="GSTIN / Tax Identification"

@@ -52,7 +52,6 @@ model Company {
   name          String
   ownerName     String?
   contactNumber String
-  email         String?
   gstin         String?
   address       String?
   notes         String?

@@ -18,7 +18,6 @@ const formatCompanyResponse = (c: any) => ({
   name: c.name,
   ownerName: c.ownerName ?? undefined,
   contactNumber: c.contactNumber,
-  email: c.email ?? undefined,
   gstin: c.gstin ?? undefined,
   address: c.address ?? undefined,
   notes: c.notes ?? undefined,
@@ -78,7 +77,6 @@ export const companyService = {
         name: data.name.trim(),
         contactNumber: data.contactNumber.trim(),
         ownerName: data.ownerName?.trim() || null,
-        email: data.email?.trim().toLowerCase() || null,
         gstin: data.gstin?.trim().toUpperCase() || null,
         address: data.address?.trim() || null,
         notes: data.notes?.trim() || null,
@@ -113,10 +111,6 @@ export const companyService = {
           data.ownerName !== undefined
             ? data.ownerName?.trim() || null
             : existing.ownerName,
-        email:
-          data.email !== undefined
-            ? data.email?.trim().toLowerCase() || null
-            : existing.email,
         gstin:
           data.gstin !== undefined
             ? data.gstin?.trim().toUpperCase() || null

@@ -40,7 +40,6 @@ class RealCompanyService implements ICompanyService {
         name: data.name.trim(),
         contactNumber: data.contactNumber.trim(),
         ownerName: data.ownerName?.trim() || undefined,
-        email: data.email?.trim() || undefined,
         gstin: data.gstin?.trim() || undefined,
         address: data.address?.trim() || undefined,
         notes: data.notes?.trim() || undefined,
@@ -59,7 +58,6 @@ class RealCompanyService implements ICompanyService {
             : undefined,
         ownerName:
           data.ownerName !== undefined ? data.ownerName.trim() : undefined,
-        email: data.email !== undefined ? data.email.trim() : undefined,
         gstin: data.gstin !== undefined ? data.gstin.trim() : undefined,
         address: data.address !== undefined ? data.address.trim() : undefined,
         notes: data.notes !== undefined ? data.notes.trim() : undefined,

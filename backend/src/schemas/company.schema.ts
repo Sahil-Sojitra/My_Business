@@ -7,12 +7,6 @@ export const createCompanySchema = z.object({
   name: z.string().trim().min(2, 'Company name must be at least 2 characters'),
   contactNumber: z.string().trim().min(1, 'Contact number is required'),
   ownerName: z.string().trim().optional().or(z.literal('')),
-  email: z
-    .string()
-    .trim()
-    .email('Invalid email address')
-    .optional()
-    .or(z.literal('')),
   gstin: z
     .string()
     .trim()
