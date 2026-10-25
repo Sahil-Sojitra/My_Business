@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Image,
   Platform,
   StatusBar,
   Text,
@@ -107,6 +108,11 @@ export const LoginScreen: React.FC = () => {
           },
         ]}>
         <View style={styles.loginHeader}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.brandLogo}
+            resizeMode="contain"
+          />
           <View style={styles.badge}>
             <Text style={styles.badgeText}>My Business Mobile</Text>
           </View>

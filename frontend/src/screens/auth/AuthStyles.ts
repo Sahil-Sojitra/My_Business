@@ -26,6 +26,17 @@ export const styles = StyleSheet.create({
     marginBottom: 24,
     alignItems: 'center',
   },
+  brandLogo: {
+    width: 68,
+    height: 68,
+    borderRadius: 18,
+    marginBottom: 14,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 4,
+  },
   backBtn: {
     flexDirection: 'row',
     alignItems: 'center',
