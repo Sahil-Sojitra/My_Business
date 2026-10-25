@@ -71,3 +71,71 @@ export const deleteAccountSchema = z.object({
 });
 
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
+
+/**
+ * Validation schema for email verification with OTP
+ */
+export const verifyEmailSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email address is required')
+    .email('Please enter a valid email address format'),
+  otp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Verification code must be exactly 6 digits'),
+});
+
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+/**
+ * Validation schema for resending OTP
+ */
+export const resendOtpSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email address is required')
+    .email('Please enter a valid email address format'),
+  purpose: z
+    .enum(['EMAIL_VERIFICATION', 'PASSWORD_RESET'])
+    .optional()
+    .default('EMAIL_VERIFICATION'),
+});
+
+export type ResendOtpInput = z.infer<typeof resendOtpSchema>;
+
+/**
+ * Validation schema for forgot password request
+ */
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email address is required')
+    .email('Please enter a valid email address format'),
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+/**
+ * Validation schema for resetting password with OTP
+ */
+export const resetPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email address is required')
+    .email('Please enter a valid email address format'),
+  otp: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Verification code must be exactly 6 digits'),
+  newPassword: z
+    .string()
+    .min(6, 'New password must be at least 6 characters'),
+});
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+

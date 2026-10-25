@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import {
   register,
+  verifyEmail,
+  resendOtp,
+  forgotPassword,
+  resetPassword,
   login,
   getMe,
   updateProfile,
@@ -12,6 +16,10 @@ const router: Router = Router();
 
 // Public auth endpoints
 router.post('/register', register);
+router.post('/verify-email', verifyEmail);
+router.post('/resend-otp', resendOtp);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 router.post('/login', login);
 
 // Protected auth endpoints

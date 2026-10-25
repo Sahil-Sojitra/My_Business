@@ -1,13 +1,21 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/prisma.js';
+import { OtpPurpose } from '../types/auth.types.js';
 import { normalizeMobileNumber, isValidMobileNumber } from '../utils/phone.js';
+import { AuthError } from '../utils/errors.js';
 import {
   RegisterInput,
   LoginInput,
   UpdateProfileInput,
+  VerifyEmailInput,
+  ResendOtpInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
 } from '../schemas/auth.schema.js';
 import { storageService, extractAttachmentKeys } from './storage.service.js';
+import { emailService } from './email.service.js';
+import { otpService } from './otp.service.js';
 
 const JWT_SECRET =
   process.env.JWT_SECRET ||
@@ -22,23 +30,32 @@ export interface AuthResult {
     phone: string;
     email: string | null;
     businessName: string | null;
+    isEmailVerified: boolean;
     createdAt: string;
   };
   token: string;
 }
 
-export class AuthError extends Error {
-  statusCode: number;
-
-  constructor(message: string, statusCode: number = 400) {
-    super(message);
-    this.name = 'AuthError';
-    this.statusCode = statusCode;
-  }
+export interface RegistrationResult {
+  message: string;
+  requiresVerification: boolean;
+  email: string | null;
+  user: {
+    id: string;
+    name: string;
+    mobileNumber: string;
+    phone: string;
+    email: string | null;
+    businessName: string | null;
+    isEmailVerified: boolean;
+    createdAt: string;
+  };
 }
 
+export { AuthError } from '../utils/errors.js';
+
 /**
- * Service encapsulating broker authentication and JWT token lifecycle
+ * Service encapsulating broker authentication, verification OTPs, and JWT token lifecycle
  */
 export const authService = {
   generateToken(payload: {
@@ -47,13 +64,18 @@ export const authService = {
     name: string;
     email: string | null;
     businessName: string | null;
+    tokenVersion?: number;
   }): string {
     return jwt.sign(payload, JWT_SECRET, {
       expiresIn: JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
     });
   },
 
-  async registerUser(data: RegisterInput): Promise<AuthResult> {
+  /**
+   * Registers a new broker, creates an unverified account, generates a 6-digit OTP,
+   * and delivers it via Brevo transactional email.
+   */
+  async registerUser(data: RegisterInput): Promise<RegistrationResult> {
     const rawMobile = data.mobileNumber || data.phone || '';
     const normalizedMobile = normalizeMobileNumber(rawMobile);
 
@@ -90,6 +112,7 @@ export const authService = {
 
     const passwordHash = await bcrypt.hash(data.password, 10);
 
+    // Create broker account initially unverified
     const user = await prisma.user.create({
       data: {
         name: data.name.trim(),
@@ -97,18 +120,41 @@ export const authService = {
         email: normalizedEmail,
         passwordHash,
         businessName: data.businessName?.trim() || 'My Business',
+        isEmailVerified: false,
+        tokenVersion: 1,
       },
     });
 
-    const token = this.generateToken({
-      userId: user.id,
-      mobileNumber: user.mobileNumber,
-      name: user.name,
-      email: user.email,
-      businessName: user.businessName,
-    });
+    // Generate and store OTP, then dispatch via Brevo
+    let otpRecordId: string | null = null;
+    try {
+      const { otp, recordId } = await otpService.createAndStoreOtp({
+        email: normalizedEmail,
+        purpose: OtpPurpose.EMAIL_VERIFICATION,
+        userId: user.id,
+      });
+      otpRecordId = recordId;
+
+      await emailService.sendRegistrationOtp(normalizedEmail, user.name, otp);
+    } catch (deliveryError: unknown) {
+      // Rollback OTP and newly created user if initial email delivery fails
+      if (otpRecordId) {
+        await otpService.cleanupFailedDeliveryOtp(otpRecordId);
+      }
+      await prisma.user.delete({ where: { id: user.id } }).catch(() => {});
+
+      const message =
+        deliveryError instanceof Error
+          ? deliveryError.message
+          : 'Failed to deliver registration verification email. Please try again.';
+      throw new AuthError(message, 502);
+    }
 
     return {
+      message:
+        'Registration successful. Please enter the 6-digit verification code sent to your email address.',
+      requiresVerification: true,
+      email: user.email,
       user: {
         id: user.id,
         name: user.name,
@@ -116,12 +162,244 @@ export const authService = {
         phone: user.mobileNumber,
         email: user.email,
         businessName: user.businessName,
+        isEmailVerified: false,
         createdAt: user.createdAt.toISOString(),
+      },
+    };
+  },
+
+  /**
+   * Verifies registration email using submitted 6-digit OTP
+   */
+  async verifyEmail(data: VerifyEmailInput): Promise<AuthResult> {
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    const user = await prisma.user.findFirst({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      throw new AuthError('No account found with this email address.', 404);
+    }
+
+    if (user.isEmailVerified) {
+      // Already verified, generate fresh token
+      const token = this.generateToken({
+        userId: user.id,
+        mobileNumber: user.mobileNumber,
+        name: user.name,
+        email: user.email,
+        businessName: user.businessName,
+        tokenVersion: user.tokenVersion,
+      });
+
+      return {
+        user: {
+          id: user.id,
+          name: user.name,
+          mobileNumber: user.mobileNumber,
+          phone: user.mobileNumber,
+          email: user.email,
+          businessName: user.businessName,
+          isEmailVerified: true,
+          createdAt: user.createdAt.toISOString(),
+        },
+        token,
+      };
+    }
+
+    // Atomically verify OTP
+    await otpService.verifyOtp({
+      email: normalizedEmail,
+      otp: data.otp,
+      purpose: OtpPurpose.EMAIL_VERIFICATION,
+    });
+
+    // Mark user as verified
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { isEmailVerified: true },
+    });
+
+    const token = this.generateToken({
+      userId: updatedUser.id,
+      mobileNumber: updatedUser.mobileNumber,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      businessName: updatedUser.businessName,
+      tokenVersion: updatedUser.tokenVersion,
+    });
+
+    return {
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        mobileNumber: updatedUser.mobileNumber,
+        phone: updatedUser.mobileNumber,
+        email: updatedUser.email,
+        businessName: updatedUser.businessName,
+        isEmailVerified: true,
+        createdAt: updatedUser.createdAt.toISOString(),
       },
       token,
     };
   },
 
+  /**
+   * Resends verification or reset OTP with cooldown enforcement
+   */
+  async resendOtp(
+    data: ResendOtpInput
+  ): Promise<{ success: boolean; message: string }> {
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const purpose =
+      data.purpose === 'PASSWORD_RESET'
+        ? OtpPurpose.PASSWORD_RESET
+        : OtpPurpose.EMAIL_VERIFICATION;
+
+    const user = await prisma.user.findFirst({
+      where: { email: normalizedEmail },
+    });
+
+    if (purpose === OtpPurpose.EMAIL_VERIFICATION) {
+      if (!user) {
+        throw new AuthError('No account found with this email address.', 404);
+      }
+      if (user.isEmailVerified) {
+        throw new AuthError(
+          'This email address has already been verified. Please sign in.',
+          400
+        );
+      }
+
+      let otpRecordId: string | null = null;
+      try {
+        const { otp, recordId } = await otpService.createAndStoreOtp({
+          email: normalizedEmail,
+          purpose: OtpPurpose.EMAIL_VERIFICATION,
+          userId: user.id,
+        });
+        otpRecordId = recordId;
+
+        await emailService.sendRegistrationOtp(normalizedEmail, user.name, otp);
+      } catch (err: unknown) {
+        if (otpRecordId) {
+          await otpService.cleanupFailedDeliveryOtp(otpRecordId);
+        }
+        if (err instanceof AuthError) throw err;
+        throw new AuthError(
+          'Failed to resend verification code. Please try again.',
+          502
+        );
+      }
+
+      return {
+        success: true,
+        message: 'A fresh verification code has been sent to your email address.',
+      };
+    } else {
+      // For password reset, reuse forgotPassword logic for generic enumeration protection
+      return this.forgotPassword({ email: normalizedEmail });
+    }
+  },
+
+  /**
+   * Initiates forgot-password flow.
+   * Returns generic message to prevent account enumeration.
+   */
+  async forgotPassword(
+    data: ForgotPasswordInput
+  ): Promise<{ success: boolean; message: string }> {
+    const normalizedEmail = data.email.trim().toLowerCase();
+    const genericMessage =
+      'If an account associated with this email address exists, a 6-digit password recovery code has been sent.';
+
+    const user = await prisma.user.findFirst({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      // Return generic success response to prevent email enumeration
+      return {
+        success: true,
+        message: genericMessage,
+      };
+    }
+
+    let otpRecordId: string | null = null;
+    try {
+      const { otp, recordId } = await otpService.createAndStoreOtp({
+        email: normalizedEmail,
+        purpose: OtpPurpose.PASSWORD_RESET,
+        userId: user.id,
+      });
+      otpRecordId = recordId;
+
+      await emailService.sendPasswordResetOtp(normalizedEmail, user.name, otp);
+    } catch (err: unknown) {
+      if (otpRecordId) {
+        await otpService.cleanupFailedDeliveryOtp(otpRecordId);
+      }
+      // If cooldown was hit, rethrow cooldown error so client knows to wait
+      if (err instanceof AuthError && err.statusCode === 429) {
+        throw err;
+      }
+      // Otherwise suppress provider error to maintain generic response or safe failure
+      console.error('[ForgotPassword Error]', err);
+    }
+
+    return {
+      success: true,
+      message: genericMessage,
+    };
+  },
+
+  /**
+   * Resets password using OTP, updates passwordHash, and invalidates all existing sessions
+   */
+  async resetPassword(
+    data: ResetPasswordInput
+  ): Promise<{ success: boolean; message: string }> {
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    const user = await prisma.user.findFirst({
+      where: { email: normalizedEmail },
+    });
+
+    if (!user) {
+      throw new AuthError('Invalid or expired password reset code.', 400);
+    }
+
+    // Atomically verify OTP for PASSWORD_RESET purpose
+    await otpService.verifyOtp({
+      email: normalizedEmail,
+      otp: data.otp,
+      purpose: OtpPurpose.PASSWORD_RESET,
+    });
+
+    // Hash new password
+    const newPasswordHash = await bcrypt.hash(data.newPassword, 10);
+
+    // Atomically update password and increment tokenVersion (revoking all active JWT sessions)
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash: newPasswordHash,
+        tokenVersion: { increment: 1 },
+      },
+    });
+
+    return {
+      success: true,
+      message:
+        'Password has been reset successfully. You can now sign in with your new password.',
+    };
+  },
+
+  /**
+   * Authenticates broker using mobile number or email.
+   * Blocks login if email is not yet verified.
+   */
   async loginUser(data: LoginInput): Promise<AuthResult> {
     const rawIdentifier =
       data.mobileNumber || data.phone || data.email || '';
@@ -144,12 +422,24 @@ export const authService = {
     }
 
     if (!user) {
-      throw new AuthError('Invalid mobile number or password', 401);
+      throw new AuthError('Invalid credentials', 401);
     }
 
     const passwordValid = await bcrypt.compare(data.password, user.passwordHash);
     if (!passwordValid) {
-      throw new AuthError('Invalid mobile number or password', 401);
+      throw new AuthError('Invalid credentials', 401);
+    }
+
+    // Prevent unverified accounts from logging in
+    if (!user.isEmailVerified) {
+      throw new AuthError(
+        'Your email address has not been verified. Please verify your email before signing in.',
+        403,
+        {
+          requiresVerification: true,
+          email: user.email,
+        }
+      );
     }
 
     const token = this.generateToken({
@@ -158,6 +448,7 @@ export const authService = {
       name: user.name,
       email: user.email,
       businessName: user.businessName,
+      tokenVersion: user.tokenVersion,
     });
 
     return {
@@ -168,6 +459,7 @@ export const authService = {
         phone: user.mobileNumber,
         email: user.email,
         businessName: user.businessName,
+        isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt.toISOString(),
       },
       token,
@@ -183,6 +475,7 @@ export const authService = {
         mobileNumber: true,
         email: true,
         businessName: true,
+        isEmailVerified: true,
         createdAt: true,
       },
     });
@@ -198,6 +491,7 @@ export const authService = {
       phone: user.mobileNumber,
       email: user.email,
       businessName: user.businessName,
+      isEmailVerified: user.isEmailVerified,
       createdAt: user.createdAt.toISOString(),
     };
   },
@@ -283,6 +577,7 @@ export const authService = {
       name: updatedUser.name,
       email: updatedUser.email,
       businessName: updatedUser.businessName,
+      tokenVersion: updatedUser.tokenVersion,
     });
 
     return {
@@ -293,6 +588,7 @@ export const authService = {
         phone: updatedUser.mobileNumber,
         email: updatedUser.email,
         businessName: updatedUser.businessName,
+        isEmailVerified: updatedUser.isEmailVerified,
         createdAt: updatedUser.createdAt.toISOString(),
       },
       token,
@@ -327,7 +623,7 @@ export const authService = {
       }
     }
 
-    // 1. Identify all bill attachments for this user in paginated batches (bounded memory)
+    // Identify all bill attachments for this user in paginated batches (bounded memory)
     const batchSize = 100;
     let skip = 0;
     const attachmentKeys: string[] = [];
@@ -351,15 +647,20 @@ export const authService = {
       skip += batchSize;
     }
 
-    // 2. Cascade delete user and all associated companies, bills, and data in an atomic transaction
+    // Cascade delete user and all associated companies, bills, and data in an atomic transaction
     await prisma.$transaction([
       prisma.bill.deleteMany({ where: { userId } }),
       prisma.company.deleteMany({ where: { userId } }),
       prisma.user.delete({ where: { id: userId } }),
     ]);
 
-    // 3. Clean up associated Backblaze B2 cloud objects
-    let cleanup = { total: 0, deleted: [] as string[], failed: [] as any[], skipped: [] as string[] };
+    // Clean up associated Backblaze B2 cloud objects
+    let cleanup = {
+      total: 0,
+      deleted: [] as string[],
+      failed: [] as any[],
+      skipped: [] as string[],
+    };
     if (attachmentKeys.length > 0) {
       cleanup = await storageService.deleteObjects(attachmentKeys, userId);
     }
@@ -380,4 +681,3 @@ export const authService = {
     };
   },
 };
-
