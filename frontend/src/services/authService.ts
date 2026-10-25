@@ -50,7 +50,7 @@ class RealAuthService implements IAuthService {
         name: data.name.trim(),
         mobileNumber: cleanPhone,
         password: data.password,
-        email: data.email?.trim() || undefined,
+        email: data.email.trim().toLowerCase(),
         businessName: data.businessName?.trim() || undefined,
       }),
     });

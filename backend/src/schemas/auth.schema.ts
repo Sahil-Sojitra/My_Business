@@ -11,9 +11,8 @@ export const registerSchema = z
     email: z
       .string()
       .trim()
-      .email('Invalid email address format')
-      .optional()
-      .or(z.literal('')),
+      .min(1, 'Email address is required')
+      .email('Please enter a valid email address format'),
     password: z.string().min(6, 'Password must be at least 6 characters'),
     businessName: z.string().trim().optional(),
   })

@@ -68,7 +68,7 @@ export const swaggerSpec = {
     schemas: {
       RegisterInput: {
         type: 'object',
-        required: ['name', 'mobileNumber', 'password'],
+        required: ['name', 'mobileNumber', 'email', 'password'],
         properties: {
           name: { type: 'string', example: 'Sahil Sojitra' },
           mobileNumber: { type: 'string', example: '9825012345' },

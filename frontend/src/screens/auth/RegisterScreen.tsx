@@ -24,6 +24,7 @@ export const RegisterScreen: React.FC = () => {
   const [name, setName] = useState<string>('');
   const [businessName, setBusinessName] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -31,6 +32,7 @@ export const RegisterScreen: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<{
     name?: string;
     phone?: string;
+    email?: string;
     password?: string;
     confirmPassword?: string;
   }>({});
@@ -49,6 +51,13 @@ export const RegisterScreen: React.FC = () => {
       errors.phone = 'Please enter a valid 10-digit mobile number';
     } else if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
       errors.phone = 'Please enter a valid 10-digit Indian mobile number';
+    }
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      errors.email = 'Email address is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      errors.email = 'Please enter a valid email address';
     }
 
     if (!password) {
@@ -76,6 +85,7 @@ export const RegisterScreen: React.FC = () => {
       await register({
         name: name.trim(),
         phone: phone.trim().replace(/\D/g, ''),
+        email: email.trim().toLowerCase(),
         businessName: businessName.trim() || undefined,
         password,
       });
@@ -150,6 +160,22 @@ export const RegisterScreen: React.FC = () => {
             keyboardType="phone-pad"
             maxLength={10}
             error={validationErrors.phone}
+            required
+          />
+
+          <Input
+            label="Email Address"
+            value={email}
+            onChangeText={val => {
+              setEmail(val);
+              if (validationErrors.email) {
+                setValidationErrors(prev => ({ ...prev, email: undefined }));
+              }
+            }}
+            placeholder="e.g. broker@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            error={validationErrors.email}
             required
           />
 

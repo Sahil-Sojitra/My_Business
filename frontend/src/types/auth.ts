@@ -15,8 +15,8 @@ export interface LoginCredentials {
 export interface RegisterData {
   name: string;
   phone: string; // 10-digit mobile number
+  email: string; // Required broker email
   password: string;
-  email?: string;
   businessName?: string;
 }
 

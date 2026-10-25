@@ -61,13 +61,29 @@ export const authService = {
       throw new AuthError('Please provide a valid 10-digit mobile number', 400);
     }
 
-    const existingUser = await prisma.user.findUnique({
-      where: { mobileNumber: normalizedMobile },
+    const normalizedEmail = (data.email || '').trim().toLowerCase();
+    if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      throw new AuthError('Please provide a valid email address', 400);
+    }
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { mobileNumber: normalizedMobile },
+          { email: normalizedEmail },
+        ],
+      },
     });
 
     if (existingUser) {
+      if (existingUser.mobileNumber === normalizedMobile) {
+        throw new AuthError(
+          'An account with this mobile number already exists. Please sign in.',
+          409
+        );
+      }
       throw new AuthError(
-        'An account with this mobile number already exists. Please sign in.',
+        'An account with this email address already exists. Please sign in or use another email.',
         409
       );
     }
@@ -78,7 +94,7 @@ export const authService = {
       data: {
         name: data.name.trim(),
         mobileNumber: normalizedMobile,
-        email: data.email ? data.email.trim().toLowerCase() : null,
+        email: normalizedEmail,
         passwordHash,
         businessName: data.businessName?.trim() || 'My Business',
       },
