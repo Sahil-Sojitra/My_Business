@@ -14,6 +14,7 @@ import {
   ChevronRight,
   XIcon,
 } from './Icon';
+import { colors } from '../../theme/colors';
 
 interface DatePickerFieldProps {
   label: string;
@@ -226,7 +227,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
         accessibilityLabel={label}>
         <View style={styles.boxLeft}>
           <View style={styles.calendarIconBadge}>
-            <CalendarIcon size={18} color="#2563EB" />
+            <CalendarIcon size={18} color={colors.primary} />
           </View>
           <Text
             style={[
@@ -245,7 +246,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
               style={styles.clearBtn}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Clear date">
-              <XIcon size={14} color="#64748B" />
+              <XIcon size={14} color={colors.textSecondary} />
             </TouchableOpacity>
           ) : (
             <Text style={styles.pickBadgeText}>Pick</Text>
@@ -284,7 +285,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
                 onPress={() => setModalVisible(false)}
                 style={styles.closeBtn}
                 activeOpacity={0.7}>
-                <XIcon size={18} color="#64748B" />
+                <XIcon size={18} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -362,7 +363,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
                   style={styles.navArrowBtn}
                   activeOpacity={0.7}
                   accessibilityLabel="Previous month">
-                  <ChevronLeft size={18} color="#0F172A" />
+                  <ChevronLeft size={18} color={colors.textPrimary} />
                 </TouchableOpacity>
               </View>
 
@@ -376,7 +377,7 @@ export const DatePickerField: React.FC<DatePickerFieldProps> = ({
                   style={styles.navArrowBtn}
                   activeOpacity={0.7}
                   accessibilityLabel="Next month">
-                  <ChevronRight size={18} color="#0F172A" />
+                  <ChevronRight size={18} color={colors.textPrimary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleNextYear}
@@ -485,25 +486,25 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14.5,
     fontWeight: '600',
-    color: '#1E293B',
+    color: colors.textPrimary,
   },
   requiredMark: {
-    color: '#DC2626',
+    color: colors.error,
     fontWeight: '700',
   },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 12,
     minHeight: 52,
   },
   inputBoxError: {
-    borderColor: '#EF4444',
+    borderColor: colors.error,
   },
   boxLeft: {
     flexDirection: 'row',
@@ -515,23 +516,23 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 8,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#BFDBFE',
+    borderColor: colors.primaryLightBorder,
   },
   dateValueText: {
     fontSize: 15,
     fontWeight: '700',
-    color: '#0F172A',
+    color: colors.textPrimary,
     flex: 1,
   },
   placeholderText: {
     fontSize: 14.5,
     fontWeight: '500',
-    color: '#94A3B8',
+    color: colors.textMuted,
   },
   boxRight: {
     flexDirection: 'row',
@@ -540,8 +541,8 @@ const styles = StyleSheet.create({
   pickBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#2563EB',
-    backgroundColor: '#EFF6FF',
+    color: colors.primary,
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -549,22 +550,22 @@ const styles = StyleSheet.create({
   clearBtn: {
     padding: 6,
     borderRadius: 6,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.backgroundSubtle,
   },
   errorText: {
     marginTop: 5,
     fontSize: 12.5,
-    color: '#DC2626',
+    color: colors.errorText,
     fontWeight: '500',
   },
   helperText: {
     marginTop: 5,
     fontSize: 12.5,
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(41, 36, 38, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
@@ -579,12 +580,14 @@ const styles = StyleSheet.create({
   modalDialog: {
     width: '100%',
     maxWidth: 360,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#000',
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.18,
     shadowRadius: 12,
     elevation: 8,
   },
@@ -597,31 +600,31 @@ const styles = StyleSheet.create({
   dialogTitle: {
     fontSize: 17,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   dialogSub: {
     fontSize: 12.5,
-    color: '#2563EB',
+    color: colors.primary,
     fontWeight: '600',
     marginTop: 2,
   },
   closeBtn: {
     padding: 6,
     borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.backgroundSubtle,
   },
   presetsContainer: {
     marginBottom: 14,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.champagneLight,
     borderRadius: 12,
     padding: 10,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: colors.champagneBorder,
   },
   presetsHeader: {
     fontSize: 11.5,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.textSecondary,
     marginBottom: 6,
     textTransform: 'uppercase',
     letterSpacing: 0.3,
@@ -632,24 +635,24 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   presetChip: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.card,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: colors.border,
   },
   presetChipHighlight: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#93C5FD',
+    backgroundColor: colors.primary,
+    borderColor: colors.primaryDark,
   },
   presetChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#334155',
+    color: colors.textPrimary,
   },
   presetChipTextHighlight: {
-    color: '#1D4ED8',
+    color: colors.textInverse,
     fontWeight: '700',
   },
   monthNavigator: {
@@ -667,27 +670,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7,
     height: 34,
     borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.backgroundSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   navMiniBtnText: {
     fontSize: 11.5,
     fontWeight: '700',
-    color: '#475569',
+    color: colors.textSecondary,
   },
   navArrowBtn: {
     width: 34,
     height: 34,
     borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.backgroundSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   monthYearTitle: {
     fontSize: 15.5,
     fontWeight: '800',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   weekdaysRow: {
     flexDirection: 'row',
@@ -698,10 +701,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     fontWeight: '700',
-    color: '#64748B',
+    color: colors.textSecondary,
   },
   weekdaySunday: {
-    color: '#DC2626',
+    color: colors.error,
   },
   calendarGrid: {
     flexDirection: 'row',
@@ -718,22 +721,22 @@ const styles = StyleSheet.create({
   },
   dayCellToday: {
     borderWidth: 1.5,
-    borderColor: '#2563EB',
+    borderColor: colors.primary,
   },
   dayCellSelected: {
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary,
   },
   dayNumberText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0F172A',
+    color: colors.textPrimary,
   },
   dayNumberToday: {
-    color: '#2563EB',
+    color: colors.primary,
     fontWeight: '800',
   },
   dayNumberSelected: {
-    color: '#FFFFFF',
+    color: colors.textInverse,
     fontWeight: '800',
   },
   dialogActions: {
@@ -744,39 +747,46 @@ const styles = StyleSheet.create({
     paddingVertical: 11,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorBg,
+    borderWidth: 1,
+    borderColor: colors.errorBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   clearDialogBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#DC2626',
+    color: colors.errorText,
   },
   cancelBtn: {
     flex: 1,
     paddingVertical: 11,
     borderRadius: 10,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: colors.backgroundSubtle,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#475569',
+    color: colors.textSecondary,
   },
   confirmBtn: {
     flex: 1,
     paddingVertical: 11,
     borderRadius: 10,
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 2,
   },
   confirmBtnText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: colors.textInverse,
   },
 });

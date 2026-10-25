@@ -4,7 +4,7 @@ import { AppHeader } from '../../components/common/AppHeader';
 import { AttachmentViewerModal } from '../../components/common/AttachmentViewerModal';
 import { Button } from '../../components/common/Button';
 import { ConfirmModal } from '../../components/common/ConfirmModal';
-import { CheckIcon } from '../../components/common/Icon';
+import { CheckIcon, AlertCircleIcon } from '../../components/common/Icon';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { alertService } from '../../context/AlertContext';
 import { useNavigation } from '../../navigation/NavigationContext';
@@ -262,7 +262,7 @@ export const TransactionDetailsScreen: React.FC = () => {
         {bill.status === 'OUTSTANDING' ? (
           <View style={styles.outstandingBanner}>
             <View style={styles.outstandingIconCircle}>
-              <Text style={styles.outstandingIconText}>⏳</Text>
+              <AlertCircleIcon size={20} color="#8F7546" strokeWidth={2.4} />
             </View>
             <View style={styles.settledBannerTextCol}>
               <Text style={styles.outstandingBannerTitle}>
@@ -279,7 +279,7 @@ export const TransactionDetailsScreen: React.FC = () => {
         {bill.status === 'OVERDUE' ? (
           <View style={styles.overdueBanner}>
             <View style={styles.overdueIconCircle}>
-              <Text style={styles.overdueIconText}>⚠️</Text>
+              <AlertCircleIcon size={20} color="#9E2A2B" strokeWidth={2.4} />
             </View>
             <View style={styles.overdueBannerTextCol}>
               <Text style={styles.overdueBannerTitle}>Payment Overdue</Text>
@@ -301,7 +301,7 @@ export const TransactionDetailsScreen: React.FC = () => {
               activeOpacity={0.85}
               accessibilityRole="button"
               accessibilityLabel="Mark bill as outstanding">
-              <Text style={styles.outstandingBtnText}>⏳ Mark as Outstanding</Text>
+              <Text style={styles.outstandingBtnText}>Mark as Outstanding</Text>
             </TouchableOpacity>
           ) : null}
 
