@@ -52,12 +52,12 @@ const styles = StyleSheet.create({
   overdueText: {
     color: colors.errorText,
   },
-  partialBg: {
-    backgroundColor: colors.primaryLight,
-    borderColor: colors.primaryLightBorder,
+  outstandingBg: {
+    backgroundColor: colors.warningBg,
+    borderColor: colors.warningBorder,
   },
-  partialText: {
-    color: colors.primary,
+  outstandingText: {
+    color: colors.warningText,
   },
   billBg: {
     backgroundColor: colors.primaryLight,
@@ -82,7 +82,7 @@ const STATUS_CONFIG: Record<
   PAID: { text: 'Settled', bg: styles.paidBg, textStyle: styles.paidText },
   PENDING: { text: 'Pending', bg: styles.pendingBg, textStyle: styles.pendingText },
   OVERDUE: { text: 'Overdue', bg: styles.overdueBg, textStyle: styles.overdueText },
-  PARTIAL: { text: 'Partial', bg: styles.partialBg, textStyle: styles.partialText },
+  OUTSTANDING: { text: 'Outstanding', bg: styles.outstandingBg, textStyle: styles.outstandingText },
 };
 
 const TYPE_CONFIG: Record<

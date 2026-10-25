@@ -1,4 +1,8 @@
-export type TransactionStatus = 'PENDING' | 'OVERDUE' | 'PARTIAL' | 'PAID';
+export type TransactionStatus =
+  | 'PENDING'
+  | 'OVERDUE'
+  | 'OUTSTANDING'
+  | 'PAID';
 
 export type TransactionType = 'BILL' | 'PAYMENT';
 

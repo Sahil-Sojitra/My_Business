@@ -13,6 +13,7 @@ export interface ITransactionService {
   delete(id: string): Promise<boolean>;
   deleteByCompanyId(companyId: string): Promise<number>;
   settleBill(id: string): Promise<Transaction>;
+  markOutstanding(id: string): Promise<Transaction>;
   reopenBill(id: string): Promise<Transaction>;
 }
 
@@ -138,6 +139,10 @@ class RealTransactionService implements ITransactionService {
 
   async settleBill(id: string): Promise<Transaction> {
     return this.update(id, { status: 'PAID' });
+  }
+
+  async markOutstanding(id: string): Promise<Transaction> {
+    return this.update(id, { status: 'OUTSTANDING' });
   }
 
   async reopenBill(id: string): Promise<Transaction> {

@@ -144,6 +144,7 @@ export const billService = {
     let activeBillsCount = 0;
     let pendingBillsCount = 0;
     let overdueBillsCount = 0;
+    let outstandingBillsCount = 0;
     let settledBillsCount = 0;
 
     for (const b of bills) {
@@ -161,6 +162,8 @@ export const billService = {
           pendingBillsCount += 1;
         } else if (b.status === 'OVERDUE') {
           overdueBillsCount += 1;
+        } else if ((b.status as string) === 'OUTSTANDING') {
+          outstandingBillsCount += 1;
         }
       }
     }
@@ -171,6 +174,7 @@ export const billService = {
       activeBillsCount,
       pendingBillsCount,
       overdueBillsCount,
+      outstandingBillsCount,
       settledBillsCount,
     };
   },
@@ -220,7 +224,7 @@ export const billService = {
         dalaliAmount: new Prisma.Decimal(calculatedDalaliAmount.toFixed(2)),
         date: data.date,
         dueDate: data.dueDate?.trim() || null,
-        status: data.status,
+        status: data.status as BillStatus,
         description: data.description?.trim() || null,
         billPdf: data.billPdf
           ? (data.billPdf as Prisma.InputJsonValue)
@@ -289,7 +293,7 @@ export const billService = {
           data.dueDate !== undefined
             ? data.dueDate?.trim() || null
             : existing.dueDate,
-        status: data.status ?? existing.status,
+        status: (data.status as BillStatus) ?? existing.status,
         description:
           data.description !== undefined
             ? data.description?.trim() || null
