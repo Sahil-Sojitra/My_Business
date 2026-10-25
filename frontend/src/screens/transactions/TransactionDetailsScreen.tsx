@@ -29,10 +29,33 @@ export const TransactionDetailsScreen: React.FC = () => {
   const [settling, setSettling] = useState<boolean>(false);
   const [showReopenModal, setShowReopenModal] = useState<boolean>(false);
   const [reopening, setReopening] = useState<boolean>(false);
+  const [showOutstandingModal, setShowOutstandingModal] = useState<boolean>(false);
+  const [markingOutstanding, setMarkingOutstanding] = useState<boolean>(false);
 
   // Photo viewer state (in-app viewer for photos only)
   const [activePhoto, setActivePhoto] = useState<AttachmentFile | null>(null);
   const [showPhotoViewer, setShowPhotoViewer] = useState<boolean>(false);
+
+  const handleMarkOutstanding = async () => {
+    if (!transactionId) return;
+    setMarkingOutstanding(true);
+    try {
+      const updated = await transactionService.markOutstanding(transactionId);
+      setBill(updated);
+      setShowOutstandingModal(false);
+      alertService.showSuccess(
+        'Bill Marked as Outstanding',
+        'This bill is now marked as outstanding (ready to settle).'
+      );
+    } catch (err: unknown) {
+      alertService.showError(
+        'Failed to Update Bill',
+        err instanceof Error ? err.message : 'Please try again later.'
+      );
+    } finally {
+      setMarkingOutstanding(false);
+    }
+  };
 
   const handleSettle = async () => {
     if (!transactionId) return;
@@ -97,7 +120,7 @@ export const TransactionDetailsScreen: React.FC = () => {
       const data = await transactionService.getById(transactionId);
       if (data) {
         const todayIso = new Date().toISOString().split('T')[0];
-        if (data.status !== 'PAID' && data.dueDate && data.dueDate < todayIso) {
+        if (data.status === 'PENDING' && data.dueDate && data.dueDate < todayIso) {
           data.status = 'OVERDUE';
         }
       }
@@ -235,6 +258,23 @@ export const TransactionDetailsScreen: React.FC = () => {
           </View>
         ) : null}
 
+        {/* Outstanding (Ready to Settle) Banner */}
+        {bill.status === 'OUTSTANDING' ? (
+          <View style={styles.outstandingBanner}>
+            <View style={styles.outstandingIconCircle}>
+              <Text style={styles.outstandingIconText}>⏳</Text>
+            </View>
+            <View style={styles.settledBannerTextCol}>
+              <Text style={styles.outstandingBannerTitle}>
+                Bill Outstanding (Ready to Settle)
+              </Text>
+              <Text style={styles.outstandingBannerSubtitle}>
+                This bill is in the final step before settlement. Ready to mark as settled once payment is cleared.
+              </Text>
+            </View>
+          </View>
+        ) : null}
+
         {/* Overdue Warning Banner */}
         {bill.status === 'OVERDUE' ? (
           <View style={styles.overdueBanner}>
@@ -254,6 +294,17 @@ export const TransactionDetailsScreen: React.FC = () => {
 
         {/* Action Buttons */}
         <View style={styles.buttonGroup}>
+          {bill.status === 'PENDING' || bill.status === 'OVERDUE' ? (
+            <TouchableOpacity
+              style={styles.outstandingBtn}
+              onPress={() => setShowOutstandingModal(true)}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel="Mark bill as outstanding">
+              <Text style={styles.outstandingBtnText}>⏳ Mark as Outstanding</Text>
+            </TouchableOpacity>
+          ) : null}
+
           {bill.status !== 'PAID' ? (
             <TouchableOpacity
               style={styles.settleBtn}
@@ -274,6 +325,16 @@ export const TransactionDetailsScreen: React.FC = () => {
             />
           )}
 
+          {bill.status === 'OUTSTANDING' ? (
+            <Button
+              title="Return to Pending Status"
+              onPress={() => setShowReopenModal(true)}
+              variant="outline"
+              size="md"
+              style={styles.reopenBtn}
+            />
+          ) : null}
+
           <Button
             title="Delete Bill"
             onPress={() => setShowDeleteModal(true)}
@@ -282,6 +343,17 @@ export const TransactionDetailsScreen: React.FC = () => {
           />
         </View>
       </ScrollView>
+
+      <ConfirmModal
+        visible={showOutstandingModal}
+        title="Mark as Outstanding?"
+        message="Mark this bill as Outstanding (ready to settle)? This indicates payment is confirmed and ready for final settlement."
+        confirmText="Mark Outstanding"
+        confirmVariant="primary"
+        loading={markingOutstanding}
+        onConfirm={handleMarkOutstanding}
+        onCancel={() => setShowOutstandingModal(false)}
+      />
 
       <ConfirmModal
         visible={showSettleModal}
@@ -298,8 +370,8 @@ export const TransactionDetailsScreen: React.FC = () => {
       <ConfirmModal
         visible={showReopenModal}
         title="Reopen Bill?"
-        message="Are you sure you want to reopen this bill and return it to active pending status?"
-        confirmText="Reopen as Active"
+        message="Are you sure you want to return this bill to active pending status?"
+        confirmText="Return to Pending"
         loading={reopening}
         onConfirm={handleReopen}
         onCancel={() => setShowReopenModal(false)}

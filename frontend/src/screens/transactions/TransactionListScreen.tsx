@@ -3,6 +3,7 @@ import {
   FlatList,
   Platform,
   RefreshControl,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
@@ -64,6 +65,12 @@ function sortBillsByDueDate(
       if (a.dueDate) return -1;
       if (b.dueDate) return 1;
       return b.date.localeCompare(a.date);
+    }
+
+    if (tab === 'OUTSTANDING') {
+      const dateA = a.dueDate || a.date;
+      const dateB = b.dueDate || b.date;
+      return dateB.localeCompare(dateA);
     }
 
     if (tab === 'PAID') {
@@ -271,29 +278,36 @@ export const TransactionListScreen: React.FC = () => {
         totalDalali={totalDalali}
       />
 
-      {/* Status Filter Tabs */}
-      <View style={styles.tabsContainer}>
-        {(['ALL', 'PENDING', 'OVERDUE', 'PAID'] as FilterTab[]).map(tab => (
-          <TouchableOpacity
-            key={tab}
-            onPress={() => setFilterTab(tab)}
-            style={[styles.tabButton, filterTab === tab && styles.tabButtonActive]}
-            activeOpacity={0.7}>
-            <Text
-              style={[
-                styles.tabText,
-                filterTab === tab && styles.tabTextActive,
-              ]}>
-              {tab === 'ALL'
-                ? 'All'
-                : tab === 'PENDING'
-                ? 'Pending'
-                : tab === 'OVERDUE'
-                ? 'Overdue'
-                : 'Settled'}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      {/* Status Filter Tabs (Horizontal scrollable overflow with larger buttons) */}
+      <View style={styles.tabsWrapper}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsScrollContent}>
+          {(['ALL', 'PENDING', 'OVERDUE', 'OUTSTANDING', 'PAID'] as FilterTab[]).map(tab => (
+            <TouchableOpacity
+              key={tab}
+              onPress={() => setFilterTab(tab)}
+              style={[styles.tabButton, filterTab === tab && styles.tabButtonActive]}
+              activeOpacity={0.7}>
+              <Text
+                style={[
+                  styles.tabText,
+                  filterTab === tab && styles.tabTextActive,
+                ]}>
+                {tab === 'ALL'
+                  ? 'All'
+                  : tab === 'PENDING'
+                  ? 'Pending'
+                  : tab === 'OVERDUE'
+                  ? 'Overdue'
+                  : tab === 'OUTSTANDING'
+                  ? 'Outstanding'
+                  : 'Settled'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Search Input */}
@@ -339,6 +353,8 @@ export const TransactionListScreen: React.FC = () => {
                   ? 'No settled bills yet'
                   : filterTab === 'OVERDUE'
                   ? 'No overdue bills'
+                  : filterTab === 'OUTSTANDING'
+                  ? 'No outstanding bills'
                   : filterTab === 'PENDING'
                   ? 'No pending bills'
                   : 'No bills recorded yet'
@@ -348,22 +364,30 @@ export const TransactionListScreen: React.FC = () => {
                   ? `No entry found for "${searchQuery}".`
                   : filterTab === 'PAID'
                   ? 'Bills you mark as settled will appear here in the Settled tab.'
+                  : filterTab === 'OUTSTANDING'
+                  ? 'Bills marked as ready to be settled will appear here.'
                   : filterTab === 'PENDING'
                   ? 'Bills that are pending payment will appear here.'
                   : 'Record client sales bills to track amounts and accrued interest.'
               }
-              icon={filterTab === 'PAID' ? '✅' : '🧾'}
+              icon={
+                filterTab === 'PAID'
+                  ? '✅'
+                  : filterTab === 'OUTSTANDING'
+                  ? '⏳'
+                  : '🧾'
+              }
               actionTitle={
                 searchQuery
                   ? 'Clear Search'
-                  : filterTab === 'PAID'
+                  : filterTab === 'PAID' || filterTab === 'OUTSTANDING'
                   ? 'View All Bills'
                   : '+ Record New Bill'
               }
               onAction={
                 searchQuery
                   ? () => setSearchQuery('')
-                  : filterTab === 'PAID'
+                  : filterTab === 'PAID' || filterTab === 'OUTSTANDING'
                   ? () => setFilterTab('ALL')
                   : () =>
                       navigation.navigate('TransactionForm', {
