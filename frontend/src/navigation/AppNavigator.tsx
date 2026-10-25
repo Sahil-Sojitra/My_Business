@@ -2,8 +2,11 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LoadingSpinner } from '../components/common/LoadingSpinner';
 import { useAuth } from '../features/auth/AuthContext';
+import { EmailVerificationScreen } from '../screens/auth/EmailVerificationScreen';
+import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
 import { LoginScreen } from '../screens/auth/LoginScreen';
 import { RegisterScreen } from '../screens/auth/RegisterScreen';
+import { ResetPasswordScreen } from '../screens/auth/ResetPasswordScreen';
 import { InterestCalculatorScreen } from '../screens/calculator/dalaliCalculatorScreen';
 import { CompanyDetailsScreen } from '../screens/companies/CompanyDetailsScreen';
 import { CompanyFormScreen } from '../screens/companies/CompanyFormScreen';
@@ -26,10 +29,18 @@ export const AppNavigator: React.FC = () => {
 
   // Unauthenticated flow
   if (!isAuthenticated) {
-    if (currentScreen === 'Register') {
-      return <RegisterScreen />;
+    switch (currentScreen) {
+      case 'Register':
+        return <RegisterScreen />;
+      case 'EmailVerification':
+        return <EmailVerificationScreen />;
+      case 'ForgotPassword':
+        return <ForgotPasswordScreen />;
+      case 'ResetPassword':
+        return <ResetPasswordScreen />;
+      default:
+        return <LoginScreen />;
     }
-    return <LoginScreen />;
   }
 
   // Authenticated flow

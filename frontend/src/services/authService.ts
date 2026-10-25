@@ -1,16 +1,26 @@
 import {
   AuthResponse,
+  ForgotPasswordData,
+  GenericSuccessResponse,
   LoginCredentials,
   RegisterData,
+  RegisterResponse,
+  ResendOtpData,
+  ResetPasswordData,
   UpdateProfileData,
   User,
+  VerifyEmailData,
 } from '../types/auth';
 import { ApiError, apiClient, request } from './apiClient';
 import { sessionPersistence } from './storage';
 
 export interface IAuthService {
   login(credentials: LoginCredentials): Promise<AuthResponse>;
-  register(data: RegisterData): Promise<AuthResponse>;
+  register(data: RegisterData): Promise<RegisterResponse>;
+  verifyEmail(data: VerifyEmailData): Promise<AuthResponse>;
+  resendOtp(data: ResendOtpData): Promise<GenericSuccessResponse>;
+  forgotPassword(data: ForgotPasswordData): Promise<GenericSuccessResponse>;
+  resetPassword(data: ResetPasswordData): Promise<GenericSuccessResponse>;
   logout(): Promise<void>;
   getCurrentUser(): Promise<User | null>;
   updateProfile(data: UpdateProfileData): Promise<AuthResponse>;
@@ -41,10 +51,10 @@ class RealAuthService implements IAuthService {
     return response;
   }
 
-  async register(data: RegisterData): Promise<AuthResponse> {
+  async register(data: RegisterData): Promise<RegisterResponse> {
     const cleanPhone = data.phone.trim().replace(/\D/g, '');
 
-    const response = await request<AuthResponse>('/auth/register', {
+    const response = await request<RegisterResponse>('/auth/register', {
       method: 'POST',
       body: JSON.stringify({
         name: data.name.trim(),
@@ -55,9 +65,66 @@ class RealAuthService implements IAuthService {
       }),
     });
 
+    // Registration does not issue an active token until email OTP is verified
+    return response;
+  }
+
+  async verifyEmail(data: VerifyEmailData): Promise<AuthResponse> {
+    const response = await request<AuthResponse>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: data.email.trim().toLowerCase(),
+        otp: data.otp.trim(),
+      }),
+    });
+
     apiClient.setAuthToken(response.token);
     apiClient.setCurrentUser(response.user);
     await sessionPersistence.saveSession(response.token, response.user);
+    return response;
+  }
+
+  async resendOtp(data: ResendOtpData): Promise<GenericSuccessResponse> {
+    const response = await request<GenericSuccessResponse>('/auth/resend-otp', {
+      method: 'POST',
+      body: JSON.stringify({
+        email: data.email.trim().toLowerCase(),
+        purpose: data.purpose || 'EMAIL_VERIFICATION',
+      }),
+    });
+
+    return response;
+  }
+
+  async forgotPassword(
+    data: ForgotPasswordData
+  ): Promise<GenericSuccessResponse> {
+    const response = await request<GenericSuccessResponse>(
+      '/auth/forgot-password',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data.email.trim().toLowerCase(),
+        }),
+      }
+    );
+
+    return response;
+  }
+
+  async resetPassword(data: ResetPasswordData): Promise<GenericSuccessResponse> {
+    const response = await request<GenericSuccessResponse>(
+      '/auth/reset-password',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data.email.trim().toLowerCase(),
+          otp: data.otp.trim(),
+          newPassword: data.newPassword,
+        }),
+      }
+    );
+
     return response;
   }
 
@@ -97,8 +164,13 @@ class RealAuthService implements IAuthService {
       return freshUser;
     } catch (err: unknown) {
       // If server returned 401 Unauthorized or 404 Not Found (user deleted/reset on backend), clear session
-      if (err instanceof ApiError && (err.statusCode === 401 || err.statusCode === 404)) {
-        console.log(`[Auth] Session invalid (${err.statusCode}), clearing stale token and logging out.`);
+      if (
+        err instanceof ApiError &&
+        (err.statusCode === 401 || err.statusCode === 404)
+      ) {
+        console.log(
+          `[Auth] Session invalid (${err.statusCode}), clearing stale token and logging out.`
+        );
         await this.logout();
         return null;
       }

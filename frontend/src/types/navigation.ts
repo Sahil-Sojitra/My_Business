@@ -1,6 +1,9 @@
 export type RootScreenName =
   | 'Login'
   | 'Register'
+  | 'EmailVerification'
+  | 'ForgotPassword'
+  | 'ResetPassword'
   | 'Home'
   | 'Profile'
   | 'CompanyList'
@@ -13,8 +16,11 @@ export type RootScreenName =
   | 'DalaliCalculator';
 
 export interface ScreenParams {
-  Login: undefined;
+  Login: { message?: string; initialPhone?: string } | undefined;
   Register: undefined;
+  EmailVerification: { email: string; fromRegistration?: boolean };
+  ForgotPassword: { initialEmail?: string } | undefined;
+  ResetPassword: { email: string };
   Home: undefined;
   Profile: undefined;
   CompanyList: undefined;

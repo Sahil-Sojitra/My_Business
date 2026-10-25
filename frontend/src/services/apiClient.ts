@@ -49,12 +49,19 @@ export const apiClient = {
 export class ApiError extends Error {
   statusCode: number;
   details?: unknown;
+  data?: any;
 
-  constructor(message: string, statusCode: number, details?: unknown) {
+  constructor(
+    message: string,
+    statusCode: number,
+    details?: unknown,
+    data?: any
+  ) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;
     this.details = details;
+    this.data = data;
   }
 }
 
@@ -142,7 +149,8 @@ export async function request<T>(
     throw new ApiError(
       message,
       response.status,
-      typeof data === 'object' ? data?.details : undefined
+      typeof data === 'object' ? data?.details : undefined,
+      data
     );
   }
 

@@ -7,10 +7,17 @@ import React, {
 } from 'react';
 import { authService, sessionPersistence, apiClient } from '../../services';
 import {
+  AuthResponse,
+  ForgotPasswordData,
+  GenericSuccessResponse,
   LoginCredentials,
   RegisterData,
+  RegisterResponse,
+  ResendOtpData,
+  ResetPasswordData,
   UpdateProfileData,
   User,
+  VerifyEmailData,
 } from '../../types/auth';
 
 interface AuthContextValue {
@@ -19,7 +26,11 @@ interface AuthContextValue {
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  register: (data: RegisterData) => Promise<RegisterResponse>;
+  verifyEmail: (data: VerifyEmailData) => Promise<AuthResponse>;
+  resendOtp: (data: ResendOtpData) => Promise<GenericSuccessResponse>;
+  forgotPassword: (data: ForgotPasswordData) => Promise<GenericSuccessResponse>;
+  resetPassword: (data: ResetPasswordData) => Promise<GenericSuccessResponse>;
   logout: () => Promise<void>;
   updateProfile: (data: UpdateProfileData) => Promise<User>;
   deleteAccount(password?: string): Promise<void>;
@@ -95,12 +106,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setError(null);
     try {
       const response = await authService.register(data);
-      setUser(response.user);
+      // Note: registration does not authenticate user immediately;
+      // it returns requiresVerification: true and requires OTP verification
+      return response;
     } catch (err) {
       const message =
         err instanceof Error
           ? err.message
           : 'Registration failed. Please try again.';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const verifyEmail = useCallback(async (data: VerifyEmailData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authService.verifyEmail(data);
+      setUser(response.user);
+      return response;
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Verification failed. Please try again.';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const resendOtp = useCallback(async (data: ResendOtpData) => {
+    setError(null);
+    try {
+      const response = await authService.resendOtp(data);
+      return response;
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to resend code. Please try again.';
+      setError(message);
+      throw err;
+    }
+  }, []);
+
+  const forgotPassword = useCallback(async (data: ForgotPasswordData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authService.forgotPassword(data);
+      return response;
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Failed to request reset code. Please try again.';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const resetPassword = useCallback(async (data: ResetPasswordData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await authService.resetPassword(data);
+      return response;
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : 'Password reset failed. Please try again.';
       setError(message);
       throw err;
     } finally {
@@ -164,6 +247,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         error,
         login,
         register,
+        verifyEmail,
+        resendOtp,
+        forgotPassword,
+        resetPassword,
         logout,
         updateProfile,
         deleteAccount,
