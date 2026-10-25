@@ -75,6 +75,9 @@ export const RegisterScreen: React.FC = () => {
   };
 
   const handleRegister = async () => {
+    if (loading) {
+      return;
+    }
     clearError();
     if (!validate()) {
       return;
@@ -82,15 +85,23 @@ export const RegisterScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      await register({
+      const cleanEmail = email.trim().toLowerCase();
+      const response = await register({
         name: name.trim(),
         phone: phone.trim().replace(/\D/g, ''),
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         businessName: businessName.trim() || undefined,
         password,
       });
+
+      if (response?.requiresVerification) {
+        navigation.navigate('EmailVerification', {
+          email: cleanEmail,
+          fromRegistration: true,
+        });
+      }
     } catch {
-      // error set in AuthContext
+      // error is set in AuthContext and displayed in errorAlert
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Platform,
   StatusBar,
@@ -12,6 +12,7 @@ import { Input } from '../../components/common/Input';
 import { KeyboardAwareScrollView } from '../../components/common/KeyboardAwareScrollView';
 import { useAuth } from '../../features/auth/AuthContext';
 import { useNavigation } from '../../navigation/NavigationContext';
+import { ApiError } from '../../services/apiClient';
 import { styles } from './AuthStyles';
 
 export const LoginScreen: React.FC = () => {
@@ -19,13 +20,26 @@ export const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
   const { login, error: authError, clearError } = useAuth();
 
-  const [phone, setPhone] = useState<string>('');
+  const [phone, setPhone] = useState<string>(
+    navigation.params?.initialPhone || ''
+  );
   const [password, setPassword] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [bannerMessage, setBannerMessage] = useState<string | null>(
+    navigation.params?.message || null
+  );
+
   const [validationErrors, setValidationErrors] = useState<{
     phone?: string;
     password?: string;
   }>({});
+
+  useEffect(() => {
+    if (navigation.params?.message) {
+      setBannerMessage(navigation.params.message);
+    }
+  }, [navigation.params?.message]);
 
   const validate = (): boolean => {
     const errors: { phone?: string; password?: string } = {};
@@ -50,7 +64,13 @@ export const LoginScreen: React.FC = () => {
   };
 
   const handleLogin = async () => {
+    if (loading) {
+      return;
+    }
     clearError();
+    setUnverifiedEmail(null);
+    setBannerMessage(null);
+
     if (!validate()) {
       return;
     }
@@ -58,8 +78,14 @@ export const LoginScreen: React.FC = () => {
     setLoading(true);
     try {
       await login({ phone: phone.trim().replace(/\D/g, ''), password });
-    } catch {
-      // error is set in auth context
+    } catch (err: any) {
+      if (
+        err instanceof ApiError &&
+        err.statusCode === 403 &&
+        err.data?.requiresVerification
+      ) {
+        setUnverifiedEmail(err.data.email || '');
+      }
     } finally {
       setLoading(false);
     }
@@ -91,9 +117,40 @@ export const LoginScreen: React.FC = () => {
         </View>
 
         <View style={styles.loginCard}>
+          {bannerMessage ? (
+            <View style={styles.successAlert}>
+              <Text style={styles.successAlertText}>{bannerMessage}</Text>
+            </View>
+          ) : null}
+
           {authError ? (
             <View style={styles.errorAlert}>
               <Text style={styles.errorAlertText}>{authError}</Text>
+            </View>
+          ) : null}
+
+          {unverifiedEmail ? (
+            <View style={styles.infoAlert}>
+              <Text style={styles.infoAlertText}>
+                Email verification is required before signing in.
+              </Text>
+              <TouchableOpacity
+                style={[styles.resendBtn, { alignSelf: 'center', marginTop: 4 }]}
+                onPress={() => {
+                  clearError();
+                  navigation.navigate('EmailVerification', {
+                    email: unverifiedEmail,
+                  });
+                }}
+                activeOpacity={0.7}>
+                <Text
+                  style={[
+                    styles.resendText,
+                    { textDecorationLine: 'underline' },
+                  ]}>
+                  Verify Email Now
+                </Text>
+              </TouchableOpacity>
             </View>
           ) : null}
 
@@ -130,6 +187,16 @@ export const LoginScreen: React.FC = () => {
             error={validationErrors.password}
             required
           />
+
+          <TouchableOpacity
+            style={styles.forgotPasswordLink}
+            onPress={() => {
+              clearError();
+              navigation.navigate('ForgotPassword');
+            }}
+            activeOpacity={0.7}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
 
           <Button
             title="Sign In"
