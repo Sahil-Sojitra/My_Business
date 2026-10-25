@@ -223,7 +223,9 @@ export class BrevoEmailService {
    * Check whether Brevo credentials are fully configured
    */
   public isConfigured(): boolean {
-    return Boolean(this.apiKey && this.senderEmail);
+    const apiKey = (process.env.BREVO_API_KEY || this.apiKey || '').trim();
+    const senderEmail = (process.env.BREVO_SENDER_EMAIL || this.senderEmail || '').trim();
+    return Boolean(apiKey && senderEmail);
   }
 
   /**
@@ -231,27 +233,30 @@ export class BrevoEmailService {
    */
   public async sendEmail(options: EmailOptions): Promise<EmailDeliveryResult> {
     const masked = maskEmail(options.to);
+    const apiKey = (process.env.BREVO_API_KEY || this.apiKey || '').trim();
+    const senderEmail = (process.env.BREVO_SENDER_EMAIL || this.senderEmail || '').trim();
+    const senderName = (process.env.BREVO_SENDER_NAME || this.senderName || 'My Business').trim();
 
-    if (!this.apiKey) {
+    if (!apiKey) {
       console.warn(`[BrevoEmailService] BREVO_API_KEY is not configured. Email to ${masked} was suppressed.`);
       throw new EmailDeliveryError('Email delivery service is currently not configured.', 503);
     }
 
-    if (!this.senderEmail) {
+    if (!senderEmail) {
       console.warn(`[BrevoEmailService] BREVO_SENDER_EMAIL is not configured. Email to ${masked} was suppressed.`);
       throw new EmailDeliveryError('Email sender identity is not configured.', 503);
     }
 
     try {
-      const client = this.client || new BrevoClient({ apiKey: this.apiKey });
+      const client = new BrevoClient({ apiKey });
 
       const response = await client.transactionalEmails.sendTransacEmail({
         subject: options.subject,
         htmlContent: options.htmlContent,
         textContent: options.textContent,
         sender: {
-          name: this.senderName,
-          email: this.senderEmail,
+          name: senderName,
+          email: senderEmail,
         },
         to: [
           {
@@ -269,10 +274,15 @@ export class BrevoEmailService {
         messageId,
       };
     } catch (err: unknown) {
-      const errorMsg = err instanceof Error ? err.message : String(err);
-      console.error(`[BrevoEmailService] Failed to deliver email to ${masked}: ${errorMsg}`);
+      const anyErr = err as any;
+      const detail =
+        anyErr?.response?.body?.message ||
+        anyErr?.body?.message ||
+        anyErr?.response?.text ||
+        (err instanceof Error ? err.message : String(err));
+      console.error(`[BrevoEmailService] Failed to deliver email to ${masked}: ${detail}`);
       throw new EmailDeliveryError(
-        'Failed to deliver verification email. Please check the address or try again later.',
+        `Failed to deliver verification email: ${detail}`,
         502
       );
     }

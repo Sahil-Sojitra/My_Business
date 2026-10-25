@@ -36,4 +36,18 @@ router.get('/health', async (_req: Request, res: Response) => {
   }
 });
 
+router.get('/health/email', async (_req: Request, res: Response) => {
+  const apiKey = (process.env.BREVO_API_KEY || '').trim();
+  const senderEmail = (process.env.BREVO_SENDER_EMAIL || '').trim();
+  const senderName = (process.env.BREVO_SENDER_NAME || '').trim();
+
+  return res.status(200).json({
+    hasApiKey: Boolean(apiKey),
+    apiKeyPrefix: apiKey ? apiKey.slice(0, 8) + '...' : 'MISSING',
+    hasSenderEmail: Boolean(senderEmail),
+    senderEmail: senderEmail || 'MISSING',
+    senderName: senderName || 'My Business',
+  });
+});
+
 export default router;
