@@ -18,7 +18,7 @@ datasource db {
 enum BillStatus {
   PENDING
   OVERDUE
-  PARTIAL
+  OUTSTANDING
   PAID
 }
 

@@ -177,8 +177,8 @@ async function main() {
           dalaliAmount: 1662.5,
           date: '2026-09-10',
           dueDate: '2026-10-10',
-          status: BillStatus.PARTIAL,
-          description: 'Textile dye chemicals shipment - advance paid',
+          status: ((BillStatus as any).OUTSTANDING ?? 'OUTSTANDING') as BillStatus,
+          description: 'Textile shipment - payment verified, ready for settlement',
         },
       ],
     });

@@ -37,7 +37,9 @@ export const createBillSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be in YYYY-MM-DD format')
     .optional()
     .or(z.literal('')),
-  status: z.enum(['PENDING', 'OVERDUE', 'PARTIAL', 'PAID']).default('PENDING'),
+  status: z
+    .enum(['PENDING', 'OVERDUE', 'OUTSTANDING', 'PAID'])
+    .default('PENDING'),
   description: z.string().trim().optional().or(z.literal('')),
   billPdf: attachmentSchema,
   chitthi: attachmentSchema,
