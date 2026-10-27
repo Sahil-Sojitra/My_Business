@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes.js';
 import companyRoutes from './routes/company.routes.js';
 import billRoutes from './routes/bill.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
+import aiRoutes from './routes/ai.routes.js';
 import docsRouter from './docs/swagger.js';
 
 const app: Application = express();
@@ -37,6 +38,9 @@ app.get('/', (_req: Request, res: Response) => {
         create: 'POST /api/bills',
       },
       uploads: 'POST /api/uploads',
+      ai: {
+        testExtraction: 'POST /api/v1/ai/test-extraction',
+      },
       docs: '/docs',
       openapi: '/openapi.json',
     },
@@ -51,6 +55,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/bills', billRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/v1/ai', aiRoutes);
+app.use('/api/ai', aiRoutes);
 app.use('/api', healthRoutes);
 
 // Fallback 404 handler
